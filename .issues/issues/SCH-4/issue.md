@@ -2,14 +2,14 @@
 id: SCH-4
 title: "Add the database schema, seed R1 to R5, and expose GET /resources"
 type: task
-status: in_progress
+status: in_review
 estimate: 3
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-3]
 branch: sch-4-add-the-database-schema-seed-r1-to-r5
 created: 2026-11-04T20:00:44.227Z
-updated: 2026-11-04T23:01:57Z
+updated: 2026-11-04T23:14:50Z
 ---
 
 ## Description
