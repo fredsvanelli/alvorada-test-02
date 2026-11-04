@@ -2,13 +2,13 @@
 id: SCH-3
 title: "Scaffold the Nest.js API, the Next.js web app (Tailwind + shadcn/ui) and Postgres 16 in docker compose"
 type: chore
-status: in_progress
+status: in_review
 estimate: 3
 assignee: fred-vanelli
 parent: SCH-2
 branch: sch-3-scaffold-the-nest-js-api-the-next-js-web
 created: 2026-11-04T20:00:44.123Z
-updated: 2026-11-04T21:27:35Z
+updated: 2026-11-04T22:19:21Z
 ---
 
 ## Description
