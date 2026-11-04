@@ -1,3 +1,11 @@
 {"at":"2026-11-04T20:00:44Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-4","title":"Add the database schema, seed R1 and R2, and expose GET /resources","type":"task","status":"backlog","estimate":3,"labels":[],"parent":"SCH-2","blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-04T20:00:44.227Z","updated":"2026-11-04T20:00:44Z"}}
 {"at":"2026-11-04T20:00:55Z","by":"fred-vanelli","op":"link","field":"blocked_by","to":"SCH-3"}
 {"at":"2026-11-04T22:26:04Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
+{"at":"2026-11-04T22:44:40Z","by":"fred-vanelli","op":"update","field":"title","from":"Add the database schema, seed R1 and R2, and expose GET /resources","to":"Add the database schema, seed R1 to R5, and expose GET /resources"}
+{"at":"2026-11-04T22:44:40Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-04T22:44:40Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
+{"at":"2026-11-04T22:44:58Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-04T22:47:41Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-4-add-the-database-schema-seed-r1-to-r5"}
+{"at":"2026-11-04T23:01:57Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-04T23:01:57Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
+{"at":"2026-11-04T23:09:04Z","by":"fred-vanelli","op":"comment","to":"2026-11-04T23-09-04Z-fred-vanelli.md"}

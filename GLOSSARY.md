@@ -5,7 +5,7 @@ A team shares a fixed list of resources and books them for intervals of time, wi
 ## Language
 
 **Resource**:
-A bookable thing from the fixed list (R1, R2).
+A bookable thing from the fixed list (R1 to R5), identified by its id and shown by its name.
 _Avoid_: room, equipment
 
 **Booking**:
