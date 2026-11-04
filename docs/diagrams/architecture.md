@@ -40,7 +40,7 @@ erDiagram
   RESOURCE ||--o{ BOOKING : "is booked by"
 
   RESOURCE {
-    text id PK "fixed list, seeded: R1, R2"
+    text id PK "fixed list, seeded: R1 to R5"
     text name
   }
 
