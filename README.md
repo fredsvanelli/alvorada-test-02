@@ -4,5 +4,6 @@ Case 02: a booking system for shared resources that rejects overlapping bookings
 
 ## Docs
 
-- [Architecture diagrams](docs/diagrams/architecture.md): containers, data model, backend modules and booking flows
 - [PRD](.issues/docs/PRD.md)
+- [Architecture diagrams](docs/diagrams/architecture.md): containers, data model, backend modules and booking flows
+

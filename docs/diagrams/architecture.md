@@ -1,4 +1,4 @@
-# Architecture diagrams: conflict-free bookings (Case 02)
+# Architecture diagrams: conflict-free bookings
 
 One shared picture of the bookings app before implementation. It covers how the pieces run locally, what is stored, where the booking rules live and how each operation ends. The rules come from the PRD in [`.issues/docs/PRD.md`](../../.issues/docs/PRD.md).
 
@@ -17,8 +17,8 @@ flowchart LR
 
   subgraph host["Developer machine"]
     browser["Browser"]
-    web["Next.js app<br/>TypeScript + Tailwind + shadcn/ui<br/>localhost:3000 · npm run dev"]
-    api["Nest.js REST API<br/>TypeScript<br/>localhost:3001 · npm run start:dev"]
+    web["Next.js app<br/>TypeScript + Tailwind + shadcn/ui"]
+    api["Nest.js REST API<br/>TypeScript"]
 
     subgraph docker["Docker · docker compose up -d db"]
       db[("Postgres 16<br/>localhost:5432")]
@@ -68,7 +68,7 @@ stateDiagram-v2
   free --> free : rejected attempt, no row written
   free --> active : accepted, row inserted
   active --> canceled : cancel
-  canceled --> canceled : cancel again returns ja_cancelada
+  canceled --> canceled : cancel again returns already_canceled
   note right of canceled
     The row stays, so the id is never reused
   end note
@@ -116,7 +116,7 @@ flowchart TB
 
 ## 4. Booking flows
 
-Error codes follow the PRD wording: `recurso_inexistente`, `dados_invalidos`, `conflito`, `id_em_uso`, `ja_cancelada` and `nao_encontrada`. `id_em_uso` is the rejection that keeps an id taken after it was used once.
+Error codes: `unknown_resource`, `invalid_data`, `conflict`, `id_taken`, `already_canceled` and `not_found`. `id_taken` is the rejection that keeps an id taken after it was used once.
 
 ### 4.1 Create a booking
 
@@ -134,24 +134,24 @@ sequenceDiagram
   C->>S: create(dto)
 
   alt Invalid data: missing field, not an integer, or start >= end
-    S-->>C: dados_invalidos
-    C-->>W: 422 dados_invalidos
+    S-->>C: invalid_data
+    C-->>W: 422 invalid_data
   else Unknown resource
     S->>DB: Find resource by id
     DB-->>S: none
-    S-->>C: recurso_inexistente
-    C-->>W: 404 recurso_inexistente
+    S-->>C: unknown_resource
+    C-->>W: 404 unknown_resource
   else Id already used, active or canceled
     S->>DB: Find booking by id
     DB-->>S: row found
-    S-->>C: id_em_uso
-    C-->>W: 409 id_em_uso
+    S-->>C: id_taken
+    C-->>W: 409 id_taken
   else Overlaps an active booking of the same resource
     S->>DB: Active bookings of the resource, ordered by id
     DB-->>S: rows
     S->>S: overlaps(new, b) is true for some b
-    S-->>C: conflito with the conflicting ids
-    C-->>W: 409 conflito, conflicts A, B
+    S-->>C: conflict with the conflicting ids
+    C-->>W: 409 conflict, conflicts A, B
   else Accepted
     S->>DB: Active bookings of the resource
     DB-->>S: rows
@@ -182,10 +182,14 @@ sequenceDiagram
   W->>C: GET /availability?resource=R1&start=19&end=21
   C->>S: availability(resource, start, end)
 
-  alt Invalid data
-    C-->>W: 422 dados_invalidos
+  alt Invalid data: missing field, not an integer, or start >= end
+    S-->>C: invalid_data
+    C-->>W: 422 invalid_data
   else Unknown resource
-    C-->>W: 404 recurso_inexistente
+    S->>DB: Find resource by id
+    DB-->>S: none
+    S-->>C: unknown_resource
+    C-->>W: 404 unknown_resource
   else Valid query
     S->>DB: SELECT active bookings of R1 ORDER BY id ASC
     DB-->>S: rows
@@ -216,15 +220,15 @@ sequenceDiagram
   DB-->>S: row or none
 
   alt Not found
-    S-->>C: nao_encontrada
-    C-->>W: 404 nao_encontrada
+    S-->>C: not_found
+    C-->>W: 404 not_found
   else Already canceled
-    S-->>C: ja_cancelada
-    C-->>W: 200 ja_cancelada, nothing changes
+    S-->>C: already_canceled
+    C-->>W: 200 already_canceled, nothing changes
   else Active
     S->>DB: UPDATE status to canceled, row kept
     S-->>C: canceled booking
-    C-->>W: 200 cancelada
+    C-->>W: 200 canceled
   end
 
   Note over S,DB: The slot is free again, the id stays taken
