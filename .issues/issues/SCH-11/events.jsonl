@@ -1,0 +1,3 @@
+{"at":"2026-11-04T20:00:44Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-11","title":"Write the README: setup, run, tests, demo, decisions and what is left","type":"task","status":"backlog","estimate":2,"labels":[],"parent":"SCH-2","blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-04T20:00:44.994Z","updated":"2026-11-04T20:00:44Z"}}
+{"at":"2026-11-04T20:00:56Z","by":"fred-vanelli","op":"link","field":"blocked_by","to":"SCH-9"}
+{"at":"2026-11-04T20:00:56Z","by":"fred-vanelli","op":"link","field":"blocked_by","to":"SCH-10"}
