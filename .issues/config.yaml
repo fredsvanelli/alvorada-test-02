@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fredsvanelli/pmkit/main/schemas/issues.config.schema.json
+version: 2
+id_prefix: SCH
+epic_prefix: EPC
+id_style: numbered
+statuses:
+  triage: { category: triage }
+  backlog: { category: backlog }
+  todo: { category: todo }
+  in_progress: { category: in_progress }
+  in_review: { category: in_review }
+  done: { category: done }
+  canceled: { category: canceled }
+default_status: backlog
+types: [feature, bug, task, chore]
+priorities: [urgent, high, medium, low]
+labels: [needs-criteria]
+estimate:
+  unit: points
+  scale: [1, 2, 3, 5, 8, 13]
+members:
+  fred-vanelli: { name: Fred Vanelli, email: fredsvanelli@gmail.com }
+defaults:
+  stale_days: 60
+  stuck_business_days: 3
+  sprint_length_days: 14
+  sprint_start_weekday: mon
+  velocity_window: 3
+  status_update_window_days: 14
+# With true, each pmkit write commits the files it changed as `pmkit: <command> <id>`.
+# With false, the default, no command commits.
+auto_commit: false

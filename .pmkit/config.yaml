@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fredsvanelli/pmkit/main/schemas/pmkit.config.schema.json
+version: 1
+tracker:
+  system: local
+  path: .issues
+git_host:
+  system: github
+  repo: fredsvanelli/alvorada-test-02
+  default_branch: main
+write_policy:
+  confirm: single_writes
+  preview: [bulk, delete, publish_update, move_scope]
