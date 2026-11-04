@@ -4,8 +4,9 @@ title: Implement the Case 02 conflict-free bookings app
 type: feature
 status: backlog
 priority: high
+assignee: fred-vanelli
 created: 2026-11-04T20:00:32.257Z
-updated: 2026-11-04T20:00:32Z
+updated: 2026-11-04T22:26:04Z
 ---
 
 ## Description

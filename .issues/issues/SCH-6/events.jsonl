@@ -1,3 +1,4 @@
 {"at":"2026-11-04T20:00:44Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-6","title":"Create a booking with POST /bookings (invalid_data, unknown_resource, id_taken, conflict)","type":"feature","status":"backlog","estimate":5,"labels":[],"parent":"SCH-2","blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-04T20:00:44.439Z","updated":"2026-11-04T20:00:44Z"}}
 {"at":"2026-11-04T20:00:55Z","by":"fred-vanelli","op":"link","field":"blocked_by","to":"SCH-4"}
 {"at":"2026-11-04T20:00:55Z","by":"fred-vanelli","op":"link","field":"blocked_by","to":"SCH-5"}
+{"at":"2026-11-04T22:26:04Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
