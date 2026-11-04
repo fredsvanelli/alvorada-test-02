@@ -1,0 +1,2 @@
+{"at":"2026-11-04T18:19:59Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-1","title":"Create Mermaid architecture diagrams for the bookings app","type":"task","status":"backlog","priority":"high","estimate":3,"labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-04T18:19:59.444Z","updated":"2026-11-04T18:19:59Z"}}
+{"at":"2026-11-04T18:22:52Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
