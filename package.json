@@ -2,8 +2,7 @@
   "name": "alvorada-bookings",
   "private": true,
   "workspaces": [
-    "api",
-    "web"
+    "api"
   ],
   "engines": {
     "node": ">=22"
