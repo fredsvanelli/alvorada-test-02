@@ -28,4 +28,18 @@ describe('HealthController', () => {
       ServiceUnavailableException,
     );
   });
+
+  it('throws ServiceUnavailableException when the query does not answer within 2 seconds', async () => {
+    vi.useFakeTimers();
+    try {
+      query.mockReturnValue(new Promise(() => {}));
+      const result = expect(controller.check()).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      );
+      await vi.advanceTimersByTimeAsync(2000);
+      await result;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
