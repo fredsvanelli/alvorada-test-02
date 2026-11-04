@@ -2,12 +2,13 @@
 id: SCH-1
 title: Create Mermaid architecture diagrams for the bookings app
 type: task
-status: backlog
+status: in_progress
 priority: high
 estimate: 3
 assignee: fred-vanelli
+branch: sch-1-create-mermaid-architecture-diagrams-for
 created: 2026-11-04T18:19:59.444Z
-updated: 2026-11-04T18:22:52Z
+updated: 2026-11-04T18:27:46Z
 ---
 
 ## Description
