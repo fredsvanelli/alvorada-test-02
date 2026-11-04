@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Conflict-free Bookings</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F7}
+a{color:#1D4ED8}a:hover{color:#1E3A8A}
+input:focus-visible,button:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F4F5F7; color: #15171C; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.45">
+<div style="max-width: 1240px; margin: 0 auto; padding: 32px 20px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+<header style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 4px">
+
+<h1 style="margin: 0; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em">Bookings</h1>
+
+</div>
+
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<section aria-labelledby="op-title" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="background: #FFFFFF; border: 1px solid #DDE1E7; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<h2 id="op-title" style="margin: 0; font-size: 17px; font-weight: 600">Operation</h2>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-rec" style="font-size: 13px; font-weight: 500; color: #3A404C">Resource</label>
+<select id="f-rec" value="{{ form.recurso }}" onChange="{{ onRecurso }}" style="min-height: 44px; padding: 0 12px; border: 1px solid #C9CED6; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #15171C; background: #FFFFFF; box-sizing: border-box; cursor: pointer">
+<sc-for list="{{ opcoesRecurso }}" as="o" hint-placeholder-count="10">
+<option value="{{ o.v }}">{{ o.label }}</option>
+</sc-for>
+</select>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-ini" style="font-size: 13px; font-weight: 500; color: #3A404C">Start</label>
+<select id="f-ini" value="{{ form.inicio }}" onChange="{{ onInicio }}" style="min-height: 44px; padding: 0 12px; border: 1px solid #C9CED6; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #15171C; background: #FFFFFF; box-sizing: border-box; width: 100%; cursor: pointer">
+<sc-for list="{{ horas }}" as="o" hint-placeholder-count="3">
+<option value="{{ o.v }}">{{ o.v }}</option>
+</sc-for>
+</select>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f-fim" style="font-size: 13px; font-weight: 500; color: #3A404C">End</label>
+<select id="f-fim" value="{{ form.fim }}" onChange="{{ onFim }}" style="min-height: 44px; padding: 0 12px; border: 1px solid #C9CED6; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #15171C; background: #FFFFFF; box-sizing: border-box; width: 100%; cursor: pointer">
+<sc-for list="{{ horas }}" as="o" hint-placeholder-count="3">
+<option value="{{ o.v }}">{{ o.v }}</option>
+</sc-for>
+</select>
+</div>
+</div>
+
+<div style="font-size: 13px; color: {{ previa.fg }}; background: {{ previa.bg }}; border-radius: 8px; padding: 8px 10px">{{ previa.texto }}</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" onClick="{{ reservar }}" style="flex: 1 1 120px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #1D4ED8; background: #1D4ED8; color: #FFFFFF; font: inherit; font-weight: 600; cursor: pointer">Book</button>
+<button type="button" onClick="{{ consultar }}" style="flex: 1 1 120px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #1D4ED8; background: #FFFFFF; color: #1D4ED8; font: inherit; font-weight: 600; cursor: pointer">Check</button>
+
+</div>
+
+</div>
+
+
+</section>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+<section aria-labelledby="tl-title" style="background: #FFFFFF; border: 1px solid #DDE1E7; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between">
+<h2 id="tl-title" style="margin: 0; font-size: 17px; font-weight: 600">Timeline</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #565D6B">
+<span style="display: inline-flex; gap: 6px; align-items: center"><span aria-hidden="true" style="width: 14px; height: 10px; border-radius: 3px; background: #1D4ED8"></span>Active</span>
+<span style="display: inline-flex; gap: 6px; align-items: center"><span aria-hidden="true" style="width: 14px; height: 10px; border-radius: 3px; background: #EEF0F3; border: 1px dashed #8A919E; box-sizing: border-box"></span>Cancelled</span>
+<span style="display: inline-flex; gap: 6px; align-items: center"><span aria-hidden="true" style="width: 14px; height: 10px; border-radius: 3px; border: 2px dashed #15803D; box-sizing: border-box"></span>Preview: free</span>
+<span style="display: inline-flex; gap: 6px; align-items: center"><span aria-hidden="true" style="width: 14px; height: 10px; border-radius: 3px; border: 2px dashed #C2410C; box-sizing: border-box"></span>Preview: conflict</span>
+</div>
+</div>
+
+<div style="overflow-x: auto">
+<div style="min-width: 520px; display: flex; flex-direction: column">
+<div style="display: flex; gap: 12px; height: 22px">
+<div style="flex: 0 0 132px"></div>
+<div style="flex: 1 1 auto; position: relative">
+<sc-for list="{{ ticks }}" as="t" hint-placeholder-count="7">
+<span style="position: absolute; top: 0; left: {{ t.left }}%; transform: translateX(-50%); font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #565D6B">{{ t.label }}</span>
+</sc-for>
+</div>
+</div>
+<sc-for list="{{ linhas }}" as="l" hint-placeholder-count="3">
+<div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid #E8EBEF; padding: 8px 0">
+<div style="flex: 0 0 132px; display: flex; flex-direction: column">
+<span style="font-weight: 600; font-size: 14px"><span style="font-family: 'IBM Plex Mono', monospace">{{ l.id }}</span> · {{ l.nome }}</span>
+<span style="font-size: 12px; color: #565D6B">{{ l.tipo }}</span>
+</div>
+<div style="flex: 1 1 auto; position: relative; height: 44px; background: #F8F9FB; border-radius: 6px">
+<sc-for list="{{ l.ticks }}" as="t" hint-placeholder-count="7">
+<span aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: {{ t.left }}%; width: 1px; background: #E2E5EA"></span>
+</sc-for>
+<sc-for list="{{ l.barras }}" as="b" hint-placeholder-count="2">
+<div title="{{ b.titulo }}" style="position: absolute; top: 6px; height: 32px; left: {{ b.left }}%; width: {{ b.width }}%; box-sizing: border-box; border-radius: 6px; background: {{ b.bg }}; border: {{ b.border }}; box-shadow: {{ b.ring }}; color: {{ b.fg }}; text-decoration: {{ b.deco }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; display: flex; align-items: center; padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{ b.label }}</div>
+</sc-for>
+<sc-if value="{{ l.temPrevia }}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: absolute; top: 2px; height: 40px; left: {{ l.previa.left }}%; width: {{ l.previa.width }}%; box-sizing: border-box; border-radius: 8px; border: 2px dashed {{ l.previa.cor }}; background: {{ l.previa.fundo }}"></div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="tb-title" style="background: #FFFFFF; border: 1px solid #DDE1E7; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+<h2 id="tb-title" style="margin: 0; font-size: 17px; font-weight: 600">Bookings</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{ abas }}" as="a" hint-placeholder-count="3">
+<button type="button" onClick="{{ a.pick }}" aria-pressed="{{ a.pressed }}" style="min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid {{ a.border }}; background: {{ a.bg }}; color: {{ a.fg }}; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer">{{ a.label }} ({{ a.count }})</button>
+</sc-for>
+</div>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 14px">
+<thead>
+<tr style="text-align: left; color: #565D6B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em">
+<th scope="col" style="padding: 8px 10px; font-weight: 600; border-bottom: 1px solid #DDE1E7">ID</th>
+<th scope="col" style="padding: 8px 10px; font-weight: 600; border-bottom: 1px solid #DDE1E7">Resource</th>
+<th scope="col" style="padding: 8px 10px; font-weight: 600; border-bottom: 1px solid #DDE1E7">Period</th>
+<th scope="col" style="padding: 8px 10px; font-weight: 600; border-bottom: 1px solid #DDE1E7">Status</th>
+<th scope="col" style="padding: 8px 10px; font-weight: 600; border-bottom: 1px solid #DDE1E7; text-align: right">Action</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{ tabela }}" as="r" hint-placeholder-count="3">
+<tr>
+<td style="padding: 10px; border-bottom: 1px solid #EEF0F3; font-family: 'IBM Plex Mono', monospace; font-weight: 600">{{ r.id }}</td>
+<td style="padding: 10px; border-bottom: 1px solid #EEF0F3"><span style="font-family: 'IBM Plex Mono', monospace">{{ r.recurso }}</span> · {{ r.nome }}</td>
+<td style="padding: 10px; border-bottom: 1px solid #EEF0F3; font-family: 'IBM Plex Mono', monospace">{{ r.periodo }}</td>
+<td style="padding: 10px; border-bottom: 1px solid #EEF0F3"><span style="display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: {{ r.chipBg }}; color: {{ r.chipFg }}">{{ r.status }}</span></td>
+<td style="padding: 6px 10px; border-bottom: 1px solid #EEF0F3; text-align: right">
+<sc-if value="{{ r.ativa }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ r.cancelar }}" aria-label="Cancel booking {{ r.id }}" style="min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #C9CED6; background: #FFFFFF; color: #15171C; font: inherit; font-size: 13px; cursor: pointer">Cancel</button>
+</sc-if>
+<sc-if value="{{ r.inativa }}" hint-placeholder-val="{{ false }}">
+<span style="font-size: 12px; color: #565D6B">ID stays taken</span>
+</sc-if>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{ tabelaVazia }}" hint-placeholder-val="{{ false }}">
+<p style="margin: 12px 0 0; color: #565D6B; font-size: 14px">No bookings in this filter.</p>
+</sc-if>
+</div>
+</section>
+
+<section aria-labelledby="lg-title" style="background: #15171C; color: #E6E8EC; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+<h2 id="lg-title" style="margin: 0; font-size: 17px; font-weight: 600; color: #FFFFFF">Operation log</h2>
+
+</div>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 13px">
+<sc-for list="{{ historico }}" as="h" hint-placeholder-count="4">
+<li style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid #2A2E36">
+<div style="display: flex; gap: 10px; flex-wrap: wrap"><span style="color: #8F96A3">#{{ h.n }}</span><span style="color: #FFFFFF">{{ h.chamada }}</span></div>
+<div style="padding-left: 28px; color: {{ h.cor }}; overflow-wrap: anywhere">→ {{ h.resposta }}</div>
+</li>
+</sc-for>
+</ol>
+</section>
+
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.exemplo();
+  }
+
+  recursos() {
+    return [
+      { id: 'R1', nome: 'Agora Room', tipo: 'Room · 8 seats' },
+      { id: 'R2', nome: 'Pixel Room', tipo: 'Room · 4 seats' },
+      { id: 'R3', nome: '4K Projector', tipo: 'Equipment' },
+      { id: 'R4', nome: 'Orbit Room', tipo: 'Room · 12 seats' },
+      { id: 'R5', nome: 'Focus Room', tipo: 'Room · 2 seats' },
+      { id: 'R6', nome: 'Auditorium', tipo: 'Room · 40 seats' },
+      { id: 'R7', nome: 'Laptop 01', tipo: 'Equipment' },
+      { id: 'R8', nome: '360 Camera', tipo: 'Equipment' },
+      { id: 'R9', nome: 'Audio kit', tipo: 'Equipment' },
+      { id: 'R10', nome: 'Smart board', tipo: 'Equipment' }
+    ];
+  }
+
+  exemplo() {
+    return {
+      reservas: [
+        { id: 'A', recurso: 'R1', inicio: 10, fim: 20, status: 'active' },
+        { id: 'B', recurso: 'R1', inicio: 20, fim: 30, status: 'active' },
+        { id: 'C', recurso: 'R2', inicio: 19, fim: 21, status: 'active' }
+      ],
+      log: [
+        { n: 4, tipo: 'ok', chamada: 'book("C", "R2", [19,21))', resposta: '{ ok: true, booking: "C" }  // attempt #3 did not take the ID' },
+        { n: 3, tipo: 'erro', chamada: 'book("C", "R1", [19,21))', resposta: '{ ok: false, error: "conflict", conflicts: ["A","B"] }' },
+        { n: 2, tipo: 'ok', chamada: 'book("B", "R1", [20,30))', resposta: '{ ok: true, booking: "B" }  // starts when A ends' },
+        { n: 1, tipo: 'ok', chamada: 'book("A", "R1", [10,20))', resposta: '{ ok: true, booking: "A" }' }
+      ],
+      seq: 4,
+      form: { id: 'D', recurso: 'R1', inicio: '19', fim: '21' },
+      resultado: null,
+      filtro: 'all'
+    };
+  }
+
+  cmp(a, b) { return String(a).localeCompare(String(b), 'en', { numeric: true }); }
+  num(s) { const t = String(s == null ? '' : s).trim(); return t === '' ? NaN : Number(t.replace(',', '.')); }
+  per(i, f) { return '[' + i + ',' + f + ')'; }
+
+  // Validates resource and interval; with needsId, the identifier too.
+  validar(f, needsId) {
+    const id = String(f.id || '').trim();
+    const rec = String(f.recurso || '').trim().toUpperCase();
+    const i = this.num(f.inicio), fm = this.num(f.fim);
+    if (needsId && id === '') return { erro: 'invalid_data', titulo: 'Invalid data', detalhe: 'An identifier is required for the booking.' };
+    if (!Number.isFinite(i) || !Number.isFinite(fm)) return { erro: 'invalid_data', titulo: 'Invalid data', detalhe: 'Select a start and an end.' };
+    if (!(i < fm)) return { erro: 'invalid_data', titulo: 'Invalid data', detalhe: 'Start (' + i + ') must be before end (' + fm + ').' };
+    if (!this.recursos().some((r) => r.id === rec)) return { erro: 'resource_not_found', titulo: 'Resource not found', detalhe: 'There is no resource "' + (rec || '—') + '". Use R1 to R10.' };
+    return { id: id, rec: rec, i: i, fm: fm };
+  }
+
+  // Active bookings on the same resource overlapping [i, fm), by ascending ID.
+  conflitos(reservas, rec, i, fm) {
+    return reservas
+      .filter((r) => r.status === 'active' && r.recurso === rec && r.inicio < fm && i < r.fim)
+      .map((r) => r.id)
+      .sort((a, b) => this.cmp(a, b));
+  }
+
+  proximoId(reservas) {
+    const usados = new Set(reservas.map((r) => r.id));
+    const L = 'ABCDEF';
+    for (let k = 0; k < L.length; k++) if (!usados.has(L[k])) return L[k];
+    return null;
+  }
+
+  registrar(patch, tipo, chamada, resposta, resultado) {
+    const seq = this.state.seq + 1;
+    const log = [{ n: seq, tipo: tipo, chamada: chamada, resposta: resposta }].concat(this.state.log).slice(0, 14);
+    this.setState(Object.assign({}, patch, { seq: seq, log: log, resultado: resultado }));
+  }
+
+  reservar() {
+    const f = this.state.form;
+    const chamada = 'book("' + String(f.id || '').trim() + '", "' + String(f.recurso || '').trim() + '", [' + String(f.inicio).trim() + ',' + String(f.fim).trim() + '))';
+    const v = this.validar(f, true);
+    if (v.erro) {
+      this.registrar({}, 'erro', chamada, '{ ok: false, error: "' + v.erro + '" }', { tipo: 'erro', codigo: v.erro, titulo: v.titulo + ' — nothing was created', detalhe: v.detalhe });
+      return;
+    }
+    const existente = this.state.reservas.find((r) => r.id === v.id);
+    if (existente) {
+      const d = 'Identifier "' + v.id + '" already belongs to a ' + existente.status + ' booking and cannot be reused.';
+      this.registrar({}, 'erro', chamada, '{ ok: false, error: "id_in_use" }', { tipo: 'erro', codigo: 'id_in_use', titulo: 'Identifier already used — nothing was created', detalhe: d });
+      return;
+    }
+    const c = this.conflitos(this.state.reservas, v.rec, v.i, v.fm);
+    if (c.length) {
+      this.registrar({}, 'erro', chamada, '{ ok: false, error: "conflict", conflicts: [' + c.map((x) => '"' + x + '"').join(',') + '] }', { tipo: 'erro', codigo: 'conflict', titulo: 'Time slot taken — nothing was created', detalhe: v.rec + ' ' + this.per(v.i, v.fm) + ' conflicts with ' + c.join(', ') + '. Identifier "' + v.id + '" is still free.' });
+      return;
+    }
+    const reservas = this.state.reservas.concat([{ id: v.id, recurso: v.rec, inicio: v.i, fim: v.fm, status: 'active' }]);
+    const form = Object.assign({}, f, { id: this.proximoId(reservas) || v.id, recurso: v.rec });
+    this.registrar({ reservas: reservas, form: form }, 'ok', chamada, '{ ok: true, booking: "' + v.id + '" }', { tipo: 'ok', codigo: 'created', titulo: 'Booking ' + v.id + ' accepted', detalhe: v.rec + ' taken for ' + this.per(v.i, v.fm) + '.' });
+  }
+
+  consultar() {
+    const f = this.state.form;
+    const chamada = 'check("' + String(f.recurso || '').trim() + '", [' + String(f.inicio).trim() + ',' + String(f.fim).trim() + '))';
+    const v = this.validar(f, false);
+    if (v.erro) {
+      this.registrar({}, 'erro', chamada, '{ ok: false, error: "' + v.erro + '" }', { tipo: 'erro', codigo: v.erro, titulo: v.titulo, detalhe: v.detalhe });
+      return;
+    }
+    const c = this.conflitos(this.state.reservas, v.rec, v.i, v.fm);
+    const livre = c.length === 0;
+    this.registrar({}, 'info', chamada, '{ available: ' + livre + ', conflicts: [' + c.map((x) => '"' + x + '"').join(',') + '] }', livre
+      ? { tipo: 'ok', codigo: 'available', titulo: v.rec + ' is free for ' + this.per(v.i, v.fm), detalhe: 'Check only — no booking was created.' }
+      : { tipo: 'aviso', codigo: 'unavailable', titulo: v.rec + ' is taken for ' + this.per(v.i, v.fm), detalhe: 'Active conflicts: ' + c.join(', ') + '. Check only — nothing changed.' });
+  }
+
+  cancelar(idBruto) {
+    const id = String(idBruto || '').trim();
+    const chamada = 'cancel("' + id + '")';
+    const r = this.state.reservas.find((x) => x.id === id);
+    if (!r) {
+      this.registrar({}, 'erro', chamada, '{ ok: false, error: "booking_not_found" }', { tipo: 'erro', codigo: 'booking_not_found', titulo: 'Booking not found', detalhe: 'There is no booking with identifier "' + (id || '—') + '".' });
+      return;
+    }
+    if (r.status === 'cancelled') {
+      this.registrar({}, 'aviso', chamada, '{ ok: true, result: "already_cancelled" }', { tipo: 'aviso', codigo: 'already_cancelled', titulo: 'Booking ' + id + ' was already cancelled', detalhe: 'Nothing changed.' });
+      return;
+    }
+    const reservas = this.state.reservas.map((x) => (x.id === id ? Object.assign({}, x, { status: 'cancelled' }) : x));
+    this.registrar({ reservas: reservas }, 'ok', chamada, '{ ok: true, result: "cancelled" }', { tipo: 'ok', codigo: 'cancelled', titulo: 'Booking ' + id + ' cancelled', detalhe: r.recurso + ' freed for ' + this.per(r.inicio, r.fim) + '. Identifier "' + id + '" stays taken.' });
+  }
+
+  setCampo(k) {
+    return (e) => this.setState({ form: Object.assign({}, this.state.form, { [k]: e.target.value }) });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const recursos = this.recursos();
+    const nomeDe = (id) => { const r = recursos.find((x) => x.id === id); return r ? r.nome : '?'; };
+
+    // Live preview of the selected interval
+    const f = s.form;
+    const pi = this.num(f.inicio), pf = this.num(f.fim);
+    const prec = String(f.recurso || '').trim().toUpperCase();
+    const recOk = recursos.some((r) => r.id === prec);
+    const intOk = Number.isFinite(pi) && Number.isFinite(pf) && pi < pf;
+    const pConf = recOk && intOk ? this.conflitos(s.reservas, prec, pi, pf) : [];
+    let previa;
+    if (!intOk) previa = { texto: 'Preview: pick an interval where start < end.', fg: '#3A404C', bg: '#F1F3F6' };
+    else if (!recOk) previa = { texto: 'Preview: resource "' + (prec || '—') + '" does not exist.', fg: '#3A404C', bg: '#F1F3F6' };
+    else if (pConf.length) previa = { texto: 'Preview: ' + prec + ' ' + this.per(pi, pf) + ' conflicts with ' + pConf.join(', ') + '.', fg: '#9A3412', bg: '#FFF1E8' };
+    else previa = { texto: 'Preview: ' + prec + ' ' + this.per(pi, pf) + ' is free.', fg: '#166534', bg: '#ECF7F0' };
+
+    // Timeline scale
+    let lo = 0, hi = 60;
+    s.reservas.forEach((r) => { lo = Math.min(lo, r.inicio); hi = Math.max(hi, r.fim); });
+    if (intOk && recOk) { lo = Math.min(lo, pi); hi = Math.max(hi, pf); }
+    lo = Math.floor(lo / 10) * 10; hi = Math.ceil(hi / 10) * 10;
+    const span = hi - lo || 1;
+    const passo = Math.max(5, Math.ceil(span / 6 / 5) * 5);
+    const pos = (x) => ((x - lo) / span) * 100;
+    const ticks = [];
+    for (let t = lo; t <= hi; t += passo) ticks.push({ left: pos(t), label: String(t) });
+
+    const linhas = recursos.map((rc) => {
+      const barras = s.reservas
+        .filter((r) => r.recurso === rc.id)
+        .sort((a, b) => (a.status === b.status ? 0 : a.status === 'cancelled' ? -1 : 1))
+        .map((r) => {
+          const ativa = r.status === 'active';
+          const emConflito = ativa && rc.id === prec && pConf.indexOf(r.id) >= 0;
+          return {
+            left: pos(r.inicio), width: pos(r.fim) - pos(r.inicio),
+            label: r.id + ' ' + this.per(r.inicio, r.fim),
+            titulo: 'Booking ' + r.id + ' · ' + this.per(r.inicio, r.fim) + ' · ' + r.status,
+            bg: ativa ? '#1D4ED8' : '#EEF0F3',
+            fg: ativa ? '#FFFFFF' : '#565D6B',
+            border: ativa ? '1px solid #1D4ED8' : '1px dashed #8A919E',
+            deco: ativa ? 'none' : 'line-through',
+            ring: emConflito ? '0 0 0 2px #FFFFFF, 0 0 0 4px #C2410C' : 'none'
+          };
+        });
+      const temPrevia = intOk && recOk && rc.id === prec;
+      const conf = pConf.length > 0;
+      return {
+        id: rc.id, nome: rc.nome, tipo: rc.tipo, ticks: ticks, barras: barras, temPrevia: temPrevia,
+        previa: { left: pos(pi), width: pos(pf) - pos(pi), cor: conf ? '#C2410C' : '#15803D', fundo: conf ? 'rgba(194,65,12,0.10)' : 'rgba(21,128,61,0.10)' }
+      };
+    });
+
+    const ativas = s.reservas.filter((r) => r.status === 'active').length;
+    const canceladas = s.reservas.length - ativas;
+    const abas = [
+      { id: 'all', label: 'All', count: s.reservas.length },
+      { id: 'active', label: 'Active', count: ativas },
+      { id: 'cancelled', label: 'Cancelled', count: canceladas }
+    ].map((a) => {
+      const on = s.filtro === a.id;
+      return Object.assign(a, {
+        pressed: on ? 'true' : 'false',
+        bg: on ? '#15171C' : '#FFFFFF', fg: on ? '#FFFFFF' : '#15171C', border: on ? '#15171C' : '#C9CED6',
+        pick: () => this.setState({ filtro: a.id })
+      });
+    });
+
+    const tabela = s.reservas
+      .filter((r) => s.filtro === 'all' || r.status === s.filtro)
+      .slice().sort((a, b) => this.cmp(a.id, b.id))
+      .map((r) => {
+        const ativa = r.status === 'active';
+        return {
+          id: r.id, recurso: r.recurso, nome: nomeDe(r.recurso), periodo: this.per(r.inicio, r.fim),
+          status: ativa ? 'Active' : 'Cancelled', ativa: ativa, inativa: !ativa,
+          chipBg: ativa ? '#E3EAFD' : '#EEF0F3', chipFg: ativa ? '#1E3A8A' : '#3A404C',
+          cancelar: () => this.cancelar(r.id)
+        };
+      });
+
+    const estilos = {
+      ok: { bg: '#ECF7F0', border: '#A7D7B8', fg: '#14532D', chipBg: '#15803D' },
+      erro: { bg: '#FDEEEE', border: '#F1B4B4', fg: '#7F1D1D', chipBg: '#B91C1C' },
+      aviso: { bg: '#FFF4E8', border: '#F5C79A', fg: '#7C2D12', chipBg: '#C2410C' }
+    };
+    const res = s.resultado ? Object.assign({}, s.resultado, estilos[s.resultado.tipo] || estilos.ok) : {};
+    const coresLog = { ok: '#86EFAC', erro: '#FCA5A5', aviso: '#FDBA74', info: '#93C5FD' };
+
+    return {
+      form: f,
+      opcoesId: 'ABCDEF'.split('').map((l) => {
+        const r = s.reservas.find((x) => x.id === l);
+        return { v: l, label: r ? l + ' — in use (' + r.status + ')' : l };
+      }),
+      opcoesRecurso: recursos.map((rc) => ({ v: rc.id, label: rc.id + ' · ' + rc.nome })),
+      horas: Array.from({ length: 101 }, (_, k) => ({ v: String(k) })),
+      onId: this.setCampo('id'), onRecurso: this.setCampo('recurso'), onInicio: this.setCampo('inicio'), onFim: this.setCampo('fim'),
+      previa: previa,
+      reservar: () => this.reservar(),
+      consultar: () => this.consultar(),
+      cancelarPorId: () => this.cancelar(this.state.form.id),
+      restaurar: () => this.setState(this.exemplo()),
+      temResultado: !!s.resultado, semResultado: !s.resultado, res: res,
+      ticks: ticks, linhas: linhas,
+      abas: abas, tabela: tabela, tabelaVazia: tabela.length === 0,
+      historico: s.log.map((h) => Object.assign({}, h, { cor: coresLog[h.tipo] || '#E6E8EC' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

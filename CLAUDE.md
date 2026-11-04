@@ -1,0 +1,49 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+A booking system for shared resources that rejects overlapping bookings. The spec is `.issues/docs/PRD.md`. The agreed design is `docs/diagrams/architecture.md`. Read both before changing behavior.
+
+Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (TypeScript) → Postgres 16 in Docker (`docker compose up -d db`, localhost:5432). Only Postgres runs in Docker.
+
+No application code exists yet. Scaffolding is SCH-3. When it lands, add the build, test and single-test commands here.
+
+## Domain rules (from the PRD, easy to get wrong)
+
+- Intervals are half-open `[start, end)`: a booking `[10,20)` frees the resource at 20, so `[20,30)` is accepted. Time is plain integers, with `start < end`.
+- Overlap only counts **active** bookings of the **same** resource.
+- The client chooses the booking id. A **rejected** attempt writes no row, so its id stays free. A **created** booking's id is never reused, even after cancellation (cancel sets `status = canceled` and keeps the row).
+- Availability check is read-only and returns conflicts in **ascending id** order.
+- Canceling an already canceled booking returns `already_canceled` and changes nothing.
+- Error codes: `invalid_data` (422), `unknown_resource` (404), `id_taken` (409), `conflict` (409, with conflicting ids), `not_found` (404), `already_canceled` (200).
+- Out of scope: payment, recurrence, auth, concurrency.
+
+## Backend shape (planned)
+
+- The `[start, end)` rule lives in one place: pure functions `validInterval` and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
+- Controllers only map HTTP to service calls and results to status codes.
+- Modules: `ResourcesModule` (`GET /resources`, seeded R1 and R2), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
+- Create checks in this order: invalid_data → unknown_resource → id_taken → conflict → insert.
+
+## Design reference
+
+`.design/prototype-html/Main.dc.html` (plus `.design/prototype.pdf`) is a UI mockup exported from a design tool. Replicate its colors, spacing and layout in shadcn/Tailwind components. Don't copy its markup or runtime. To view it, serve the folder (`python3 -m http.server`) and open `Main.dc.html`.
+
+## Workflow
+
+- Work is tracked with pmkit in `.issues/` (prefix `SCH-`, config in `.pmkit/config.yaml`, GitHub repo `fredsvanelli/alvorada-test-02`, default branch `main`). SCH-2 is the parent feature. SCH-3 to SCH-11 are its sub-issues, and their `blocked_by` sets the order. Use the `pmkit` skill or the `/pmkit:issues:*` commands rather than editing `.issues/` files by hand.
+- One branch per issue, created by pmkit (`sch-<n>-<slug>`).
+- Commit messages are conventional commits ending with the issue ID, for example `feat: add availability endpoint (SCH-7)`.
+
+### Overrides to `/pmkit:issues:work`
+
+Follow the pmkit steps as written, with these changes:
+
+1. **Plan (step 7):** don't write the plan directly. Stop and ask the user to run `/mattpocock-skills:grill-with-docs` on the issue, because that skill can't be invoked by the model. Wait for the document it produces (ADRs, glossary, sharpened spec).
+2. **Design:** feed that document into `/superpowers:brainstorming`. Its output becomes the implementation plan that step 7 shows, asks about and optionally posts as a comment.
+3. **Implement (step 8)** using the `superpowers` workflows
+4. **Review before the PR (before step 9):** run `/utils:review-work --base main --spec .issues/issues/<issue id>/issue.md` on the branch. Fix the findings, or list the ones left open with a reason, before asking to open the PR.
+
+- The final README must cover setup, run, tests, a reproducible demo, two decisions, up to three highlighted tests and what is left (SCH-11, PRD "What to deliver").
