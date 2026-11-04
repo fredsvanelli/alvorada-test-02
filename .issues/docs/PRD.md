@@ -1,95 +1,90 @@
-# Caso 02 — Reservas sem conflito
+# Case 02 — Conflict-free bookings
 
-Queremos conhecer seu jeito de resolver problemas. Neste desafio, você vai construir uma solução pequena, mostrar como ela funciona e conversar conosco sobre as decisões que tomou.
+We want to get to know how you solve problems. In this challenge, you will build a small solution, show how it works and talk with us about the decisions you made.
 
-## O desafio
+## The challenge
 
-Uma equipe compartilha salas ou equipamentos. Crie um sistema que responda se um recurso pode ser reservado em determinado período e permita cancelar uma reserva.
+A team shares rooms or equipment. Build a system that answers whether a resource can be booked for a given period and lets you cancel a booking.
 
-A solução pode ser um calendário, app, API, biblioteca ou aplicação de terminal.
+The solution can be a calendar, app, API, library or terminal application.
 
-## Como deve funcionar
+## How it should work
 
-Comece com uma lista fixa de recursos. Uma reserva tem `id`, `recurso`, `inicio` e `fim`, com o início anterior ao fim. Use números para representar o tempo, sem precisar lidar com calendário ou fuso horário.
+Start with a fixed list of resources. A booking has an `id`, `resource`, `start` and `end`, with the start before the end. Use numbers to represent time, with no need to deal with calendars or time zones.
 
-Uma reserva de 10 a 20 ocupa o período a partir de 10, mas libera o recurso exatamente em 20. Por isso, outra reserva pode começar em 20. Essa regra também pode ser escrita como `[inicio, fim)`. A restrição de sobreposição vale para reservas ativas do mesmo recurso, então recursos diferentes podem ser reservados no mesmo horário.
+A booking from 10 to 20 occupies the period starting at 10, but frees the resource exactly at 20. So another booking can start at 20. This rule can also be written as `[start, end)`. The overlap restriction applies to active bookings of the same resource, so different resources can be booked at the same time.
 
-Se o recurso não existir, os dados forem inválidos ou o horário estiver ocupado, explique o problema sem criar a reserva. Uma tentativa rejeitada não ocupa o identificador. Já o identificador de uma reserva criada não pode ser reutilizado, mesmo depois do cancelamento.
+If the resource does not exist, the data is invalid or the slot is taken, explain the problem without creating the booking. A rejected attempt does not take the identifier. The identifier of a created booking, however, cannot be reused, even after cancellation.
 
-Cancelar uma reserva libera seu horário. Se ela já estiver cancelada, retorne `ja_cancelada` sem mudar nada. Se não existir, informe o erro.
+Canceling a booking frees its slot. If it is already canceled, return `already_canceled` without changing anything. If it does not exist, report the error.
 
-Também deve ser possível consultar um período sem reservar. Para um recurso e intervalo válidos, informe se está disponível e quais reservas ativas conflitam, em ordem crescente de identificador. A consulta não muda os dados.
+It must also be possible to check a period without booking it. For a valid resource and interval, report whether it is available and which active bookings conflict, in ascending identifier order. The check does not change the data.
 
-Permita consultar as reservas e saber quais estão ativas ou canceladas. Tudo pode funcionar em memória, com uma operação por vez. Não precisa implementar pagamento, reservas recorrentes, autenticação ou acesso simultâneo.
+Allow listing the bookings and seeing which are active or canceled. Everything can run in memory, one operation at a time. There is no need to implement payment, recurring bookings, authentication or concurrent access.
 
-## Um exemplo
+## An example
 
-Considere os recursos R1 e R2 e faça as seguintes reservas:
+Consider resources R1 and R2 and make the following bookings:
 
-| Reserva | Recurso | Período | Resultado |
-
+| Booking | Resource | Period | Result |
 |---|---|---|---|
+| A | R1 | `[10,20)` | Accepted. |
+| B | R1 | `[20,30)` | Accepted: starts when A ends. |
+| C | R1 | `[19,21)` | Rejected: conflicts with A and B. |
+| C | R2 | `[19,21)` | Accepted: the previous attempt did not take the identifier C. |
 
-| A | R1 | `[10,20)` | Aceita. |
+Checking R1 for `[19,21)` must show the conflicts A and B. After canceling A, R1 is available for `[10,20)`, but the identifier A remains taken.
 
-| B | R1 | `[20,30)` | Aceita: começa quando A termina. |
+## How to manage your time
 
-| C | R1 | `[19,21)` | Recusada: conflita com A e B. |
+We suggest spending up to four hours on implementation, tests and documentation. If you cannot finish everything in that time, send what you have and tell us what is left. The goal is a small solution that serves as a starting point for our conversation.
 
-| C | R2 | `[19,21)` | Aceita: a tentativa anterior não ocupou o identificador C. |
+## Tools and use of AI
 
-Consultar R1 para `[19,21)` deve mostrar os conflitos A e B. Depois de cancelar A, R1 fica disponível em `[10,20)`, mas o identificador A continua ocupado.
+Use the language and tools you are most comfortable with. The solution can be an interface, API, terminal application, library with a runnable example or simulator. Choose the form that best fits your focus, whether front end, mobile, back end, architecture, algorithms or data.
 
-## Como organizar seu tempo
+The challenge rules apply to any approach, but you are free to decide how to organize and present the solution. There is no need to publish the application, pay for services or use hardware. If it depends on an external service, provide a local way to demonstrate it working.
 
-Nossa sugestão é dedicar até quatro horas à implementação, aos testes e à documentação. Se não conseguir terminar tudo nesse tempo, envie o que fez e conte o que ficou pendente. O objetivo é ter uma solução pequena que sirva de ponto de partida para nossa conversa.
+You may use AI, documentation and libraries. Tell us how these tools helped, what you kept or changed and how you checked the result. We do not need your AI conversation history, since we want to know your decisions and how you verified the code.
 
-## Ferramentas e uso de IA
+## What to deliver
 
-Use a linguagem e as ferramentas com que se sente mais à vontade. A solução pode ser uma interface, API, aplicação de terminal, biblioteca com exemplo executável ou simulador. Escolha a forma que melhor combina com seu foco, seja front, mobile, back, arquitetura, algoritmos ou dados.
+The delivery has two parts:
 
-As regras do desafio valem para qualquer abordagem, mas você tem liberdade para decidir como organizar e apresentar a solução. Não é necessário publicar a aplicação, pagar por serviços ou usar hardware. Se depender de um serviço externo, ofereça uma forma local de demonstrar o funcionamento.
+- **A Git repository with the solution's code, tests and documentation.** The README should explain how to install what is needed, run the application and run the tests. Include a demonstration we can reproduce, your main decisions and what is left to do.
 
-Pode usar IA, documentação e bibliotecas. Conte como essas ferramentas ajudaram, o que você aproveitou ou mudou e como conferiu o resultado. Não precisamos do histórico de conversas com a IA, pois queremos conhecer suas decisões e a maneira como você verificou o código.
+- **A video of up to 30 minutes explaining the solution.** Show the application working, walk through the most important parts of the code and explain why you chose this approach.
 
-## O que entregar
+### Repository and documentation
 
-A entrega tem duas partes:
+Create the repository on the service of your choice. In the README, state the case name or number, the focus you chose and how much time you spent on the work. Anyone who clones the project should be able to follow the demonstration with the instructions you left.
 
-- **Um repositório Git com o código, os testes e a documentação da solução.** O README deve explicar como instalar o que for necessário, executar a aplicação e rodar os testes. Inclua uma demonstração que possamos reproduzir, suas principais decisões e o que ficou pendente.
+When explaining the tests, highlight up to three situations that help understand your solution, such as a value at the boundary of a rule, the interaction between two rules or an invalid input. Describe the expected result and what kind of error each test helps catch. You may write other tests, with no coverage percentage to reach.
 
-- **Um vídeo de até 30 minutos explicando a solução.** Mostre a aplicação funcionando, percorra os trechos de código mais importantes e conte por que escolheu essa abordagem.
+Also describe two decisions you made during the work, explaining what you wanted to check, how you investigated and what you concluded. One of them can be about an AI suggestion, if you used one. These notes can live in the README itself and do not need to follow a form.
 
-### Repositório e documentação
+Use fictitious data and leave out credentials, real personal data and employers' code. The number of commits does not count in the evaluation.
 
-Crie o repositório no serviço de sua preferência. No README, informe o nome ou número do caso, o foco escolhido e quanto tempo você dedicou ao trabalho. Quem clonar o projeto deve conseguir acompanhar a demonstração com as instruções que você deixou.
+### Video explaining the solution
 
-Ao explicar os testes, destaque até três situações que ajudem a entender sua solução, como um valor no limite de uma regra, a interação entre duas regras ou uma entrada inválida. Conte o resultado esperado e que tipo de erro cada teste ajuda a encontrar. Você pode escrever outros testes, sem precisar atingir um percentual de cobertura.
+The recording should help us follow your reasoning. Choose a scenario different from the example in this document, explain the result you expect and run the solution to compare it with what happened. Also show an important test and the part of the code it helps verify.
 
-Conte também duas decisões que tomou durante o trabalho, explicando o que queria conferir, como investigou e o que concluiu. Uma delas pode ser sobre uma sugestão da IA, se você a usou. Essas notas podem ficar no próprio README e não precisam seguir um formulário.
+As you walk through the project, explain why you chose an approach, what alternative you considered and where the solution has limits. If something did not work, it is worth showing how you investigated.
 
-Use dados fictícios e deixe de fora credenciais, dados pessoais reais e código de empregadores. A quantidade de commits não conta na avaliação.
+There is no need to show your face, create slides, edit the recording or repeat your résumé. Use the time to explain the work, including how you checked the AI's suggestions, if any. If you need another presentation format, talk to the person following your process.
 
-### Vídeo explicando a solução
+## How to submit
 
-A gravação deve nos ajudar a acompanhar seu raciocínio. Escolha um cenário diferente do exemplo deste documento, explique o resultado que espera e execute a solução para compará-lo com o que aconteceu. Mostre também um teste importante e o trecho de código que ele ajuda a conferir.
+When you are ready, reply through the same channel where you received the invitation, sharing:
 
-Ao percorrer o projeto, conte por que escolheu uma abordagem, que alternativa considerou e onde a solução tem limites. Se algo não funcionou, vale mostrar como investigou.
+- The repository link and the full hash of the commit we should evaluate.
 
-Não precisa mostrar o rosto, criar slides, editar a gravação ou repetir seu currículo. Use o tempo para explicar o trabalho, incluindo como verificou as sugestões da IA, quando houver. Se precisar de outro formato de apresentação, converse com a pessoa que acompanha seu processo.
+- The video link, which can also be in the README.
 
-## Como enviar
+- The case name or number, the focus you chose and the approximate time spent.
 
-Quando estiver pronto, responda pelo mesmo canal em que recebeu o convite, compartilhando:
+- Any note needed to run the solution, if there is one.
 
-- O link do repositório e o hash completo do commit que devemos avaliar.
+The repository can be private. In that case, ask the person in charge which users should be given read access. Also check that we can open the video, without sending passwords or tokens. We will confirm receipt and access to the files.
 
-- O link do vídeo, que também pode ficar no README.
-
-- O nome ou número do caso, o foco escolhido e o tempo aproximado utilizado.
-
-- Alguma observação necessária para executar a solução, se houver.
-
-O repositório pode ser privado. Nesse caso, peça à pessoa responsável os usuários que devem receber acesso de leitura. Confira também se conseguimos abrir o vídeo, sem enviar senhas ou tokens. Vamos confirmar o recebimento e o acesso aos arquivos.
-
-O commit identifica o código entregue. Se continuar trabalhando e quiser incluir uma mudança na avaliação, basta avisar e enviar o novo hash. Você também pode corrigir links, permissões e instruções de execução depois do envio.
+The commit identifies the delivered code. If you keep working and want a change included in the evaluation, just let us know and send the new hash. You can also fix links, permissions and run instructions after submitting.

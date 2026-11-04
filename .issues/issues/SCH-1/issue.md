@@ -24,7 +24,7 @@ Stack: Next.js (TypeScript) with Tailwind and shadcn/ui as the component library
 - Containers view: browser → Next.js (shadcn/ui + Tailwind) → Nest.js REST API → Postgres (Docker), with how each one runs locally
 - Data model (ER): resources (fixed list) and bookings (id, resource, start, end, status active/canceled)
 - Backend modules view: Nest.js modules, controllers and services, and where the conflict rule `[start, end)` is enforced
-- Booking flow sequences: create (accepted, rejected for unknown resource / invalid data / overlap), check availability with conflicts ordered by id, cancel (success, `ja_cancelada`, not found)
+- Booking flow sequences: create (accepted, rejected for unknown resource / invalid data / overlap), check availability with conflicts ordered by id, cancel (success, `already_canceled`, `not_found`)
 - Every diagram in Mermaid, in a Markdown doc in the repository, linked from the README
 - Save the diagrams on /docs/diagrams
 
@@ -47,5 +47,5 @@ Stack: Next.js (TypeScript) with Tailwind and shadcn/ui as the component library
 - [ ] The diagrams doc renders on GitHub with all four views: containers, data model, backend modules and booking flows
 - [ ] The containers view names Next.js with Tailwind and shadcn/ui, Nest.js and Postgres in Docker, and shows how they connect
 - [ ] The data model shows that a booking id stays taken after cancellation and that a rejected attempt does not take an id
-- [ ] The flow sequences cover every outcome in the PRD: accepted, rejected (unknown resource, invalid data, overlap), availability with conflicts by ascending id, canceled, ja_cancelada and not found
+- [ ] The flow sequences cover every outcome in the PRD: accepted, rejected (unknown resource, invalid data, overlap), availability with conflicts by ascending id, canceled, `already_canceled` and `not_found`
 - [ ] The README links to the diagrams doc
