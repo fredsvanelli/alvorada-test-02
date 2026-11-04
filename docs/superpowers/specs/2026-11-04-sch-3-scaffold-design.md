@@ -49,7 +49,7 @@ These are the issue's acceptance criteria.
 
 ### API (`api/`)
 
-- Generated with the Nest CLI. It keeps the CLI's Jest, ESLint and Prettier setup.
+- Generated with the Nest CLI. It keeps the CLI's test, lint and Prettier setup. Nest CLI 12 generates Vitest and oxlint (not Jest and ESLint); the user confirmed keeping Vitest during review.
 - **Config:** `@nestjs/config` (`ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', validate })`), where `.env` is `api/.env`. `validate` is a plain function that throws one error naming every missing variable.
 - **Required variables:** `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `API_PORT`.
 - **Env template:** `api/.env.example` is committed with dev defaults: `localhost`, `5432`, `bookings` / `bookings` / `bookings`, and `3001`. `api/.env` is gitignored.
@@ -77,7 +77,7 @@ These are the issue's acceptance criteria.
 |---|---|
 | `dev:api` | the API in watch mode |
 | `dev:web` | Next dev |
-| `test` | the API's Jest |
+| `test` | the API's Vitest |
 | `lint` | lint in both workspaces |
 | `typecheck` | `tsc --noEmit` in both workspaces |
 | `build` | `build` in both workspaces (builder's call, needed for goal 6) |
