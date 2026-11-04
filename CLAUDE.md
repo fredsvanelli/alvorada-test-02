@@ -8,7 +8,15 @@ A booking system for shared resources that rejects overlapping bookings. The spe
 
 Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (TypeScript) → Postgres 16 in Docker (`docker compose up -d db`, localhost:5432). Only Postgres runs in Docker.
 
-No application code exists yet. Scaffolding is SCH-3. When it lands, add the build, test and single-test commands here.
+## Commands
+
+npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). Run everything from the repo root.
+
+- One-time setup: `cp api/.env.example api/.env`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
+- Run: `npm run dev:api` (port 3001, `GET /health` checks the database) and `npm run dev:web` (port 3000).
+- Check: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+- Single test: `npm test -w api -- -t "<test name>"`, or `npm test -w api -- <file filter>`.
+- Adding a dependency: npm 10 crashes on this workspace (`Cannot read properties of null (reading 'edgesOut')`). Use `npx npm@11 install -w <api|web> <pkg>`. `npm ci` works with npm 10.
 
 ## Domain rules (from the PRD, easy to get wrong)
 
