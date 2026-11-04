@@ -32,7 +32,7 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 
 - The `[start, end)` rule lives in one place: pure functions `validInterval` and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
 - Controllers only map HTTP to service calls and results to status codes.
-- Modules: `ResourcesModule` (`GET /resources`, seeded R1 and R2), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
+- Modules: `ResourcesModule` (`GET /resources`, seeded R1 to R5), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
 - Create checks in this order: invalid_data → unknown_resource → id_taken → conflict → insert.
 
 ## Design reference
