@@ -20,7 +20,7 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 
 ## Domain rules (from the PRD, easy to get wrong)
 
-- Intervals are half-open `[start, end)`: a booking `[10,20)` frees the resource at 20, so `[20,30)` is accepted. Time is plain integers, with `start < end`.
+- Intervals are half-open `[start, end)`: a booking `[10,20)` frees the resource at 20, so `[20,30)` is accepted. Time is plain non-negative integers within Postgres `integer` (`0..2147483647`), with `start < end`.
 - Overlap only counts **active** bookings of the **same** resource.
 - The client chooses the booking id. A **rejected** attempt writes no row, so its id stays free. A **created** booking's id is never reused, even after cancellation (cancel sets `status = canceled` and keeps the row).
 - Availability check is read-only and returns conflicts in **ascending id** order.
@@ -30,7 +30,7 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 
 ## Backend shape (planned)
 
-- The `[start, end)` rule lives in one place: pure functions `validInterval` and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
+- The `[start, end)` rule lives in one place: pure functions `parseInterval(start, end)` (returns `Interval | null`; accepts integers or digit-only strings in `0..2147483647` with `start < end`, and `null` means `invalid_data`) and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
 - Controllers only map HTTP to service calls and results to status codes.
 - Modules: `ResourcesModule` (`GET /resources`, seeded R1 to R5), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
 - Create checks in this order: invalid_data → unknown_resource → id_taken → conflict → insert.

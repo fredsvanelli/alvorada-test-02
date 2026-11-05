@@ -4,3 +4,11 @@
 {"at":"2026-11-04T23:01:57Z","by":"fred-vanelli","op":"comment","to":"2026-11-04T23-01-57Z-fred-vanelli.md"}
 {"at":"2026-11-04T23:23:03Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
 {"at":"2026-11-04T23:25:54Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-04T23:31:26Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-04T23:31:39Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-5-implement-the-pure-booking-rules"}
+{"at":"2026-11-05T00:00:51Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T00-00-51Z-fred-vanelli.md"}
+{"at":"2026-11-05T00:03:34Z","by":"fred-vanelli","op":"update","field":"title","from":"Implement the pure booking rules validInterval and overlaps with unit tests","to":"Implement the pure booking rules parseInterval and overlaps with unit tests"}
+{"at":"2026-11-05T00:03:34Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-05T00:03:34Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
+{"at":"2026-11-05T00:06:46Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T00-06-46Z-fred-vanelli.md"}
+{"at":"2026-11-05T00:07:18Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
