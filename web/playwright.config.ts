@@ -13,19 +13,21 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Each server signals readiness through stdout, not `url`: with `url`, Playwright connects
+  // before starting the server, and on WSL2 mirrored networking a closed 127.0.0.1 port drops
+  // the connection, so each check blocks for about 2m15s until ETIMEDOUT.
+  // Both commands exit with an error when their port is taken, so a server already on :3000
+  // (which may call the real API) fails the run.
   webServer: [
     {
       command: 'npm run runbooks:upstream',
       cwd: '..',
-      url: `${UPSTREAM}/__runbooks/state`,
-      reuseExistingServer: false,
+      wait: { stdout: /listening on/ },
     },
     {
-      command: 'npm run dev',
+      command: 'npm run dev -- -p 3000',
       env: { NEXT_PUBLIC_API_URL: UPSTREAM },
-      url: 'http://localhost:3000',
-      // A dev server already on :3000 may call the real API, so always start our own.
-      reuseExistingServer: false,
+      wait: { stdout: /Ready in/ },
       timeout: 120_000,
     },
   ],
