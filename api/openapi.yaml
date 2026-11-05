@@ -50,6 +50,33 @@ paths:
                 - { id: R1, name: Agora Room }
                 - { id: R2, name: Pixel Room }
   /bookings:
+    get:
+      operationId: listBookings
+      summary: List every booking, active and canceled, in ascending id order
+      description: >
+        Takes no query params; unknown ones are ignored. Ids are ordered by
+        character code (`10` before `9`, `B` before `a`). Returns `[]` when
+        there are no bookings.
+      responses:
+        '200':
+          description: Every booking with its status and its resource nested.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+              example:
+                - id: A
+                  resource: { id: R1, name: Agora Room }
+                  start: 10
+                  end: 20
+                  status: canceled
+                - id: B
+                  resource: { id: R1, name: Agora Room }
+                  start: 20
+                  end: 30
+                  status: active
     post:
       operationId: createBooking
       summary: Create a booking, or reject it without writing anything

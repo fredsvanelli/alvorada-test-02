@@ -54,6 +54,11 @@ export class BookingsController {
     );
   }
 
+  @Get('bookings')
+  list(): Promise<BookingView[]> {
+    return this.bookings.list();
+  }
+
   // Read-only: 200 with available and conflicts, or the error body. The raw
   // query values go to the service, which validates them.
   @Get('availability')

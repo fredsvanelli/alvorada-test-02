@@ -8,6 +8,7 @@ describe('BookingsService', () => {
   const findById = vi.fn();
   const findActiveByResource = vi.fn();
   const insert = vi.fn();
+  const findAllWithResource = vi.fn();
   const exists = vi.fn();
   const findResource = vi.fn();
   let service: BookingsService;
@@ -27,6 +28,7 @@ describe('BookingsService', () => {
       findById,
       findActiveByResource,
       insert,
+      findAllWithResource,
       exists,
       findResource,
     ]) {
@@ -43,7 +45,12 @@ describe('BookingsService', () => {
         BookingsService,
         {
           provide: BookingsRepository,
-          useValue: { findById, findActiveByResource, insert },
+          useValue: {
+            findById,
+            findActiveByResource,
+            insert,
+            findAllWithResource,
+          },
         },
         {
           provide: ResourcesService,
@@ -283,6 +290,22 @@ describe('BookingsService', () => {
         error: 'unknown_resource',
       });
       expect(findActiveByResource).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('list', () => {
+    const view = (id: string, status: BookingStatus = 'active') => ({
+      id,
+      resource: { id: 'R1', name: 'Agora Room' },
+      start: 10,
+      end: 20,
+      status,
+    });
+
+    it('returns the repository views in its order', async () => {
+      const views = [view('10'), view('9', 'canceled'), view('B'), view('a')];
+      findAllWithResource.mockResolvedValue(views);
+      await expect(service.list()).resolves.toStrictEqual(views);
     });
   });
 });

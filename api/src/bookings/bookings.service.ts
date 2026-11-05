@@ -71,6 +71,11 @@ export class BookingsService {
     return { ok: true, booking: { ...booking, resource: { id, name } } };
   }
 
+  // Every booking, active and canceled, in ascending id order.
+  list(): Promise<BookingView[]> {
+    return this.bookings.findAllWithResource();
+  }
+
   // Read-only: checks run in the order invalid_data, unknown_resource, then
   // the conflict lookup. Nothing is written. Takes the raw query values.
   async availability(

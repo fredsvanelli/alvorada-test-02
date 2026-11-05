@@ -6,6 +6,7 @@ import { BookingsService } from './bookings.service.js';
 describe('BookingsController', () => {
   const create = vi.fn();
   const availability = vi.fn();
+  const list = vi.fn();
   let controller: BookingsController;
 
   const body = { id: 'A', resource: 'R1', start: 10, end: 20 };
@@ -13,10 +14,11 @@ describe('BookingsController', () => {
   beforeEach(async () => {
     create.mockReset();
     availability.mockReset();
+    list.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [BookingsController],
       providers: [
-        { provide: BookingsService, useValue: { create, availability } },
+        { provide: BookingsService, useValue: { create, availability, list } },
       ],
     }).compile();
     controller = moduleRef.get(BookingsController);
@@ -66,6 +68,20 @@ describe('BookingsController', () => {
       message: expect.any(String),
       conflicts: ['A', 'B'],
     });
+  });
+
+  it('lists bookings', async () => {
+    const views = [
+      {
+        id: 'A',
+        resource: { id: 'R1', name: 'Agora Room' },
+        start: 10,
+        end: 20,
+        status: 'active',
+      },
+    ];
+    list.mockResolvedValue(views);
+    await expect(controller.list()).resolves.toBe(views);
   });
 
   describe('availability', () => {
