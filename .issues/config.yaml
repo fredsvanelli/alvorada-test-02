@@ -19,7 +19,7 @@ estimate:
   unit: points
   scale: [1, 2, 3, 5, 8, 13]
 members:
-  fred-vanelli: { name: Fred Vanelli, email: fredsvanelli@gmail.com }
+  fred-vanelli: { name: Fred Vanelli }
 defaults:
   stale_days: 60
   stuck_business_days: 3

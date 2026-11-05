@@ -37,5 +37,9 @@ Ids compared character by character by character code, so `10` comes before `9` 
 _Avoid_: alphabetical order, natural order
 
 **Availability check**:
-A read-only question of whether an Interval on a Resource has any Conflicts. The answer is **available** when there are none, and otherwise lists the Conflicts in ascending id order. The check claims nothing: an available Interval can still be taken by the next create.
-_Avoid_: query, lookup
+A read-only question of whether an Interval on a Resource has any Conflicts, and optionally whether a Booking id is still free. The answer is **id taken** when the id was given and is already used, before any Conflict is looked at; otherwise it is **available** when there are no Conflicts, and lists the Conflicts in ascending id order when there are. The check claims nothing: an available Interval or a free id can still be taken by the next create.
+_Avoid_: query, lookup, slot check
+
+**Id taken**:
+The answer given when a Booking id is already used by a Booking, Active or Canceled. Both a create and an Availability check that names the id give it.
+_Avoid_: duplicate id, id conflict
