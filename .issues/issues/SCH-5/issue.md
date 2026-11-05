@@ -2,13 +2,14 @@
 id: SCH-5
 title: Implement the pure booking rules validInterval and overlaps with unit tests
 type: feature
-status: backlog
+status: in_progress
 estimate: 2
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-3]
+branch: sch-5-implement-the-pure-booking-rules
 created: 2026-11-04T20:00:44.336Z
-updated: 2026-11-04T23:25:54Z
+updated: 2026-11-04T23:31:39Z
 ---
 
 ## Acceptance criteria

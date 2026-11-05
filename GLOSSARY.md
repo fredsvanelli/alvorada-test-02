@@ -13,7 +13,7 @@ A claim on one Resource for one Interval, identified by an id the client chooses
 _Avoid_: reservation
 
 **Interval**:
-A half-open span `[start, end)` of integer times with start before end; the Resource is free again at `end`.
+A half-open span `[start, end)` of non-negative integer times with start before end; the Resource is free again at `end`.
 _Avoid_: period, slot, range
 
 **Active** / **Canceled**:

@@ -90,7 +90,7 @@ flowchart TB
   subgraph bookingsMod["BookingsModule"]
     bc["BookingsController<br/>POST /bookings<br/>GET /bookings<br/>GET /availability<br/>POST /bookings/:id/cancel"]
     bs["BookingsService<br/>create · list · availability · cancel"]
-    rules["booking-rules.ts · pure functions<br/>validInterval: integers and start < end<br/>overlaps a, b: a.start < b.end AND b.start < a.end"]
+    rules["booking-rules.ts · pure functions<br/>parseInterval: integers 0..2147483647 and start < end<br/>overlaps a, b: a.start < b.end AND b.start < a.end"]
     repo["BookingsRepository<br/>find by id · active by resource ordered by id<br/>insert · set status"]
   end
 
