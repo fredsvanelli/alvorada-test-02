@@ -1,6 +1,4 @@
-import type { Tone } from "@/lib/bookings";
-
-export type LogEntry = { n: number; call: string; reply: string; tone: Tone };
+import type { LogEntry, Tone } from "@/lib/bookings";
 
 const toneClass: Record<Tone, string> = {
   ok: "text-log-ok",

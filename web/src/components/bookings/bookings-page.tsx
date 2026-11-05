@@ -4,29 +4,30 @@ import { useCallback, useEffect, useOptimistic, useRef, useState, useTransition 
 import { Card } from "@/components/ui/card";
 import { API_URL, call } from "@/lib/api";
 import {
+  addLog,
   applyOptimistic,
   bookResult,
   cancelResult,
   describeCall,
   describeReply,
   isBookable,
-  previewOf,
+  shownPreview,
   type ApiReply,
   type Booking,
   type BookRequest,
+  type Checked,
+  type LogEntry,
   type OptimisticChange,
   type Resource,
   type ResultCard,
   type ShownBooking,
 } from "@/lib/bookings";
 import { BookingsTable } from "./bookings-table";
-import { OperationLog, type LogEntry } from "./operation-log";
+import { OperationLog } from "./operation-log";
 import { OperationPanel, type Form } from "./operation-panel";
 import { Timeline } from "./timeline";
 
 type Load = "loading" | "ready" | "failed";
-
-const LOG_SIZE = 14;
 
 // Both lists, or null when either call fails or answers outside the contract.
 async function fetchAll(): Promise<{ resources: Resource[]; bookings: Booking[] } | null> {
@@ -46,7 +47,7 @@ export function BookingsPage() {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [shown, addOptimistic] = useOptimistic<ShownBooking[], OptimisticChange>(bookings, applyOptimistic);
   const [, startTransition] = useTransition();
-  const [checked, setChecked] = useState<{ resource: string; start: number; end: number; reply: ApiReply } | null>(null);
+  const [checked, setChecked] = useState<Checked | null>(null);
   const previewSeq = useRef(0);
 
   const apply = useCallback((data: Awaited<ReturnType<typeof fetchAll>>) => {
@@ -71,12 +72,7 @@ export function BookingsPage() {
     // Updates after an await are not part of the transition unless wrapped again (React 19).
     startTransition(() => {
       setResult(card);
-      setLog((l) =>
-        [{ n: (l[0]?.n ?? 0) + 1, call: describeCall("POST", path, body), reply: describeReply(reply), tone: card.tone }, ...l].slice(
-          0,
-          LOG_SIZE,
-        ),
-      );
+      setLog((l) => addLog(l, { call: describeCall("POST", path, body), reply: describeReply(reply), tone: card.tone }));
       // A failed re-fetch keeps the last good list.
       if (list.status === 200 && Array.isArray(list.body)) setBookings(list.body as Booking[]);
       if (card.code === "created") setForm((f) => ({ ...f, id: "" }));
@@ -103,7 +99,7 @@ export function BookingsPage() {
   useEffect(() => {
     const n = ++previewSeq.current;
     if (!checkable) return;
-    const q = { resource: form.resource, start: Number(form.start), end: Number(form.end) };
+    const q = { resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings };
     const timer = setTimeout(() => {
       const params = new URLSearchParams({ resource: q.resource, start: String(q.start), end: String(q.end) });
       void call("GET", `/availability?${params}`).then((reply) => {
@@ -113,13 +109,10 @@ export function BookingsPage() {
     return () => clearTimeout(timer);
   }, [checkable, form.resource, form.start, form.end, bookings]);
 
-  // Until the first answer for valid fields arrives, the last answer stays on screen (it names its own interval).
-  const preview =
-    checkable && checked ? previewOf(checked.reply, checked.resource, checked.start, checked.end) : previewOf(null, "", 0, 0);
-  const timelinePreview =
-    checked && (preview.tone === "available" || preview.tone === "conflict")
-      ? { resource: checked.resource, start: checked.start, end: checked.end, tone: preview.tone, conflicts: preview.conflicts }
-      : null;
+  const { preview, box } = shownPreview(
+    checked,
+    checkable ? { resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings } : null,
+  );
 
   return (
     <main className="mx-auto box-border flex w-full max-w-[1240px] flex-col gap-6 px-5 pt-8 pb-12">
@@ -143,7 +136,7 @@ export function BookingsPage() {
 
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-6">
           {load === "failed" ? (
-            <Card role="alert" className="gap-3 rounded-xl border border-error-border bg-error-bg p-5 text-error-fg ring-0 text-[15px]">
+            <Card role="alert" className="gap-3 border-error-border bg-error-bg text-error-fg">
               <p>
                 Can&apos;t reach the API at <span className="font-mono">{API_URL}</span>. Start it with{" "}
                 <code className="font-mono">npm run dev:api</code>.
@@ -159,9 +152,13 @@ export function BookingsPage() {
                 Retry
               </button>
             </Card>
+          ) : load === "loading" ? (
+            <Card role="status" aria-live="polite">
+              <p className="text-muted-foreground">Loading resources and bookings…</p>
+            </Card>
           ) : (
             <>
-              <Timeline resources={resources} bookings={shown} preview={timelinePreview} />
+              <Timeline resources={resources} bookings={shown} preview={box} />
               <BookingsTable bookings={shown} onCancel={onCancel} />
             </>
           )}

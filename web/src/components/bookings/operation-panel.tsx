@@ -62,7 +62,7 @@ export function OperationPanel({
   );
 
   return (
-    <Card aria-labelledby="op-title" className="gap-4 rounded-xl border border-border p-5 ring-0 text-[15px]">
+    <Card aria-labelledby="op-title">
       <h2 id="op-title" className="text-[17px] font-semibold">
         Operation
       </h2>

@@ -11,6 +11,12 @@ export type ResultCard = { tone: Tone; title: string; detail: string; code: stri
 export type Preview = { tone: 'idle' | 'available' | 'conflict' | 'failed'; text: string; conflicts: string[] };
 export type OptimisticChange = { kind: 'add'; booking: Booking } | { kind: 'cancel'; id: string };
 export type BookRequest = { id: string; resource: string; start: number; end: number };
+export type LogEntry = { n: number; call: string; reply: string; tone: Tone };
+export type TimelinePreview = { resource: string; start: number; end: number; tone: Preview['tone']; conflicts: string[] };
+// `basis` is the booking list the check ran against: a new list (after a write) makes the answer stale.
+export type Checked = { resource: string; start: number; end: number; basis: unknown; reply: ApiReply };
+
+const LOG_SIZE = 14;
 
 const REJECTIONS = ['invalid_data', 'unknown_resource', 'id_taken', 'conflict'];
 
@@ -46,16 +52,19 @@ function failed(reply: ApiReply): ResultCard {
   return { tone: 'error', title: 'Request failed', detail: `HTTP ${reply.status}: ${reply.raw}`, code: String(reply.status) };
 }
 
+function isBooking(body: unknown, id: string): body is Booking {
+  return (
+    field(body, 'id') === id &&
+    typeof field(field(body, 'resource'), 'id') === 'string' &&
+    typeof field(body, 'start') === 'number' &&
+    typeof field(body, 'end') === 'number'
+  );
+}
+
 export function bookResult(reply: ApiReply, req: BookRequest): ResultCard {
   if (reply.status === null) return failed(reply);
   const error = field(reply.body, 'error');
-  const created =
-    reply.status === 201 &&
-    field(reply.body, 'id') === req.id &&
-    typeof field(field(reply.body, 'resource'), 'id') === 'string' &&
-    typeof field(reply.body, 'start') === 'number' &&
-    typeof field(reply.body, 'end') === 'number';
-  if (created) {
+  if (reply.status === 201 && isBooking(reply.body, req.id)) {
     const b = reply.body as Booking;
     return { tone: 'ok', title: `Booking ${b.id} created`, detail: `${b.resource.id} taken for ${formatInterval(b.start, b.end)}.`, code: 'created' };
   }
@@ -98,6 +107,53 @@ export function previewOf(reply: ApiReply | null, resource: string, start: numbe
 export function applyOptimistic(list: ShownBooking[], change: OptimisticChange): ShownBooking[] {
   if (change.kind === 'add') return [...list, { ...change.booking, pending: 'add' }];
   return list.map((b) => (b.id === change.id && !b.pending ? { ...b, status: 'canceled', pending: 'cancel' } : b));
+}
+
+export function addLog(log: LogEntry[], entry: Omit<LogEntry, 'n'>): LogEntry[] {
+  return [{ ...entry, n: (log[0]?.n ?? 0) + 1 }, ...log].slice(0, LOG_SIZE);
+}
+
+export function filterBookings<T extends Booking>(list: T[], filter: 'all' | BookingStatus) {
+  const active = list.filter((b) => b.status === 'active').length;
+  return {
+    rows: list.filter((b) => filter === 'all' || b.status === filter),
+    counts: { all: list.length, active, canceled: list.length - active },
+  };
+}
+
+export function timelineRows<T extends Booking>(resources: Resource[], bookings: T[], preview: TimelinePreview | null) {
+  const { max, ticks } = axis(bookings.map((b) => b.end));
+  const span = (start: number, end: number) => ({ left: position(start, max), width: position(end, max) - position(start, max) });
+  const rows = resources.map((resource) => {
+    const here = preview && preview.resource === resource.id ? preview : null;
+    const bars = bookings
+      .filter((b) => b.resource.id === resource.id)
+      .sort((a, b) => (a.status === b.status ? 0 : a.status === 'canceled' ? -1 : 1))
+      .map((booking) => ({
+        booking,
+        ...span(booking.start, booking.end),
+        ringed: booking.status === 'active' && !!here?.conflicts.includes(booking.id),
+      }));
+    const box = here && (here.tone === 'available' || here.tone === 'conflict') ? { ...span(here.start, here.end), tone: here.tone } : null;
+    return { resource, bars, box };
+  });
+  return { max, ticks, rows };
+}
+
+// The preview shows an answer only for the current fields and booking list; otherwise it is still checking.
+export function shownPreview(
+  checked: Checked | null,
+  now: { resource: string; start: number; end: number; basis: unknown } | null,
+): { preview: Preview; box: TimelinePreview | null } {
+  if (!now) return { preview: previewOf(null, '', 0, 0), box: null };
+  const current =
+    checked && checked.resource === now.resource && checked.start === now.start && checked.end === now.end && checked.basis === now.basis;
+  if (!current) {
+    return { preview: { tone: 'idle', text: `Checking ${now.resource} ${formatInterval(now.start, now.end)}…`, conflicts: [] }, box: null };
+  }
+  const preview = previewOf(checked.reply, checked.resource, checked.start, checked.end);
+  const drawn = preview.tone === 'available' || preview.tone === 'conflict';
+  return { preview, box: drawn ? { resource: now.resource, start: now.start, end: now.end, tone: preview.tone, conflicts: preview.conflicts } : null };
 }
 
 export function describeCall(method: string, path: string, body?: unknown): string {

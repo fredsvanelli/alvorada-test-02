@@ -1,18 +1,23 @@
 import { afterEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  addLog,
   applyOptimistic,
   axis,
   bookResult,
   cancelResult,
   describeCall,
   describeReply,
+  filterBookings,
   formatInterval,
   isBookable,
   position,
   previewOf,
+  shownPreview,
+  timelineRows,
   type ApiReply,
   type Booking,
+  type LogEntry,
 } from './bookings.ts';
 import { API_URL, call } from './api.ts';
 
@@ -153,6 +158,84 @@ describe('applyOptimistic', () => {
     assert.equal(out[0].status, 'canceled');
     assert.equal(out[0].pending, 'cancel');
     assert.deepEqual(out[1], booking('B'));
+  });
+});
+
+describe('addLog', () => {
+  const entry = { call: 'POST /bookings', reply: '201 {}', tone: 'ok' as const };
+  it('puts the newest entry first and numbers it after the previous one', () => {
+    const log = addLog(addLog([], entry), { ...entry, call: 'second' });
+    assert.deepEqual(log.map((e) => [e.n, e.call]), [[2, 'second'], [1, 'POST /bookings']]);
+  });
+  it('keeps at most 14 entries', () => {
+    let log: LogEntry[] = [];
+    for (let i = 0; i < 15; i++) log = addLog(log, entry);
+    assert.equal(log.length, 14);
+    assert.equal(log[0].n, 15);
+    assert.equal(log[13].n, 2);
+  });
+});
+
+describe('filterBookings', () => {
+  const list = [booking('A'), booking('B', 'canceled'), booking('C')];
+  it('counts every status and keeps API order', () => {
+    const r = filterBookings(list, 'all');
+    assert.deepEqual(r.counts, { all: 3, active: 2, canceled: 1 });
+    assert.deepEqual(r.rows.map((b) => b.id), ['A', 'B', 'C']);
+  });
+  it('filters by status', () => {
+    assert.deepEqual(filterBookings(list, 'active').rows.map((b) => b.id), ['A', 'C']);
+    assert.deepEqual(filterBookings(list, 'canceled').rows.map((b) => b.id), ['B']);
+  });
+});
+
+describe('timelineRows', () => {
+  const r2 = { id: 'R2', name: 'Pixel Room' };
+  const list: Booking[] = [
+    { id: 'A', resource: r1, start: 10, end: 20, status: 'active' },
+    { id: 'C', resource: r1, start: 0, end: 50, status: 'canceled' },
+    { id: 'D', resource: r2, start: 40, end: 60, status: 'active' },
+  ];
+  it('puts each booking on its resource row, canceled first, with positions on the axis', () => {
+    const t = timelineRows([r1, r2], list, null);
+    assert.equal(t.max, 100);
+    assert.deepEqual(t.rows[0].bars.map((b) => [b.booking.id, b.left, b.width]), [['C', 0, 50], ['A', 10, 10]]);
+    assert.deepEqual(t.rows[1].bars.map((b) => b.booking.id), ['D']);
+    assert.equal(t.rows[0].box, null);
+  });
+  it('rings only the active conflicts on the preview row and draws its box there', () => {
+    const t = timelineRows([r1, r2], list, { resource: 'R1', start: 19, end: 21, tone: 'conflict', conflicts: ['A', 'C', 'D'] });
+    assert.deepEqual(t.rows[0].bars.map((b) => [b.booking.id, b.ringed]), [['C', false], ['A', true]]);
+    assert.deepEqual(t.rows[1].bars.map((b) => b.ringed), [false]);
+    assert.deepEqual(t.rows[0].box, { left: 19, width: 2, tone: 'conflict' });
+    assert.equal(t.rows[1].box, null);
+  });
+});
+
+describe('shownPreview', () => {
+  const basis = [booking('A')];
+  const now = { resource: 'R1', start: 19, end: 21, basis };
+  const checked = { resource: 'R1', start: 19, end: 21, basis, reply: json(200, { available: false, conflicts: ['A'] }) };
+  it('asks for an interval when the fields cannot be checked', () => {
+    assert.equal(shownPreview(checked, null).preview.text, 'Pick a start and an end from 0 to 100');
+    assert.equal(shownPreview(checked, null).box, null);
+  });
+  it('shows the answer for the current fields and list, with its box', () => {
+    const s = shownPreview(checked, now);
+    assert.equal(s.preview.text, 'R1 [19,21) conflicts with A');
+    assert.deepEqual(s.box, { resource: 'R1', start: 19, end: 21, tone: 'conflict', conflicts: ['A'] });
+  });
+  it('says it is checking while the answer is for other fields', () => {
+    const s = shownPreview(checked, { ...now, start: 30, end: 40 });
+    assert.deepEqual(s.preview, { tone: 'idle', text: 'Checking R1 [30,40)…', conflicts: [] });
+    assert.equal(s.box, null);
+  });
+  it('says it is checking while the answer predates the current list', () => {
+    assert.equal(shownPreview(checked, { ...now, basis: [...basis] }).preview.text, 'Checking R1 [19,21)…');
+  });
+  it('draws no box for a failed check', () => {
+    const failedCheck = { ...checked, reply: json(422, { error: 'invalid_data', message: 'x' }) };
+    assert.equal(shownPreview(failedCheck, now).box, null);
   });
 });
 

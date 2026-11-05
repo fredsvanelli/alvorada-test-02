@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatInterval, type BookingStatus, type ShownBooking } from "@/lib/bookings";
+import { filterBookings, formatInterval, type BookingStatus, type ShownBooking } from "@/lib/bookings";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | BookingStatus;
@@ -14,16 +14,15 @@ const cellClass = "border-b border-cell-line p-2.5";
 
 export function BookingsTable({ bookings, onCancel }: { bookings: ShownBooking[]; onCancel: (id: string) => void }) {
   const [filter, setFilter] = useState<Filter>("all");
-  const active = bookings.filter((b) => b.status === "active").length;
+  const { rows, counts } = filterBookings(bookings, filter);
   const chips: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: bookings.length },
-    { id: "active", label: "Active", count: active },
-    { id: "canceled", label: "Canceled", count: bookings.length - active },
+    { id: "all", label: "All", count: counts.all },
+    { id: "active", label: "Active", count: counts.active },
+    { id: "canceled", label: "Canceled", count: counts.canceled },
   ];
-  const rows = bookings.filter((b) => filter === "all" || b.status === filter);
 
   return (
-    <Card aria-labelledby="tb-title" className="gap-3.5 rounded-xl border border-border p-5 ring-0 text-[15px]">
+    <Card aria-labelledby="tb-title" className="gap-3.5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="tb-title" className="text-[17px] font-semibold">
           Bookings
