@@ -2,12 +2,12 @@
 id: SCH-15
 title: Remove the 4m30 wait from test:e2e on WSL2 mirrored networking
 type: bug
-status: backlog
+status: in_review
 priority: medium
 estimate: 1
 branch: sch-15-remove-the-4m30-wait-from-test-e2e-on
 created: 2026-11-05T22:38:06.248Z
-updated: 2026-11-05T22:38:23Z
+updated: 2026-11-05T22:43:50Z
 ---
 
 ## Description
