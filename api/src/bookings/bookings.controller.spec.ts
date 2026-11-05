@@ -140,12 +140,19 @@ describe('BookingsController', () => {
       await expect(
         controller.availability('R1', '19', '21'),
       ).resolves.toStrictEqual({ available: false, conflicts: ['A', 'B'] });
-      expect(availability).toHaveBeenCalledWith('R1', '19', '21');
+      expect(availability).toHaveBeenCalledWith('R1', '19', '21', undefined);
+    });
+
+    it('passes the optional id to the service', async () => {
+      availability.mockResolvedValue({ ok: true, available: true, conflicts: [] });
+      await controller.availability('R1', '19', '21', 'C');
+      expect(availability).toHaveBeenCalledWith('R1', '19', '21', 'C');
     });
 
     it.each([
       ['invalid_data', 422],
       ['unknown_resource', 404],
+      ['id_taken', 409],
     ])('maps availability %s to %i', async (code, status) => {
       availability.mockResolvedValue({ ok: false, error: code });
       const error = await thrownByAvailability();
@@ -156,12 +163,12 @@ describe('BookingsController', () => {
       });
     });
 
-    it('asks for resource, start and end on invalid_data', async () => {
+    it('asks for resource, start, end and an optional id on invalid_data', async () => {
       availability.mockResolvedValue({ ok: false, error: 'invalid_data' });
       const error = await thrownByAvailability();
       expect(error.getResponse()).toMatchObject({
         message:
-          'Send resource, and integer start and end from 0 to 2147483647 with start before end.',
+          'Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).',
       });
     });
   });

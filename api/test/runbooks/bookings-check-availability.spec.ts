@@ -149,4 +149,55 @@ describe('Check whether an interval is free on a resource, without booking it', 
 
     await expectAnswer(response, true, []);
   });
+
+  it('S09 An id that an active booking has returns id_taken, before the conflict lookup', async () => {
+    await given('A', 'R1', 10, 20);
+    await given('B', 'R1', 20, 30);
+
+    const response = await check('resource=R1&start=19&end=21&id=A');
+
+    await expectError(response, 409, 'id_taken');
+  });
+
+  it('S10 An id that a canceled booking has still returns id_taken', async () => {
+    await given('A', 'R1', 10, 20);
+    const cancel = await fetch(`${baseUrl}/bookings/A/cancel`, {
+      method: 'POST',
+    });
+    expect(cancel.status, 'cancel A').toBe(200);
+
+    const response = await check('resource=R1&start=10&end=20&id=A');
+
+    await expectError(response, 409, 'id_taken');
+  });
+
+  it('S11 A free id answers exactly as a check without id', async () => {
+    await given('A', 'R1', 10, 20);
+    await given('B', 'R1', 20, 30);
+
+    const response = await check('resource=R1&start=19&end=21&id=C');
+
+    await expectAnswer(response, false, ['A', 'B']);
+  });
+
+  it('S12 An unknown resource wins over a taken id', async () => {
+    await given('A', 'R1', 10, 20);
+
+    const response = await check('resource=R9&start=10&end=20&id=A');
+
+    await expectError(response, 404, 'unknown_resource');
+  });
+
+  it('S13 An empty, repeated or malformed id returns invalid_data', async () => {
+    const queries: Record<string, string> = {
+      'empty id': 'resource=R1&start=10&end=20&id=',
+      'repeated id': 'resource=R1&start=10&end=20&id=C&id=D',
+      'id with a space': 'resource=R1&start=10&end=20&id=C%20D',
+      'id over 64 characters': `resource=R1&start=10&end=20&id=${'x'.repeat(65)}`,
+    };
+
+    for (const [name, query] of Object.entries(queries)) {
+      await expectError(await check(query), 422, 'invalid_data', name);
+    }
+  });
 });

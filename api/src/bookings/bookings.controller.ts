@@ -30,11 +30,12 @@ const MESSAGE: Record<CreateError, string> = {
   conflict: 'The interval overlaps active bookings of this resource.',
 };
 
-// Availability takes no id, so its invalid_data message does not ask for one.
+// Availability's id is optional, so its invalid_data message says so.
 const AVAILABILITY_MESSAGE: Record<AvailabilityError, string> = {
   invalid_data:
-    'Send resource, and integer start and end from 0 to 2147483647 with start before end.',
+    'Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).',
   unknown_resource: MESSAGE.unknown_resource,
+  id_taken: MESSAGE.id_taken,
 };
 
 @Controller()
@@ -83,8 +84,9 @@ export class BookingsController {
     @Query('resource') resource: unknown,
     @Query('start') start: unknown,
     @Query('end') end: unknown,
+    @Query('id') id?: unknown,
   ): Promise<{ available: boolean; conflicts: string[] }> {
-    const result = await this.bookings.availability(resource, start, end);
+    const result = await this.bookings.availability(resource, start, end, id);
     if (result.ok) {
       return { available: result.available, conflicts: result.conflicts };
     }
