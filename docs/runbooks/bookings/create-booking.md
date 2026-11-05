@@ -15,11 +15,11 @@ status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "877471d"
+  commit: "500ef6c"
   result: passed
-  report: _runs/2026-11-05-0037-bookings.create-booking.md
+  report: _runs/2026-11-05-1330-bookings.create-booking.md
   runs:
-    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.create-booking.md }
+    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1330-bookings.create-booking.md }
   cells:
     S01: passed r1
     S02: passed r1
