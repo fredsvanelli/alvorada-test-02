@@ -200,4 +200,16 @@ describe('Check whether an interval is free on a resource, without booking it', 
       await expectError(await check(query), 422, 'invalid_data', name);
     }
   });
+
+  it('S14 An available check claims nothing, so the same interval and id can be booked right after', async () => {
+    const response = await check('resource=R1&start=10&end=20&id=X');
+
+    await expectAnswer(response, true, []);
+    const create = await fetch(`${baseUrl}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'X', resource: 'R1', start: 10, end: 20 }),
+    });
+    expect(create.status, 'POST /bookings after').toBe(201);
+  });
 });

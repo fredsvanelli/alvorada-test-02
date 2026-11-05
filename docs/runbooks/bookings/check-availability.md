@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["GET /availability"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"GET /availability now accepts an optional `id` query param. When sent and a booking (active or canceled) already has that id, it answers 409 { error: id_taken, message } with no conflicts or available keys, checked after unknown_resource and before the conflict lookup (unknown_resource wins over id_taken). A free id answers 200 exactly as before. An empty, repeated or malformed id (not 1 to 64 letters, digits, - or _) is invalid_data 422. Without id, behavior is unchanged.\""]
+sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"GET /availability now accepts an optional `id` query param. When sent and a booking (active or canceled) already has that id, it answers 409 { error: id_taken, message } with no conflicts or available keys, checked after unknown_resource and before the conflict lookup (unknown_resource wins over id_taken). A free id answers 200 exactly as before. An empty, repeated or malformed id (not 1 to 64 letters, digits, - or _) is invalid_data 422. Without id, behavior is unchanged.\"", "SCH-12"]
 scripts: ["api/test/runbooks/bookings-check-availability.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "500ef6c"
+  commit: "c0479a3"
   result: passed
-  report: _runs/2026-11-05-1330-bookings.check-availability.md
+  report: _runs/2026-11-05-2019-bookings.check-availability.md
   runs:
-    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1330-bookings.check-availability.md }
+    r1: { date: 2026-11-05, commit: "c0479a3", report: _runs/2026-11-05-2019-bookings.check-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -34,6 +34,7 @@ last_run:
     S11: passed r1
     S12: passed r1
     S13: passed r1
+    S14: passed r1
 ---
 
 # Check whether an interval is free on a resource, without booking it
@@ -368,6 +369,31 @@ The body has no `conflicts` key and no `available` key. An id must be 1 to 64 le
 
 ---
 
+### S14. An available check claims nothing, so the same interval and id can be booked right after
+
+Parents: S02
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: no bookings.
+Request:
+
+```http
+GET /availability?resource=R1&start=10&end=20&id=X
+```
+
+Expected: 200.
+
+```json
+{ "available": true, "conflicts": [] }
+```
+
+The body has exactly these two keys.
+
+Read-back: `POST /bookings` with X R1 `[10,20)`, sent after the check, returns 201. Only the status is checked; `bookings.create-booking` checks the body of the 201. The check sent the same id and interval, so a claim on either would make this create answer 409.
+
+---
+
 ## Not covered
 
 - The other `invalid_data` inputs (empty or NUL resource, missing, empty, repeated, decimal or negative start, end above 2147483647, start equal to end) and `invalid_data` winning over `unknown_resource`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" in `api/src/bookings/bookings.service.spec.ts` covers each input and that the resource lookup is not reached. Create shares the same `parseInterval`, and `bookings.create-booking` S03, S16 and S18 prove those rules over HTTP.
@@ -375,7 +401,7 @@ The body has no `conflicts` key and no `available` key. An id must be 1 to 64 le
 - Unknown query params (for example `foo`) are ignored: left out of the agreed steps. The controller reads only `resource`, `start`, `end` and `id` (`api/src/bookings/bookings.controller.ts`, `@Get('availability')`).
 - `invalid_data` for a bad id winning over `unknown_resource`, and an invalid interval with a taken id answering `invalid_data`, not `id_taken`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" for ids in `api/src/bookings/bookings.service.spec.ts` asserts the resource lookup is not reached, and the service validates every param before any lookup (`availability` in `api/src/bookings/bookings.service.ts`).
 - An id at the 64-character limit, or made of `-` and `_`, accepted: left out of the agreed steps. Availability uses the same `ID` pattern as create (`api/src/bookings/bookings.service.ts`), and "accepts a 64-character id" in `api/src/bookings/bookings.service.spec.ts` proves the limit for create.
-- An available answer does not hold the interval, and concurrent checks and creates: the check is read-only, and concurrency is out of scope (PRD).
+- Concurrent checks and creates: concurrency is out of scope (PRD).
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.
 - A database failure during the check: the code has no handler of its own for it (Nest's default 500). Database reachability is proven by `health.check-database`.
