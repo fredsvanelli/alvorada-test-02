@@ -10,3 +10,4 @@
 {"at":"2026-11-05T03:24:38Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T03-24-38Z-fred-vanelli.md"}
 {"at":"2026-11-05T03:45:39Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T03-45-39Z-fred-vanelli.md"}
 {"at":"2026-11-05T03:45:39Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-05T03:51:55Z","by":"fred-vanelli","op":"move","field":"status","from":"in_review","to":"done"}

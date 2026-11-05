@@ -297,6 +297,51 @@ describe('BookingsService', () => {
       });
       expect(findActiveByResource).not.toHaveBeenCalled();
     });
+
+    it('does not look up an id when none is sent', async () => {
+      await service.availability('R1', 10, 20);
+      expect(findById).not.toHaveBeenCalled();
+    });
+
+    it('answers normally when the sent id is free', async () => {
+      findActiveByResource.mockResolvedValue([booking('A', 10, 20)]);
+      await expect(
+        service.availability('R1', 19, 21, 'C'),
+      ).resolves.toStrictEqual({ ok: true, available: false, conflicts: ['A'] });
+      expect(findById).toHaveBeenCalledWith('C');
+    });
+
+    it.each(['active', 'canceled'] as const)(
+      'rejects an id used by a %s booking as id_taken, before the conflict lookup',
+      async (status) => {
+        findById.mockResolvedValue(booking('A', 50, 60, status));
+        await expect(
+          service.availability('R1', 10, 20, 'A'),
+        ).resolves.toStrictEqual({ ok: false, error: 'id_taken' });
+        expect(findActiveByResource).not.toHaveBeenCalled();
+      },
+    );
+
+    it('checks unknown_resource before id_taken', async () => {
+      exists.mockResolvedValue(false);
+      findById.mockResolvedValue(booking('A', 50, 60));
+      await expect(
+        service.availability('R9', 10, 20, 'A'),
+      ).resolves.toStrictEqual({ ok: false, error: 'unknown_resource' });
+      expect(findById).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['an empty id', ''],
+      ['a repeated id', ['A', 'B']],
+      ['an id with a space', 'A B'],
+      ['an id over 64 characters', 'x'.repeat(65)],
+    ])('rejects %s as invalid_data', async (_, id) => {
+      await expect(
+        service.availability('R1', 10, 20, id),
+      ).resolves.toStrictEqual({ ok: false, error: 'invalid_data' });
+      expect(exists).not.toHaveBeenCalled();
+    });
   });
 
   describe('list', () => {

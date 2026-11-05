@@ -1,0 +1,9 @@
+{
+  "request": { "method": "GET", "path": "/availability", "query": { "resource": "R1", "start": "40", "end": "50" } },
+  "response": {
+    "status": 500,
+    "headers": { "content-type": "application/json; charset=utf-8" },
+    "body": { "statusCode": 500, "message": "Internal server error" }
+  },
+  "source": "hand-written: the live API cannot be made to fail; Nest's default 500 body"
+}

@@ -220,11 +220,12 @@ paths:
       summary: Check whether an interval on a resource is free, without booking it
       description: >
         Read-only: writes nothing and holds nothing, so an available interval
-        can still be taken by the next create. Checks run in this order and the
-        first failure wins: `invalid_data`, `unknown_resource`. Only active
-        bookings of the same resource conflict, with the half-open rule
-        `[start, end)`. Extra query params are ignored; a repeated `resource`,
-        `start` or `end` is `invalid_data`.
+        can still be taken by the next create. Checks run in the same order as
+        create and the first failure wins: `invalid_data`, `unknown_resource`,
+        `id_taken` (only when `id` is sent). Only active bookings of the same
+        resource conflict, with the half-open rule `[start, end)`. Extra query
+        params are ignored; a repeated `resource`, `start`, `end` or `id` is
+        `invalid_data`.
       parameters:
         - name: resource
           in: query
@@ -249,6 +250,16 @@ paths:
             pattern: '^\d+$'
             example: '21'
           description: An integer time from 0 to 2147483647, after `start`.
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_-]{1,64}$'
+            example: C
+          description: >
+            Optional. The id the next create would use. When sent, an id that a
+            booking already has, active or canceled, answers `id_taken`.
       responses:
         '200':
           description: Answered, available or not.
@@ -270,18 +281,28 @@ paths:
               example:
                 error: unknown_resource
                 message: This resource does not exist.
+        '409':
+          description: '`id_taken`: `id` was sent and a booking with this id exists, active or canceled. Conflicts are not listed.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: id_taken
+                message: This id was already used by another booking.
         '422':
           description: >
             `invalid_data`: `resource`, `start` or `end` is missing, empty or
-            repeated, a time is not an integer from 0 to 2147483647, or
-            `start >= end`.
+            repeated, a time is not an integer from 0 to 2147483647,
+            `start >= end`, or `id` is sent empty, repeated or not 1 to 64
+            letters, digits, `-` or `_`.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookingError'
               example:
                 error: invalid_data
-                message: Send resource, and integer start and end from 0 to 2147483647 with start before end.
+                message: Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).
 components:
   schemas:
     Resource:

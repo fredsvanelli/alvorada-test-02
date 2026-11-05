@@ -1,0 +1,9 @@
+{
+  "request": { "method": "GET", "path": "/availability", "query": { "resource": "R1", "start": "30", "end": "40", "id": "A" } },
+  "response": {
+    "status": 409,
+    "headers": { "content-type": "application/json; charset=utf-8" },
+    "body": { "error": "id_taken", "message": "This id was already used by another booking." }
+  },
+  "source": "hand-written: the dev database holds more than A and B, so no recording over the Preconditions data; status and body are what the live API answers for id=A (curl 2026-11-05, message from api/src/bookings/bookings.controller.ts)"
+}

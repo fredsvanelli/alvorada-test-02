@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/bookings",
+    "body": {
+      "id": "",
+      "resource": "R1",
+      "start": 50,
+      "end": 60
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"9f-sen+5LWwvDrFzMVGtnHo1JQxjI0\"",
+      "date": "Thu, 05 Nov 2026 05:18:13 GMT"
+    },
+    "body": {
+      "error": "invalid_data",
+      "message": "Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end."
+    }
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

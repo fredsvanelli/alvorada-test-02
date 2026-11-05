@@ -1,0 +1,28 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/availability",
+    "query": {
+      "resource": "R1",
+      "start": "19",
+      "end": "21"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"29-eCuDBAoP3NKxNQvtgDI2BCeqpI4\"",
+      "date": "Thu, 05 Nov 2026 05:10:51 GMT"
+    },
+    "body": {
+      "available": false,
+      "conflicts": [
+        "A",
+        "B"
+      ]
+    }
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

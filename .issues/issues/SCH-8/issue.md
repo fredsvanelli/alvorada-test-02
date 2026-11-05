@@ -2,14 +2,14 @@
 id: SCH-8
 title: Cancel and list bookings with POST /bookings/:id/cancel and GET /bookings
 type: feature
-status: in_review
+status: done
 estimate: 3
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-4]
 branch: sch-8-cancel-and-list-bookings-with-post
 created: 2026-11-04T20:00:44.671Z
-updated: 2026-11-05T03:45:39Z
+updated: 2026-11-05T03:51:55Z
 ---
 
 ## Acceptance criteria

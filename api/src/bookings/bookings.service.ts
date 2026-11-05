@@ -16,7 +16,7 @@ export type CancelResult =
   | { ok: true; result: 'canceled' | 'already_canceled'; booking: BookingView }
   | { ok: false; error: 'not_found' };
 
-export type AvailabilityError = 'invalid_data' | 'unknown_resource';
+export type AvailabilityError = 'invalid_data' | 'unknown_resource' | 'id_taken';
 
 export type AvailabilityResult =
   | { ok: true; available: boolean; conflicts: string[] }
@@ -98,19 +98,25 @@ export class BookingsService {
     return this.bookings.findAllWithResource();
   }
 
-  // Read-only: checks run in the order invalid_data, unknown_resource, then
-  // the conflict lookup. Nothing is written. Takes the raw query values.
+  // Read-only: checks run in the same order as create (invalid_data,
+  // unknown_resource, id_taken when an id is sent, then the conflict lookup).
+  // Nothing is written. Takes the raw query values.
   async availability(
     resource: unknown,
     start: unknown,
     end: unknown,
+    id?: unknown,
   ): Promise<AvailabilityResult> {
     const interval = parseInterval(start, end);
-    if (!isResourceId(resource) || !interval) {
+    const badId = id !== undefined && (typeof id !== 'string' || !ID.test(id));
+    if (!isResourceId(resource) || !interval || badId) {
       return { ok: false, error: 'invalid_data' };
     }
     if (!(await this.resources.exists(resource))) {
       return { ok: false, error: 'unknown_resource' };
+    }
+    if (typeof id === 'string' && (await this.bookings.findById(id))) {
+      return { ok: false, error: 'id_taken' };
     }
     const conflicts = await this.findConflicts(resource, interval);
     return { ok: true, available: conflicts.length === 0, conflicts };

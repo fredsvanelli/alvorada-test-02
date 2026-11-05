@@ -13,8 +13,11 @@ Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (T
 npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). Run everything from the repo root.
 
 - One-time setup: `cp api/.env.example api/.env`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
+- `WEB_ORIGIN` (in `api/.env`) is the one origin the API allows through CORS, `http://localhost:3000` by default. An `api/.env` copied before SCH-10 needs that line added, or the API does not start.
+- `NEXT_PUBLIC_API_URL` is where the browser calls the API, `http://localhost:3001` when unset. To change it, `cp web/.env.example web/.env.local` and edit it.
 - Run: `npm run dev:api` (port 3001, `GET /health` checks the database) and `npm run dev:web` (port 3000).
 - Check: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+- UI runbook scripts (Playwright, `web/e2e/`): `npm run test:e2e`. It starts the runbooks upstream server (:4010) and a web dev server (:3000) pointed at it, so both ports must be free; no API or Postgres needed (fixtures replay). Not part of `npm test`. `npm run test:e2e:headed` shows the browser; any Playwright flag passes through (`npm run test:e2e -- --headed`, `-- --ui`, `-- -g S03`).
 - Single test: `npm test -w api -- -t "<test name>"`, or `npm test -w api -- <file filter>`.
 - Adding a dependency: npm 10 crashes on this workspace (`Cannot read properties of null (reading 'edgesOut')`). Use `npx npm@11 install -w <api|web> <pkg>`. `npm ci` works with npm 10.
 

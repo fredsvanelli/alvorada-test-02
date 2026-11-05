@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/bookings"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"b9-DXKUqd2SQCLV/yO529OO89AJesc\"",
+      "date": "Thu, 05 Nov 2026 05:15:33 GMT"
+    },
+    "body": [
+      {
+        "id": "A",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 10,
+        "end": 20,
+        "status": "active"
+      },
+      {
+        "id": "B",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 20,
+        "end": 30,
+        "status": "active"
+      }
+    ]
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

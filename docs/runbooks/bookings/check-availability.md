@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["GET /availability"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md"]
+sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"GET /availability now accepts an optional `id` query param. When sent and a booking (active or canceled) already has that id, it answers 409 { error: id_taken, message } with no conflicts or available keys, checked after unknown_resource and before the conflict lookup (unknown_resource wins over id_taken). A free id answers 200 exactly as before. An empty, repeated or malformed id (not 1 to 64 letters, digits, - or _) is invalid_data 422. Without id, behavior is unchanged.\""]
 scripts: ["api/test/runbooks/bookings-check-availability.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "877471d"
+  commit: "500ef6c"
   result: passed
-  report: _runs/2026-11-05-0037-bookings.check-availability.md
+  report: _runs/2026-11-05-1330-bookings.check-availability.md
   runs:
-    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.check-availability.md }
+    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1330-bookings.check-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -29,6 +29,11 @@ last_run:
     S06: passed r1
     S07: passed r1
     S08: passed r1
+    S09: passed r1
+    S10: passed r1
+    S11: passed r1
+    S12: passed r1
+    S13: passed r1
 ---
 
 # Check whether an interval is free on a resource, without booking it
@@ -37,7 +42,7 @@ last_run:
 
 ## Goal
 
-Prove that `GET /availability` answers 200 with `{ available, conflicts }` for a valid query, where `conflicts` lists the ids of the active bookings of the same resource that overlap the half-open interval `[start, end)`, in ascending id order by character code, and otherwise rejects the query with `invalid_data` (422) or `unknown_resource` (404), checked in that order.
+Prove that `GET /availability` answers 200 with `{ available, conflicts }` for a valid query, where `conflicts` lists the ids of the active bookings of the same resource that overlap the half-open interval `[start, end)`, in ascending id order by character code, and otherwise rejects the query with `invalid_data` (422), `unknown_resource` (404) or, when the optional `id` is sent and a booking (active or canceled) already has it, `id_taken` (409), checked in that order and before the conflict lookup. A free `id` changes nothing in the answer.
 
 ---
 
@@ -172,7 +177,7 @@ Expected: 422, for each query.
 { "error": "invalid_data", "message": "<string>" }
 ```
 
-The body has no `conflicts` key and no `available` key. A repeated param arrives as an array, which is not a resource id. Today's message is "Send resource, and integer start and end from 0 to 2147483647 with start before end."; its text is not checked.
+The body has no `conflicts` key and no `available` key. A repeated param arrives as an array, which is not a resource id. Today's message is "Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _)."; its text is not checked.
 
 ---
 
@@ -240,11 +245,136 @@ The body has exactly these two keys. A, while active, overlaps this exact interv
 
 ---
 
+### S09. An id that an active booking has returns id_taken, before the conflict lookup
+
+Parents: S01
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)` and B R1 `[20,30)`.
+Request:
+
+```http
+GET /availability?resource=R1&start=19&end=21&id=A
+```
+
+Expected: 409.
+
+```json
+{ "error": "id_taken", "message": "<string>" }
+```
+
+The body has no `conflicts` key and no `available` key. The interval overlaps A and B (S01), but `id_taken` is checked first and the conflicts are not listed.
+
+---
+
+### S10. An id that a canceled booking has still returns id_taken
+
+Parents: S08, S09
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)`, A canceled.
+Request:
+
+```http
+GET /availability?resource=R1&start=10&end=20&id=A
+```
+
+Expected: 409.
+
+```json
+{ "error": "id_taken", "message": "<string>" }
+```
+
+The body has no `conflicts` key and no `available` key. Without `id`, this interval is available (S08); a created booking's id is never reused, even after cancellation.
+
+---
+
+### S11. A free id answers exactly as a check without id
+
+Parents: S01
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)` and B R1 `[20,30)`.
+Request:
+
+```http
+GET /availability?resource=R1&start=19&end=21&id=C
+```
+
+Expected: 200.
+
+```json
+{ "available": false, "conflicts": ["A", "B"] }
+```
+
+The body has exactly these two keys, and `conflicts` has exactly these two ids, in this order: the same body as S01, which sends no `id`. No booking has the id C.
+
+---
+
+### S12. An unknown resource wins over a taken id
+
+Parents: S06, S09
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)`.
+Request:
+
+```http
+GET /availability?resource=R9&start=10&end=20&id=A
+```
+
+Expected: 404.
+
+```json
+{ "error": "unknown_resource", "message": "<string>" }
+```
+
+The body has no `conflicts` key and no `available` key. A exists, but `unknown_resource` is checked before `id_taken`.
+
+---
+
+### S13. An empty, repeated or malformed id returns invalid_data
+
+Parents: none
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Request:
+
+One request per query in the table, each sent as below.
+
+```http
+GET /availability?<query from the table>
+```
+
+| Case | Query |
+|---|---|
+| empty id | `resource=R1&start=10&end=20&id=` |
+| repeated id | `resource=R1&start=10&end=20&id=C&id=D` |
+| id with a space | `resource=R1&start=10&end=20&id=C%20D` |
+| id over 64 characters | `resource=R1&start=10&end=20&id=<x repeated 65 times>` |
+
+Expected: 422, for each query.
+
+```json
+{ "error": "invalid_data", "message": "<string>" }
+```
+
+The body has no `conflicts` key and no `available` key. An id must be 1 to 64 letters, digits, `-` or `_` (`ID` in `api/src/bookings/bookings.service.ts`); a repeated param arrives as an array, which is not an id. The rest of each query is valid, so only the id is rejected.
+
+---
+
 ## Not covered
 
 - The other `invalid_data` inputs (empty or NUL resource, missing, empty, repeated, decimal or negative start, end above 2147483647, start equal to end) and `invalid_data` winning over `unknown_resource`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" in `api/src/bookings/bookings.service.spec.ts` covers each input and that the resource lookup is not reached. Create shares the same `parseInterval`, and `bookings.create-booking` S03, S16 and S18 prove those rules over HTTP.
 - An exact, case-sensitive resource match (`r1` is unknown): left out of the agreed steps. Availability uses the same `ResourcesService.exists` as create, which `bookings.create-booking` S05 proves with `r1`.
-- Unknown query params (for example `id`) are ignored: left out of the agreed steps. The controller reads only `resource`, `start` and `end` (`api/src/bookings/bookings.controller.ts`, `@Get('availability')`).
+- Unknown query params (for example `foo`) are ignored: left out of the agreed steps. The controller reads only `resource`, `start`, `end` and `id` (`api/src/bookings/bookings.controller.ts`, `@Get('availability')`).
+- `invalid_data` for a bad id winning over `unknown_resource`, and an invalid interval with a taken id answering `invalid_data`, not `id_taken`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" for ids in `api/src/bookings/bookings.service.spec.ts` asserts the resource lookup is not reached, and the service validates every param before any lookup (`availability` in `api/src/bookings/bookings.service.ts`).
+- An id at the 64-character limit, or made of `-` and `_`, accepted: left out of the agreed steps. Availability uses the same `ID` pattern as create (`api/src/bookings/bookings.service.ts`), and "accepts a 64-character id" in `api/src/bookings/bookings.service.spec.ts` proves the limit for create.
 - An available answer does not hold the interval, and concurrent checks and creates: the check is read-only, and concurrency is out of scope (PRD).
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.
