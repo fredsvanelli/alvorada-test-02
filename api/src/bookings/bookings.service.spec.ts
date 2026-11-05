@@ -229,6 +229,7 @@ describe('BookingsService', () => {
         conflicts: [],
       });
       expect(findActiveByResource).toHaveBeenCalledWith('R1');
+      expect(insert).not.toHaveBeenCalled();
     });
 
     it('lists the overlapping bookings in repository order', async () => {
