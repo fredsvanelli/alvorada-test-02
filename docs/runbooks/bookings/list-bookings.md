@@ -11,8 +11,20 @@ covers:
   requirements: []
 sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel now exists; add the step listing active and canceled bookings together\""]
 scripts: ["api/test/runbooks/bookings-list-bookings.spec.ts"]
-status: draft
-last_run: null
+status: active
+last_run:
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
+  result: passed
+  report: _runs/2026-11-05-0037-bookings.list-bookings.md
+  runs:
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.list-bookings.md }
+  cells:
+    S01: passed r1
+    S02: passed r1
+    S03: passed r1
+    S04: passed r1
 ---
 
 # List every booking with its status and resource, in ascending id order

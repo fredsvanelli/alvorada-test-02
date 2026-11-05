@@ -13,35 +13,34 @@ sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "d
 scripts: ["api/test/runbooks/bookings-create-booking.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-bookings.create-booking.md
-  outdated: true
+  report: _runs/2026-11-05-0037-bookings.create-booking.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-bookings.create-booking.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.create-booking.md }
   cells:
-    S01: passed r1 outdated
-    S02: passed r1 outdated
-    S03: passed r1 outdated
-    S04: passed r1 outdated
-    S05: passed r1 outdated
-    S06: passed r1 outdated
-    S07: passed r1 outdated
-    S08: passed r1 outdated
-    S09: passed r1 outdated
-    S10: passed r1 outdated
-    S11: passed r1 outdated
-    S12: passed r1 outdated
-    S13: passed r1 outdated
-    S14: passed r1 outdated
-    S15: passed r1 outdated
-    S16: passed r1 outdated
-    S17: passed r1 outdated
-    S18: passed r1 outdated
-    S19: passed r1 outdated
-    S20: passed r1 outdated
+    S01: passed r1
+    S02: passed r1
+    S03: passed r1
+    S04: passed r1
+    S05: passed r1
+    S06: passed r1
+    S07: passed r1
+    S08: passed r1
+    S09: passed r1
+    S10: passed r1
+    S11: passed r1
+    S12: passed r1
+    S13: passed r1
+    S14: passed r1
+    S15: passed r1
+    S16: passed r1
+    S17: passed r1
+    S18: passed r1
+    S19: passed r1
+    S20: passed r1
 ---
 
 # Create a booking, or reject it without writing anything

@@ -13,21 +13,22 @@ sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md"
 scripts: ["api/test/runbooks/bookings-check-availability.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-bookings.check-availability.md
-  outdated: true
+  report: _runs/2026-11-05-0037-bookings.check-availability.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-bookings.check-availability.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.check-availability.md }
   cells:
-    S01: passed r1 outdated
-    S02: passed r1 outdated
-    S03: passed r1 outdated
-    S04: passed r1 outdated
-    S05: passed r1 outdated
-    S06: passed r1 outdated
+    S01: passed r1
+    S02: passed r1
+    S03: passed r1
+    S04: passed r1
+    S05: passed r1
+    S06: passed r1
+    S07: passed r1
+    S08: passed r1
 ---
 
 # Check whether an interval is free on a resource, without booking it

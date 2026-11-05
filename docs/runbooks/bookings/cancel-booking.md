@@ -11,8 +11,22 @@ covers:
   requirements: []
 sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md"]
 scripts: ["api/test/runbooks/bookings-cancel-booking.spec.ts"]
-status: draft
-last_run: null
+status: active
+last_run:
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
+  result: passed
+  report: _runs/2026-11-05-0037-bookings.cancel-booking.md
+  runs:
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.cancel-booking.md }
+  cells:
+    S01: passed r1
+    S02: passed r1
+    S03: passed r1
+    S04: passed r1
+    S05: passed r1
+    S06: passed r1
 ---
 
 # Cancel a booking, freeing its interval while its id stays taken
