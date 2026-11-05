@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useOptimistic, useState, useTransition } from "react";
+import { useCallback, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { API_URL, call } from "@/lib/api";
 import {
@@ -46,6 +46,8 @@ export function BookingsPage() {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [shown, addOptimistic] = useOptimistic<ShownBooking[], OptimisticChange>(bookings, applyOptimistic);
   const [, startTransition] = useTransition();
+  const [checked, setChecked] = useState<{ resource: string; start: number; end: number; reply: ApiReply } | null>(null);
+  const previewSeq = useRef(0);
 
   const apply = useCallback((data: Awaited<ReturnType<typeof fetchAll>>) => {
     if (!data) return setLoad("failed");
@@ -94,8 +96,30 @@ export function BookingsPage() {
   }
 
   const ready = load === "ready";
-  const canBook = ready && form.resource !== "" && isBookable(form.start, form.end) && !shown.some((b) => b.pending === "add");
-  const preview = previewOf(null, form.resource, Number(form.start), Number(form.end));
+  const checkable = ready && form.resource !== "" && isBookable(form.start, form.end);
+  const canBook = checkable && !shown.some((b) => b.pending === "add");
+
+  // Live availability check: debounced, and only the latest answer counts. Re-runs after each write's re-fetch.
+  useEffect(() => {
+    const n = ++previewSeq.current;
+    if (!checkable) return;
+    const q = { resource: form.resource, start: Number(form.start), end: Number(form.end) };
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({ resource: q.resource, start: String(q.start), end: String(q.end) });
+      void call("GET", `/availability?${params}`).then((reply) => {
+        if (n === previewSeq.current) setChecked({ ...q, reply });
+      });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [checkable, form.resource, form.start, form.end, bookings]);
+
+  // Until the first answer for valid fields arrives, the last answer stays on screen (it names its own interval).
+  const preview =
+    checkable && checked ? previewOf(checked.reply, checked.resource, checked.start, checked.end) : previewOf(null, "", 0, 0);
+  const timelinePreview =
+    checked && (preview.tone === "available" || preview.tone === "conflict")
+      ? { resource: checked.resource, start: checked.start, end: checked.end, tone: preview.tone, conflicts: preview.conflicts }
+      : null;
 
   return (
     <main className="mx-auto box-border flex w-full max-w-[1240px] flex-col gap-6 px-5 pt-8 pb-12">
@@ -137,7 +161,7 @@ export function BookingsPage() {
             </Card>
           ) : (
             <>
-              <Timeline resources={resources} bookings={shown} preview={null} />
+              <Timeline resources={resources} bookings={shown} preview={timelinePreview} />
               <BookingsTable bookings={shown} onCancel={onCancel} />
             </>
           )}
