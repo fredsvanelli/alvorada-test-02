@@ -127,8 +127,8 @@ paths:
         can still be taken by the next create. Checks run in this order and the
         first failure wins: `invalid_data`, `unknown_resource`. Only active
         bookings of the same resource conflict, with the half-open rule
-        `[start, end)`. Extra query params are ignored; a repeated param is
-        `invalid_data`.
+        `[start, end)`. Extra query params are ignored; a repeated `resource`,
+        `start` or `end` is `invalid_data`.
       parameters:
         - name: resource
           in: query
