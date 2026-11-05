@@ -13,6 +13,8 @@ Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (T
 npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). Run everything from the repo root.
 
 - One-time setup: `cp api/.env.example api/.env`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
+- `WEB_ORIGIN` (in `api/.env`) is the one origin the API allows through CORS, `http://localhost:3000` by default. An `api/.env` copied before SCH-10 needs that line added, or the API does not start.
+- `NEXT_PUBLIC_API_URL` is where the browser calls the API, `http://localhost:3001` when unset. To change it, `cp web/.env.example web/.env.local` and edit it.
 - Run: `npm run dev:api` (port 3001, `GET /health` checks the database) and `npm run dev:web` (port 3000).
 - Check: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 - Single test: `npm test -w api -- -t "<test name>"`, or `npm test -w api -- <file filter>`.
