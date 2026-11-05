@@ -7,9 +7,10 @@ estimate: 2
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-9, SCH-10]
+related: [SCH-14]
 branch: sch-11-write-the-readme-setup-run-tests-demo
 created: 2026-11-04T20:00:44.994Z
-updated: 2026-11-05T19:28:42Z
+updated: 2026-11-05T19:35:14Z
 ---
 
 ## Acceptance criteria
