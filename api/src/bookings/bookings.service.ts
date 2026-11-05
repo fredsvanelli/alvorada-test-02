@@ -18,8 +18,10 @@ export type CancelResult =
 
 export type AvailabilityError = 'invalid_data' | 'unknown_resource' | 'id_taken';
 
+export type Availability = { available: boolean; conflicts: string[] };
+
 export type AvailabilityResult =
-  | { ok: true; available: boolean; conflicts: string[] }
+  | ({ ok: true } & Availability)
   | { ok: false; error: AvailabilityError };
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;

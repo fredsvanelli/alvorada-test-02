@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import type { BookingView } from './booking.entity.js';
 import {
+  Availability,
   AvailabilityError,
   BookingsService,
   CreateError,
@@ -85,7 +86,7 @@ export class BookingsController {
     @Query('start') start: unknown,
     @Query('end') end: unknown,
     @Query('id') id?: unknown,
-  ): Promise<{ available: boolean; conflicts: string[] }> {
+  ): Promise<Availability> {
     const result = await this.bookings.availability(resource, start, end, id);
     if (result.ok) {
       return { available: result.available, conflicts: result.conflicts };
