@@ -9,5 +9,8 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    // Specs boot AppModule against this disposable database, recreated and seeded by the global setup.
+    env: { POSTGRES_DB: 'bookings_test' },
+    globalSetup: ['./test/global-setup.ts'],
   },
 });

@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "runbooks-playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--headless",
+        "--isolated",
+        "--secrets",
+        ".env.local",
+        "--output-dir",
+        ".runbooks/evidence"
+      ]
+    },
+    "runbooks-playwright-headed": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--isolated",
+        "--secrets",
+        ".env.local",
+        "--output-dir",
+        ".runbooks/evidence"
+      ]
+    }
+  }
+}

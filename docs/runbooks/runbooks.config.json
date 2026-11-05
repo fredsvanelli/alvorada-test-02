@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "language": "en",
+  "stack": "fullstack",
+  "tests": {
+    "ui": {
+      "tech": "next",
+      "framework": "playwright",
+      "root": "web",
+      "dir": "e2e",
+      "command": "PLAYWRIGHT_JUNIT_OUTPUT_NAME={junit} npx playwright test {files} --reporter=junit"
+    },
+    "api": {
+      "tech": "nest",
+      "framework": "vitest",
+      "root": "api",
+      "dir": "test/runbooks",
+      "command": "npx vitest run {files} --reporter=junit --outputFile={junit}"
+    }
+  },
+  "paths": { "runbooks": "docs/runbooks", "evidence": ".runbooks/evidence" },
+  "roles": { "enabled": false },
+  "app": { "baseUrl": "http://localhost:3000", "start": ["npm run dev:web"] },
+  "accounts": {},
+  "uiText": [],
+  "data": { "seedHint": "docker compose up -d db, then npm run dev:api: the API runs its migrations on start, which seed resources R1 to R5" },
+  "entries": [
+    { "extractor": "next-app-router", "root": "web", "glob": "src/app/**" },
+    {
+      "extractor": "regex",
+      "root": "api",
+      "glob": "openapi.yaml",
+      "kind": "api-endpoint",
+      "pattern": "(?<=^  (?<id>/\\S*):\\n(?:(?: {4}.*)?\\n)*)^ {4}(?<method>get|post|put|patch|delete):"
+    }
+  ],
+  "requirements": [],
+  "slices": {
+    "resources": ["api/src/resources/**"],
+    "bookings": ["api/src/bookings/**"]
+  },
+  "tickets": { "fetch": "" },
+  "git": { "base": "main", "protected": ["main"], "messageFormat": "docs: {summary}" },
+  "commits": { "runbooks": "ask", "setup": "ask" },
+  "mcp": { "headless": "runbooks-playwright", "headed": "runbooks-playwright-headed", "secretsFile": ".env.local" },
+  "viewports": {},
+  "design": null,
+  "upstream": {
+    "mode": "live",
+    "baseUrl": "http://localhost:3001",
+    "urlEnv": "NEXT_PUBLIC_API_URL",
+    "start": ["docker compose up -d db", "npm run dev:api"],
+    "serverFile": "web/e2e/runbooks-upstream.mjs"
+  },
+  "staleDays": 30,
+  "models": {
+    "check": "inline",
+    "list": "inline",
+    "ui": "inline",
+    "upgrade": "inline",
+    "roles:list": "inline",
+    "contexts:list": "inline",
+    "help": "inline",
+    "setup": "inline",
+    "settings": "inline",
+    "roles:create": "inline",
+    "roles:update": "inline",
+    "roles:delete": "inline",
+    "contexts:create": "inline",
+    "contexts:update": "inline",
+    "contexts:delete": "inline",
+    "permissions:manage": "inline",
+    "orchestrator": "inline",
+    "run --mode guided": "inline",
+    "coverage": "haiku",
+    "run --mode test": "haiku",
+    "run --mode prompt": "haiku",
+    "run --import": "haiku",
+    "run": "sonnet",
+    "help <question>": "sonnet",
+    "whats-next": "sonnet",
+    "map": "sonnet",
+    "audit": "sonnet",
+    "roles:generate": "sonnet",
+    "audit --fix": "opus",
+    "create": "opus",
+    "update": "opus",
+    "to-test": "opus"
+  }
+}
