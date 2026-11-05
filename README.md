@@ -2,7 +2,6 @@
 
 A booking system for a team's shared Resources that rejects overlapping Bookings, on the half-open rule `[start, end)`.
 
-- **Case:** Case 02, Conflict-free bookings.
 - **Focus:** full stack, with the emphasis on the back end: the booking rules, the API contract and the tests. The web app is how the rules are shown.
 - **Time spent:** about 6 hours.
 
@@ -22,7 +21,7 @@ Stack: Next.js (TypeScript, Tailwind, shadcn/ui) calling a Nest.js REST API (Typ
 Prerequisites:
 
 - [NVM](https://github.com/nvm-sh/nvm)
-- Node 22.18 or newer on the 22 line, pinned in `.nvmrc`. The web unit tests run `.ts` files with `node --test`, which needs Node 22.18 or newer.
+- Node 22.18 or newer on the 22 line, pinned in `.nvmrc`. 
 - npm 10 or newer
 - Docker with Compose
 
@@ -40,7 +39,7 @@ docker compose up -d db
 
 ## Run
 
-Run each command in its own terminal:
+From the **root** folder, run each command in its own terminal:
 
 ```sh
 npm run dev:api   # API on http://localhost:3001
@@ -51,11 +50,13 @@ On start, the API runs the database migrations, which also seed the five Resourc
 
 ## Tests
 
-| Command | What it runs | What it needs |
-|---|---|---|
-| `npm test` | API unit tests, web unit tests and the API runbook scripts | Postgres up (`docker compose up -d db`) |
-| `npm run test:e2e` | The UI runbook scripts (Playwright), replaying recorded API answers | Ports 3000 and 4010 free. No API, no Postgres. Run `npx playwright install chromium` from `web/` once beforehand |
-| `npm run lint`, `npm run typecheck`, `npm run build` | Lint, type checks and production builds of both apps | Nothing running |
+
+| Command                                              | What it runs                                                        | What it needs                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                           | API unit tests, web unit tests and the API runbook scripts          | Postgres up (`docker compose up -d db`)                                                                           |
+| `npm run test:e2e`                                   | The UI runbook scripts (Playwright), replaying recorded API answers | Run `npx playwright install chromium` from `web/` once beforehand. Ports 3000 and 4010 free. No API, no Postgres. |
+| `npm run lint`, `npm run typecheck`, `npm run build` | Lint, type checks and production builds of both apps                | Nothing running                                                                                                   |
+
 
 `npm test` never touches your data. It uses a separate database, `bookings_test`, which is dropped, recreated and migrated before every run.
 
@@ -70,7 +71,7 @@ npm run dev:api
 
 ### In the web app
 
-Open http://localhost:3000. As you fill the Operation form, the page asks the API whether the Interval is available, and whether the Id is still free. A Booking that would be rejected never reaches the create, so Book stays disabled.
+Open [http://localhost:3000](http://localhost:3000). As you fill the Operation form, the page asks the API whether the Interval is available, and whether the Id is still free. A Booking that would be rejected never reaches the create, so Book stays disabled.
 
 1. **Book A and B.** Enter Id `A`, Resource R1, Start `10`, End `20`, and click Book. Then enter `B`, R1, `20` to `30`, and click Book. Both are created. B is accepted because it starts exactly where A ends: R1 is free again at 20.
 2. **Try C on R1.** Enter `C`, R1, `19` to `21`. The preview reads "R1 [19,21) conflicts with A, B", the timeline rings A and B, and Book is disabled. Nothing is created.
@@ -83,94 +84,37 @@ Open http://localhost:3000. As you fill the Operation form, the page asks the AP
 The web app has just created A, B and C, and ids are never reused, so reset the database and restart the API (see above) before you run these. Each command is followed by the body and the HTTP status the API answers.
 
 1. Book A on R1 `[10,20)`:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
    ```
-
-   ```
-   {"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"active"}
-   201
-   ```
-
 2. Book B on R1 `[20,30)`. It starts where A ends:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"B","resource":"R1","start":20,"end":30}'
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"B","resource":"R1","start":20,"end":30}'
    ```
-
-   ```
-   {"id":"B","resource":{"id":"R1","name":"Agora Room"},"start":20,"end":30,"status":"active"}
-   201
-   ```
-
 3. C on R1 `[19,21)` is rejected with its Conflicts, in ascending id order:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R1","start":19,"end":21}'
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R1","start":19,"end":21}'
    ```
-
-   ```
-   {"error":"conflict","message":"The interval overlaps active bookings of this resource.","conflicts":["A","B"]}
-   409
-   ```
-
 4. C on R2 `[19,21)` is accepted. The rejection did not take the id:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R2","start":19,"end":21}'
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R2","start":19,"end":21}'
    ```
-
-   ```
-   {"id":"C","resource":{"id":"R2","name":"Pixel Room"},"start":19,"end":21,"status":"active"}
-   201
-   ```
-
 5. Check R1 `[19,21)` without booking it:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=19&end=21'
+    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=19&end=21'
    ```
-
-   ```
-   {"available":false,"conflicts":["A","B"]}
-   200
-   ```
-
 6. Cancel A:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings/A/cancel
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings/A/cancel
    ```
-
-   ```
-   {"result":"canceled","booking":{"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"canceled"}}
-   200
-   ```
-
 7. R1 `[10,20)` is available again:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20'
+    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20'
    ```
-
-   ```
-   {"available":true,"conflicts":[]}
-   200
-   ```
-
 8. The id A stays taken, both for a create and for an Availability check that names it:
-
    ```sh
-   curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
-   curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20&id=A'
-   ```
-
-   ```
-   {"error":"id_taken","message":"This id was already used by another booking."}
-   409
-   {"error":"id_taken","message":"This id was already used by another booking."}
-   409
+    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
+    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20&id=A'
    ```
 
 To see every Booking with its status, run `curl -s http://localhost:3001/bookings`. A shows as `canceled`, and B and C show as `active`.
@@ -180,29 +124,21 @@ To see every Booking with its status, run `curl -s http://localhost:3001/booking
 Each command runs one test on its own. Postgres must be up, because the test run recreates `bookings_test` first.
 
 1. **Touching Intervals do not overlap**: the `overlaps` case "touching: a ends where b starts", in `api/src/bookings/booking-rules.spec.ts`.
-
    ```sh
-   npm test -w api -- src/bookings/booking-rules.spec.ts -t "touching"
+    npm test -w api -- src/bookings/booking-rules.spec.ts -t "touching"
    ```
-
    - Expected: `[10,20)` against `[20,30)` is not an overlap, in both argument orders.
    - Catches: a closed-interval comparison (`<=` instead of `<`), which would reject B in the demo. Also catches a rule that gives different answers depending on which Booking comes first.
-
 2. **A rejected id stays free**: `bookings.create-booking` S09, in `api/test/runbooks/bookings-create-booking.spec.ts`.
-
    ```sh
-   npm test -w api -- test/runbooks/bookings-create-booking.spec.ts -t "S09"
+    npm test -w api -- test/runbooks/bookings-create-booking.spec.ts -t "S09"
    ```
-
    - Expected: over HTTP against the real database, C on R1 `[19,21)` answers `409 conflict` with `["A","B"]`, then C on R2 `[19,21)` answers `201`.
    - Catches: a create that writes the row before every check passes, which would leave the id C taken by a Booking that was rejected.
-
 3. **Conflicts come back in ascending id order, by character code**: `bookings.check-availability` S04, in `api/test/runbooks/bookings-check-availability.spec.ts`.
-
    ```sh
-   npm test -w api -- test/runbooks/bookings-check-availability.spec.ts -t "S04"
+    npm test -w api -- test/runbooks/bookings-check-availability.spec.ts -t "S04"
    ```
-
    - Expected: with Bookings `B`, `a`, `10` and `9` created in that order, the conflicts are `["10","9","B","a"]`.
    - Catches: ordering by the database's locale collation, by numeric value, or by creation order, any of which gives a different list.
 
