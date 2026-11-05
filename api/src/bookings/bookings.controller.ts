@@ -2,7 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -51,6 +53,21 @@ export class BookingsController {
         ...(result.error === 'conflict' && { conflicts: result.conflicts }),
       },
       STATUS[result.error],
+    );
+  }
+
+  // 200 for both outcomes (Nest answers POST with 201 by default), or 404.
+  @Post('bookings/:id/cancel')
+  @HttpCode(200)
+  async cancel(@Param('id') id: string): Promise<{
+    result: 'canceled' | 'already_canceled';
+    booking: BookingView;
+  }> {
+    const result = await this.bookings.cancel(id);
+    if (result.ok) return { result: result.result, booking: result.booking };
+    throw new HttpException(
+      { error: result.error, message: 'No booking has this id.' },
+      404,
     );
   }
 

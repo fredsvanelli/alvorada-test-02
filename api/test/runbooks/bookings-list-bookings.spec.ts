@@ -86,4 +86,21 @@ describe('List every booking with its status and resource, in ascending id order
       { id: 'a', resource: R1, start: 1, end: 2, status: 'active' },
     ]);
   });
+
+  it('S04 Active and canceled bookings are listed together, each with its status', async () => {
+    await given('A', 'R1', 10, 20);
+    await given('B', 'R1', 20, 30);
+    const cancel = await fetch(`${baseUrl}/bookings/A/cancel`, {
+      method: 'POST',
+    });
+    expect(cancel.status, 'cancel A').toBe(200);
+
+    const response = await list();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toStrictEqual([
+      { id: 'A', resource: R1, start: 10, end: 20, status: 'canceled' },
+      { id: 'B', resource: R1, start: 20, end: 30, status: 'active' },
+    ]);
+  });
 });

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Booking, type BookingStatus, type BookingView } from './booking.entity.js';
+import {
+  Booking,
+  type BookingStatus,
+  type BookingView,
+} from './booking.entity.js';
 
 // A raw row of the JOIN; pg returns integer columns as numbers.
 type ViewRow = {
@@ -65,6 +69,11 @@ export class BookingsRepository {
       end: row.end_time,
       status: row.status,
     }));
+  }
+
+  // An UPDATE, never a delete: the row keeps the id taken.
+  async setStatus(id: string, status: BookingStatus): Promise<void> {
+    await this.bookings.update({ id }, { status });
   }
 
   // insert, not save: save would update a row that already has this id.

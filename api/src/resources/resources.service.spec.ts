@@ -21,7 +21,10 @@ describe('ResourcesService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         ResourcesService,
-        { provide: getRepositoryToken(Resource), useValue: { find, exists, findOneBy } },
+        {
+          provide: getRepositoryToken(Resource),
+          useValue: { find, exists, findOneBy },
+        },
       ],
     }).compile();
     service = moduleRef.get(ResourcesService);

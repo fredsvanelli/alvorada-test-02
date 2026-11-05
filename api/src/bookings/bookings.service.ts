@@ -12,6 +12,10 @@ export type CreateResult =
   | { ok: false; error: Exclude<CreateError, 'conflict'> }
   | { ok: false; error: 'conflict'; conflicts: string[] };
 
+export type CancelResult =
+  | { ok: true; result: 'canceled' | 'already_canceled'; booking: BookingView }
+  | { ok: false; error: 'not_found' };
+
 export type AvailabilityError = 'invalid_data' | 'unknown_resource';
 
 export type AvailabilityResult =
@@ -69,6 +73,24 @@ export class BookingsService {
     await this.bookings.insert(booking);
     const { id, name } = resource;
     return { ok: true, booking: { ...booking, resource: { id, name } } };
+  }
+
+  // An id that fails the pattern cannot exist, so it is not_found without a
+  // query (this also keeps NUL away from Postgres). Canceling twice writes once.
+  async cancel(id: string): Promise<CancelResult> {
+    const booking = ID.test(id)
+      ? await this.bookings.findByIdWithResource(id)
+      : null;
+    if (!booking) return { ok: false, error: 'not_found' };
+    if (booking.status === 'canceled') {
+      return { ok: true, result: 'already_canceled', booking };
+    }
+    await this.bookings.setStatus(id, 'canceled');
+    return {
+      ok: true,
+      result: 'canceled',
+      booking: { ...booking, status: 'canceled' },
+    };
   }
 
   // Every booking, active and canceled, in ascending id order.

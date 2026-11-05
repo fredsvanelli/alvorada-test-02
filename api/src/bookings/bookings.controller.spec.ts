@@ -7,6 +7,7 @@ describe('BookingsController', () => {
   const create = vi.fn();
   const availability = vi.fn();
   const list = vi.fn();
+  const cancel = vi.fn();
   let controller: BookingsController;
 
   const body = { id: 'A', resource: 'R1', start: 10, end: 20 };
@@ -15,10 +16,14 @@ describe('BookingsController', () => {
     create.mockReset();
     availability.mockReset();
     list.mockReset();
+    cancel.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [BookingsController],
       providers: [
-        { provide: BookingsService, useValue: { create, availability, list } },
+        {
+          provide: BookingsService,
+          useValue: { create, availability, list, cancel },
+        },
       ],
     }).compile();
     controller = moduleRef.get(BookingsController);
@@ -82,6 +87,39 @@ describe('BookingsController', () => {
     ];
     list.mockResolvedValue(views);
     await expect(controller.list()).resolves.toBe(views);
+  });
+
+  describe('cancel', () => {
+    const booking = {
+      id: 'A',
+      resource: { id: 'R1', name: 'Agora Room' },
+      start: 10,
+      end: 20,
+      status: 'canceled',
+    };
+
+    it.each(['canceled', 'already_canceled'])(
+      'returns %s with the booking',
+      async (result) => {
+        cancel.mockResolvedValue({ ok: true, result, booking });
+        await expect(controller.cancel('A')).resolves.toStrictEqual({
+          result,
+          booking,
+        });
+        expect(cancel).toHaveBeenCalledWith('A');
+      },
+    );
+
+    it('maps not_found to 404', async () => {
+      cancel.mockResolvedValue({ ok: false, error: 'not_found' });
+      const error: unknown = await controller.cancel('Z').catch((e) => e);
+      expect(error).toBeInstanceOf(HttpException);
+      expect((error as HttpException).getStatus()).toBe(404);
+      expect((error as HttpException).getResponse()).toStrictEqual({
+        error: 'not_found',
+        message: 'No booking has this id.',
+      });
+    });
   });
 
   describe('availability', () => {

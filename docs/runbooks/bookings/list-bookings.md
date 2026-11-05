@@ -9,7 +9,7 @@ roles: []
 covers:
   entries: ["GET /bookings"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md"]
+sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel now exists; add the step listing active and canceled bookings together\""]
 scripts: ["api/test/runbooks/bookings-list-bookings.spec.ts"]
 status: draft
 last_run: null
@@ -21,7 +21,7 @@ last_run: null
 
 ## Goal
 
-Prove that `GET /bookings` answers 200 with a bare array of every booking in the shape `{ id, resource: { id, name }, start, end, status }`, the resource nested with its seeded name and `start`/`end` as JSON numbers, in ascending id order by character code, and `[]` when there are no bookings.
+Prove that `GET /bookings` answers 200 with a bare array of every booking, active and canceled, in the shape `{ id, resource: { id, name }, start, end, status }`, the resource nested with its seeded name and `start`/`end` as JSON numbers, in ascending id order by character code, and `[]` when there are no bookings.
 
 ---
 
@@ -30,7 +30,7 @@ Prove that `GET /bookings` answers 200 with a bare array of every booking in the
 - Test environment: Postgres up (`docker compose up -d db`) and `api/.env` copied from `api/.env.example`. The script boots the real `AppModule` (`api/src/app.module.ts`) with `Test.createTestingModule({ imports: [AppModule] })`, calls `app.listen(0)` once, closes the app in `afterAll`, and sends requests with Node's built-in `fetch`. Run from `api/` with `npx vitest run {files} --reporter=junit --outputFile={junit}`.
 - Database schema and seed: the script runs against the disposable test database `bookings_test` (`POSTGRES_DB` in `api/vitest.config.ts`), which `api/test/global-setup.ts` drops, recreates and migrates before every Vitest run. The `booking` table and the resources R1 to R5 come from the migration `api/src/database/migrations/1793750400000-InitSchema.ts`, which seeds R1 as "Agora Room" and R2 as "Pixel Room".
 - Auth: none. Authentication is out of scope (PRD), and `api/openapi.yaml` declares `security: []`.
-- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, in the order listed and with the ids the step names, before the request under test; each of those creates must return 201. A booking written as `A R1 [10,20)` means the JSON body `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }`. Resources come only from the seed.
+- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, in the order listed and with the ids the step names, before the request under test; each of those creates must return 201. A booking written as `A R1 [10,20)` means the JSON body `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }`. A booking the step lists as canceled is canceled after all the creates, through `POST /bookings/<id>/cancel` with no body; that call must return 200. Resources come only from the seed.
 - Requests: the request line is sent exactly as written, with no query and no body.
 
 ---
@@ -114,9 +114,34 @@ The ids come back as `["10", "9", "B", "a"]`, exactly these four in this order: 
 
 ---
 
+### S04. Active and canceled bookings are listed together, each with its status
+
+Parents: S02
+Requirement: none
+Endpoint: `GET /bookings`
+As: anonymous
+Given: A R1 `[10,20)` and B R1 `[20,30)`, then A canceled through `POST /bookings/A/cancel` (200).
+Request:
+
+```http
+GET /bookings
+```
+
+Expected: 200.
+
+```json
+[
+  { "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 10, "end": 20, "status": "canceled" },
+  { "id": "B", "resource": { "id": "R1", "name": "Agora Room" }, "start": 20, "end": 30, "status": "active" }
+]
+```
+
+The whole body equals this array (strict equality): exactly these two bookings, in id order A, B. The canceled booking stays in the list with `status: "canceled"` (cancel sets the status and keeps the row, `setStatus` in `api/src/bookings/bookings.repository.ts`), and the list does not filter by status (`findAllWithResource`).
+
+---
+
 ## Not covered
 
-- Active and canceled bookings listed together, each with its status: no endpoint cancels a booking yet (`POST /bookings/:id/cancel`, SCH-8 Task 3), and the script creates data only through the API. `/runbooks:update` adds this step once the cancel endpoint exists.
 - Unknown query params (for example `?status=active`) are ignored: left out of the agreed steps. The controller takes no query (`api/src/bookings/bookings.controller.ts`, `@Get('bookings')`).
 - Invalid input (422): the endpoint takes no query and no body, so no input can be invalid.
 - A read-back: the endpoint only reads; it is itself the read-back of `bookings.create-booking` and, later, `bookings.cancel-booking`.

@@ -9,6 +9,8 @@ describe('BookingsService', () => {
   const findActiveByResource = vi.fn();
   const insert = vi.fn();
   const findAllWithResource = vi.fn();
+  const findByIdWithResource = vi.fn();
+  const setStatus = vi.fn();
   const exists = vi.fn();
   const findResource = vi.fn();
   let service: BookingsService;
@@ -29,6 +31,8 @@ describe('BookingsService', () => {
       findActiveByResource,
       insert,
       findAllWithResource,
+      findByIdWithResource,
+      setStatus,
       exists,
       findResource,
     ]) {
@@ -50,6 +54,8 @@ describe('BookingsService', () => {
             findActiveByResource,
             insert,
             findAllWithResource,
+            findByIdWithResource,
+            setStatus,
           },
         },
         {
@@ -307,5 +313,58 @@ describe('BookingsService', () => {
       findAllWithResource.mockResolvedValue(views);
       await expect(service.list()).resolves.toStrictEqual(views);
     });
+  });
+
+  describe('cancel', () => {
+    const view = (status: BookingStatus) => ({
+      id: 'A',
+      resource: { id: 'R1', name: 'Agora Room' },
+      start: 10,
+      end: 20,
+      status,
+    });
+
+    it('cancels an active booking', async () => {
+      findByIdWithResource.mockResolvedValue(view('active'));
+      await expect(service.cancel('A')).resolves.toStrictEqual({
+        ok: true,
+        result: 'canceled',
+        booking: view('canceled'),
+      });
+      expect(findByIdWithResource).toHaveBeenCalledWith('A');
+      expect(setStatus).toHaveBeenCalledTimes(1);
+      expect(setStatus).toHaveBeenCalledWith('A', 'canceled');
+    });
+
+    it('answers already_canceled without writing', async () => {
+      findByIdWithResource.mockResolvedValue(view('canceled'));
+      await expect(service.cancel('A')).resolves.toStrictEqual({
+        ok: true,
+        result: 'already_canceled',
+        booking: view('canceled'),
+      });
+      expect(setStatus).not.toHaveBeenCalled();
+    });
+
+    it('returns not_found for an unknown id', async () => {
+      findByIdWithResource.mockResolvedValue(null);
+      await expect(service.cancel('Z')).resolves.toStrictEqual({
+        ok: false,
+        error: 'not_found',
+      });
+      expect(setStatus).not.toHaveBeenCalled();
+    });
+
+    it.each(['x'.repeat(65), 'R\u00001', 'A B', ''])(
+      'returns not_found for %j without a query',
+      async (id) => {
+        await expect(service.cancel(id)).resolves.toStrictEqual({
+          ok: false,
+          error: 'not_found',
+        });
+        expect(findByIdWithResource).not.toHaveBeenCalled();
+        expect(setStatus).not.toHaveBeenCalled();
+      },
+    );
   });
 });
