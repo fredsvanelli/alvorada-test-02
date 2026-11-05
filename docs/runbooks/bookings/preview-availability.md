@@ -10,17 +10,17 @@ upstream: mocked
 covers:
   entries: ["/", "GET /resources", "GET /bookings", "GET /availability"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10"]
-scripts: []
+sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "file web/src/components/bookings/bookings-page.tsx", "text \"The live availability preview now sends the form Id with the check (id param only when Id is not empty). A 409 id_taken shows Id X was already used by another booking in the conflict colors, with no preview box and Book disabled. Changing the Id re-runs the check. An invalid Id (422) shows the neutral failure text.\""]
+scripts: ["web/e2e/bookings/preview-availability.runbook.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "a7cb566"
+  commit: "500ef6c"
   result: passed
-  report: _runs/2026-11-05-0326-bookings.preview-availability.md
+  report: _runs/2026-11-05-1332-bookings.preview-availability.md
   runs:
-    r1: { date: 2026-11-05, commit: "a7cb566", report: _runs/2026-11-05-0326-bookings.preview-availability.md }
+    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1332-bookings.preview-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -30,6 +30,8 @@ last_run:
     S06: passed r1
     S07: passed r1
     S08: passed r1
+    S09: passed r1
+    S10: passed r1
 ---
 
 # See whether an interval is free while picking it, without booking
@@ -38,16 +40,16 @@ last_run:
 
 ## Goal
 
-On the bookings home page, while the user picks a resource, a start and an end, the preview line under the fields says whether the interval is available or names the conflicting booking ids, and the timeline draws a dashed preview box and rings the conflicting bookings. The check is the page's availability check (there is no Check button) and it creates nothing.
+On the bookings home page, while the user picks a resource, a start and an end, the preview line under the fields says whether the interval is available or names the conflicting booking ids, and the timeline draws a dashed preview box and rings the conflicting bookings. The check is the page's availability check (there is no Check button) and it creates nothing. The "Book" button follows the preview: it is enabled only while the line says the interval is available, and disabled for a conflict, a taken id, a failed check or fields that cannot be checked. When "Id" is filled, the check carries it, and an id some booking already has shows on the line instead of the interval's answer.
 
 ---
 
 ## Preconditions
 
 - Services: the upstream server (`npm run runbooks:upstream`, on `http://127.0.0.1:4010`) and the web app started with `NEXT_PUBLIC_API_URL=http://127.0.0.1:4010 npm run dev:web`. Before each step, the runbook and the step are selected on the server (`POST /__runbooks/select` with `{ "runbook": "bookings.preview-availability", "mode": "mocked", "step": "<Sxx>" }`).
-- Data: the fixtures in `docs/runbooks/_fixtures/bookings/preview-availability/`. They answer `GET /resources` with R1 to R5 (R1 "Agora Room", R2 "Pixel Room"), `GET /bookings` with two active bookings, A on R1 `[10,20)` and B on R1 `[20,30)`, and `GET /availability` for each interval the steps pick. `S05/` holds a hand-written 500 for R1 `[40,50)`.
-- Recording only (`/runbooks:run bookings.preview-availability --record`): `docker compose up -d db` and `npm run dev:api`, with the `booking` table empty. Then, directly against the API at `http://localhost:3001` (not through the upstream server, so the setup is not recorded), `POST /bookings` with `{"id":"A","resource":"R1","start":10,"end":20}` and `{"id":"B","resource":"R1","start":20,"end":30}`, both answered 201. Skip S05 while recording (its fixture is hand-written), or delete any file the recording writes in `S05/` other than `get--availability-0-server-error.json`.
-- Field entry: "Set" means replacing the field's whole value at once (Playwright `fill`), so no request goes out for a half-typed number.
+- Data: the fixtures in `docs/runbooks/_fixtures/bookings/preview-availability/`. They answer `GET /resources` with R1 to R5 (R1 "Agora Room", R2 "Pixel Room"), `GET /bookings` with two active bookings, A on R1 `[10,20)` and B on R1 `[20,30)`, and `GET /availability` for each interval the steps pick. `S05/` holds a hand-written 500 for R1 `[40,50)`. `get--availability-id-taken.json` is a hand-written 409 `id_taken` for R1 `[30,40)` with `id=A` (S09, S10). A check with any other id matches the fixture of its interval, whose query names no `id`, so `id=D` for R1 `[30,40)` answers "available".
+- Recording only (`/runbooks:run bookings.preview-availability --record`): `docker compose up -d db` and `npm run dev:api`, with the `booking` table empty. Then, directly against the API at `http://localhost:3001` (not through the upstream server, so the setup is not recorded), `POST /bookings` with `{"id":"A","resource":"R1","start":10,"end":20}` and `{"id":"B","resource":"R1","start":20,"end":30}`, both answered 201. Skip S05 while recording (its fixture is hand-written), or delete any file the recording writes in `S05/` other than `get--availability-0-server-error.json`. Over A and B, the API answers `id=A` with the same 409 as the hand-written fixture, so a recorded copy of it can replace `get--availability-id-taken.json`.
+- Field entry: "Set" means replacing the field's whole value at once (Playwright `fill`), so no request goes out for a half-typed number or id. "Id" is empty in every step that does not set it.
 
 ---
 
@@ -66,7 +68,7 @@ Actions:
 3. Set "Start" to 30.
 4. Set "End" to 40.
 
-Expected: the preview line under the fields reads "R1 [30,40) is available", in green (`#166534` on `#ECF7F0`). On the timeline, the R1 row shows a dashed green box (2px dashed `#15803D` on a light green fill) from 30 to 40. Neither bar "A [10,20)" nor "B [20,30)" has a ring. No other row shows a preview box.
+Expected: the preview line under the fields reads "R1 [30,40) is available", in green (`#166534` on `#ECF7F0`). On the timeline, the R1 row shows a dashed green box (2px dashed `#15803D` on a light green fill) from 30 to 40. Neither bar "A [10,20)" nor "B [20,30)" has a ring. No other row shows a preview box. The "Book" button is enabled.
 
 ---
 
@@ -83,7 +85,7 @@ Actions:
 3. Set "Start" to 19.
 4. Set "End" to 21.
 
-Expected: the preview line reads "R1 [19,21) conflicts with A, B", in orange (`#9A3412` on `#FFF1E8`). On the timeline, the R1 row shows a dashed orange box (2px dashed `#C2410C` on a light orange fill) from 19 to 21, and the bars "A [10,20)" and "B [20,30)" each carry a ring: a 2px white gap, then a 2px `#C2410C` outline.
+Expected: the preview line reads "R1 [19,21) conflicts with A, B", in orange (`#9A3412` on `#FFF1E8`). On the timeline, the R1 row shows a dashed orange box (2px dashed `#C2410C` on a light orange fill) from 19 to 21, and the bars "A [10,20)" and "B [20,30)" each carry a ring: a 2px white gap, then a 2px `#C2410C` outline. The "Book" button is disabled.
 
 ---
 
@@ -99,11 +101,11 @@ Actions:
 2. Set "Start" to 19 and "End" to 21, and wait for "R1 [19,21) conflicts with A, B".
 3. Read `requests` from `GET http://127.0.0.1:4010/__runbooks/state`.
 
-Expected: the Bookings table still shows the chips "All (2)", "Active (2)" and "Canceled (0)", with the rows A and B, both "Active". The Operation log has no entry and no result card appears under "Book". `requests` holds only `GET` requests: `GET /resources`, `GET /bookings` and `GET /availability` with query `resource=R1`, `start=19`, `end=21`. It holds no `POST`.
+Expected: the Bookings table still shows the chips "All (2)", "Active (2)" and "Canceled (0)", with the rows A and B, both "Active". The Operation log has no entry and no result card appears under "Book". `requests` holds only `GET` requests: `GET /resources`, `GET /bookings` and `GET /availability` with query `resource=R1`, `start=19`, `end=21` and no `id` key, since "Id" is empty. It holds no `POST`.
 
 ---
 
-### S04. A start that is not before the end shows the neutral failure text and leaves Book enabled
+### S04. A start that is not before the end shows the neutral failure text and disables Book
 
 Parents: none
 Requirement: none
@@ -115,11 +117,11 @@ Actions:
 2. Set "Start" to 30.
 3. Set "End" to 20.
 
-Expected: the preview line reads "Couldn't check availability", in gray (`#3A404C` on `#F1F3F6`). The timeline shows no dashed preview box on any row and no ring on any bar. The "Book" button is enabled. `requests` from `GET /__runbooks/state` holds `GET /availability` with query `resource=R1`, `start=30`, `end=20` (answered 422).
+Expected: the preview line reads "Couldn't check availability", in gray (`#3A404C` on `#F1F3F6`). The timeline shows no dashed preview box on any row and no ring on any bar. The "Book" button is disabled. `requests` from `GET /__runbooks/state` holds `GET /availability` with query `resource=R1`, `start=30`, `end=20` (answered 422).
 
 ---
 
-### S05. A failed availability request shows the neutral failure text
+### S05. A failed availability request shows the neutral failure text and disables Book
 
 Parents: none
 Requirement: none
@@ -131,7 +133,7 @@ Actions:
 2. Set "Start" to 40.
 3. Set "End" to 50.
 
-Expected: the preview line reads "Couldn't check availability", in gray (`#3A404C` on `#F1F3F6`). The timeline shows no dashed preview box and no ring. The "Book" button is enabled. `requests` from `GET /__runbooks/state` holds `GET /availability` with query `resource=R1`, `start=40`, `end=50`, answered 500.
+Expected: the preview line reads "Couldn't check availability", in gray (`#3A404C` on `#F1F3F6`). The timeline shows no dashed preview box and no ring. The "Book" button is disabled. `requests` from `GET /__runbooks/state` holds `GET /availability` with query `resource=R1`, `start=40`, `end=50`, answered 500.
 
 ---
 
@@ -148,7 +150,7 @@ Actions:
 3. Set "Start" to 19.
 4. Set "End" to 21.
 
-Expected: the preview line reads "R2 [19,21) is available", in green (`#166534` on `#ECF7F0`). The dashed green box from 19 to 21 is on the R2 row. The R1 row shows no preview box, and the bars "A [10,20)" and "B [20,30)" have no ring.
+Expected: the preview line reads "R2 [19,21) is available", in green (`#166534` on `#ECF7F0`). The dashed green box from 19 to 21 is on the R2 row. The R1 row shows no preview box, and the bars "A [10,20)" and "B [20,30)" have no ring. The "Book" button is enabled.
 
 ---
 
@@ -185,13 +187,51 @@ Expected: the preview line reads "Pick a start and an end from 0 to 100", in gra
 
 ---
 
+### S09. An Id some booking already has shows the taken text and disables Book
+
+Parents: none
+Requirement: none
+Page: `/`
+
+Actions:
+
+1. Open `/` and wait for the bars "A [10,20)" and "B [20,30)" on the R1 row.
+2. Set "Id" to A.
+3. Leave "Resource" on "R1 · Agora Room".
+4. Set "Start" to 30.
+5. Set "End" to 40.
+6. Read `requests` from `GET http://127.0.0.1:4010/__runbooks/state`.
+
+Expected: the preview line reads "Id A was already used by another booking", in orange (`#9A3412` on `#FFF1E8`, the conflict colors). The timeline shows no dashed preview box on any row, and the bars "A [10,20)" and "B [20,30)" have no ring. The "Book" button is disabled. `requests` holds one `GET /availability`, with query `resource=R1`, `start=30`, `end=40`, `id=A`, answered 409.
+
+---
+
+### S10. Changing the Id checks again and shows the new answer
+
+Parents: S09
+Requirement: none
+Page: `/`
+
+Actions:
+
+1. Open `/` and wait for the bars "A [10,20)" and "B [20,30)" on the R1 row.
+2. Set "Id" to A, "Start" to 30 and "End" to 40, and wait for "Id A was already used by another booking".
+3. Set "Id" to D.
+4. Read `requests` from `GET http://127.0.0.1:4010/__runbooks/state`.
+
+Expected: the preview line reads "R1 [30,40) is available", in green (`#166534` on `#ECF7F0`). On the timeline, the R1 row shows a dashed green box (2px dashed `#15803D` on a light green fill) from 30 to 40, and the bars "A [10,20)" and "B [20,30)" have no ring. The "Book" button is enabled. `requests` holds two `GET /availability` with `resource=R1`, `start=30`, `end=40`, in this order: one with `id=A`, answered 409, then one with `id=D`, answered 200.
+
+---
+
 ## Not covered
 
 - What the API saves, and that the check writes nothing in the database: a mocked runbook proves only what the screen shows and the requests it sends (S03 checks that no `POST` went out). The `bookings.check-availability` api runbook proves the API side against Postgres.
 - The booking rules behind each answer (half-open `[start, end)`, only active bookings of the same resource conflict, conflicts in ascending id order): the API decides them and the page shows its answer as is. Proven by the `bookings.check-availability` api runbook.
-- The debounce of about 250 ms and "only the latest answer counts" (`web/src/components/bookings/bookings-page.tsx:104-110`): timing. The mocked server answers at once, and a browser run cannot hold one response back so that it arrives after a newer one.
-- The previous answer staying on screen while the answer for new fields is on its way (`bookings-page.tsx:117-118`): it lasts only the debounce plus one round trip, too short to observe reliably.
-- The preview running again after a Book, turning "R1 [19,21) is available" into "R1 [19,21) conflicts with D" (`bookings-page.tsx:114`, `bookings` in the effect's dependencies): the fixtures answer one response per query within a step, so the switch cannot be replayed in a mocked step. Booking itself is `bookings.book-from-form`.
+- The debounce of about 250 ms and "only the latest answer counts" (`web/src/components/bookings/bookings-page.tsx:99-110`): timing. The mocked server answers at once, and a browser run cannot hold one response back so that it arrives after a newer one.
+- The pending line "Checking R1 [30,40)…", with no preview box and "Book" disabled, while the answer for new fields or a new Id is on its way (`shownPreview` in `web/src/lib/bookings.ts`, `bookings-page.tsx:114-117`): it lasts only the debounce plus one round trip, too short to observe reliably. S10 proves only the answer that follows.
+- Which ids count as taken (an active or a canceled booking's id) and which ids the API rejects: the API decides, and the page shows its 409 as in S09. Proven by the `bookings.check-availability` api runbook (S09, S10, S13).
+- An Id the API rejects as `invalid_data` (422), such as "a b": the page shows "Couldn't check availability" through the same branch as S04's 422 (`previewOf` in `web/src/lib/bookings.ts`), so S04 stands for it.
+- The preview running again after a Cancel, for example "R1 [19,21) conflicts with A, B" turning into "R1 [19,21) conflicts with B" once A is canceled (`bookings-page.tsx:110`, `bookings` in the effect's dependencies): the fixtures answer one response per query within a step, so the switch cannot be replayed in a mocked step. Canceling itself is `bookings.cancel-from-table`. A created booking runs no re-check: the form clears "Id", "Start" and "End" (`bookings-page.tsx:79`), which `bookings.book-from-form` proves.
 - Decimals and negative values ("2.5", "-1") in "Start" or "End": the same `isBookable` branch as S08 (`web/src/lib/bookings.ts:22-24`), so S08 stands for them.
 
 ---

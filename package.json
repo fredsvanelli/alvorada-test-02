@@ -17,6 +17,8 @@
     "build": "npm run build --workspaces",
     "runbooks": "npm run runbooks:ui",
     "runbooks:ui": "node docs/runbooks/runbooks-ui.mjs",
-    "runbooks:upstream": "node web/e2e/runbooks-upstream.mjs"
+    "runbooks:upstream": "node web/e2e/runbooks-upstream.mjs",
+    "test:e2e": "npm run test:e2e -w web --",
+    "test:e2e:headed": "npm run test:e2e -- --headed"
   }
 }
