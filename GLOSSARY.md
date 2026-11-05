@@ -9,7 +9,7 @@ A bookable thing from the fixed list (R1 to R5), identified by its id and shown 
 _Avoid_: room, equipment
 
 **Booking**:
-A claim on one Resource for one Interval, identified by an id the client chooses. Its id is never reused once created.
+A claim on one Resource for one Interval, identified by an id the client chooses. Its id is never reused once created. An id is 1 to 64 letters, digits, `-` or `_`, and case matters: `a` and `A` are different Bookings.
 _Avoid_: reservation
 
 **Interval**:
@@ -27,6 +27,10 @@ _Avoid_: clash, collision
 **Rejection**:
 A create attempt that is refused with a reason and writes nothing, so its id stays free.
 _Avoid_: failed booking
+
+**Ascending id order**:
+Ids compared character by character by character code, so `10` comes before `9` and `B` before `a`. Every list of Conflicts uses it.
+_Avoid_: alphabetical order, natural order
 
 **Availability check**:
 A read-only question of whether an Interval on a Resource has any Conflicts, answered with the Conflicts in ascending id order.
