@@ -75,6 +75,11 @@ describe('bookResult', () => {
       assert.ok(card.detail.includes(`msg ${error}`));
     }
   });
+  it('treats a 201 without the booking shape as a failed request', () => {
+    const card = bookResult(json(201, { id: 'D' }), req);
+    assert.equal(card.title, 'Request failed');
+    assert.equal(card.code, '201');
+  });
   it('treats a non-JSON 500 as a failed request', () => {
     const card = bookResult({ status: 500, body: null, raw: '<html>oops</html>' }, req);
     assert.equal(card.tone, 'error');

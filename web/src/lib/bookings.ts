@@ -49,7 +49,13 @@ function failed(reply: ApiReply): ResultCard {
 export function bookResult(reply: ApiReply, req: BookRequest): ResultCard {
   if (reply.status === null) return failed(reply);
   const error = field(reply.body, 'error');
-  if (reply.status === 201 && field(reply.body, 'id') === req.id) {
+  const created =
+    reply.status === 201 &&
+    field(reply.body, 'id') === req.id &&
+    typeof field(field(reply.body, 'resource'), 'id') === 'string' &&
+    typeof field(reply.body, 'start') === 'number' &&
+    typeof field(reply.body, 'end') === 'number';
+  if (created) {
     const b = reply.body as Booking;
     return { tone: 'ok', title: `Booking ${b.id} created`, detail: `${b.resource.id} taken for ${formatInterval(b.start, b.end)}.`, code: 'created' };
   }
