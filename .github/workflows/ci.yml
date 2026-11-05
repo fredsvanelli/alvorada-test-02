@@ -30,3 +30,24 @@ jobs:
       - run: npm ci
       - run: cp api/.env.example api/.env
       - run: npm test -w api
+
+  # UI runbook scripts: Playwright starts the runbooks upstream server (fixtures
+  # replay) and the web dev server itself, so no API or Postgres is needed.
+  web-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: web/test-results/
+          retention-days: 7
