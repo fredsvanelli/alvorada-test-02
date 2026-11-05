@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ResourcesService } from '../resources/resources.service.js';
 import { Booking } from './booking.entity.js';
-import { overlaps, parseInterval } from './booking-rules.js';
+import { type Interval, overlaps, parseInterval } from './booking-rules.js';
 import { BookingsRepository } from './bookings.repository.js';
 
 export type CreateError =
@@ -14,6 +14,13 @@ export type CreateResult =
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
+// A resource id to look up: a non-empty string. Arrays (a repeated query
+// param) and NUL fail. Postgres text cannot hold NUL: it would throw a 500
+// instead of invalid_data.
+function isResourceId(value: unknown): value is string {
+  return typeof value === 'string' && value !== '' && !value.includes('\u0000');
+}
+
 // Returns the booking to insert, or null when the body is invalid_data.
 function parseBooking(body: unknown): Booking | null {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
@@ -24,10 +31,7 @@ function parseBooking(body: unknown): Booking | null {
   if (
     typeof id !== 'string' ||
     !ID.test(id) ||
-    typeof resource !== 'string' ||
-    resource === '' ||
-    // Postgres text cannot hold NUL: it would throw a 500 instead of invalid_data.
-    resource.includes('\u0000') ||
+    !isResourceId(resource) ||
     interval === null
   ) {
     return null;
@@ -53,14 +57,23 @@ export class BookingsService {
     if (await this.bookings.findById(booking.id)) {
       return { ok: false, error: 'id_taken' };
     }
-    const active = await this.bookings.findActiveByResource(booking.resource);
-    const conflicts = active
-      .filter((other) => overlaps(booking, other))
-      .map((other) => other.id);
+    const conflicts = await this.findConflicts(booking.resource, booking);
     if (conflicts.length > 0)
       return { ok: false, error: 'conflict', conflicts };
     // ponytail: check-then-insert is not atomic; concurrency is out of scope (PRD).
     await this.bookings.insert(booking);
     return { ok: true, booking };
+  }
+
+  // The one conflict lookup, shared by create and availability so they cannot
+  // disagree. Ids keep the repository's ascending id order.
+  private async findConflicts(
+    resource: string,
+    interval: Interval,
+  ): Promise<string[]> {
+    const active = await this.bookings.findActiveByResource(resource);
+    return active
+      .filter((other) => overlaps(interval, other))
+      .map((other) => other.id);
   }
 }
