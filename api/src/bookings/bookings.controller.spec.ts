@@ -28,8 +28,12 @@ describe('BookingsController', () => {
     return error as HttpException;
   }
 
-  it('returns the created booking', async () => {
-    const booking = { ...body, status: 'active' };
+  it('returns the created booking with its resource nested', async () => {
+    const booking = {
+      ...body,
+      resource: { id: 'R1', name: 'Agora Room' },
+      status: 'active',
+    };
     create.mockResolvedValue({ ok: true, booking });
     await expect(controller.create(body)).resolves.toBe(booking);
     expect(create).toHaveBeenCalledWith(body);

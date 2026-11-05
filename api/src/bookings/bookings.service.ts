@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ResourcesService } from '../resources/resources.service.js';
-import { Booking } from './booking.entity.js';
+import type { Booking, BookingView } from './booking.entity.js';
 import { type Interval, overlaps, parseInterval } from './booking-rules.js';
 import { BookingsRepository } from './bookings.repository.js';
 
@@ -8,7 +8,7 @@ export type CreateError =
   'invalid_data' | 'unknown_resource' | 'id_taken' | 'conflict';
 
 export type CreateResult =
-  | { ok: true; booking: Booking }
+  | { ok: true; booking: BookingView }
   | { ok: false; error: Exclude<CreateError, 'conflict'> }
   | { ok: false; error: 'conflict'; conflicts: string[] };
 
@@ -57,9 +57,8 @@ export class BookingsService {
   async create(body: unknown): Promise<CreateResult> {
     const booking = parseBooking(body);
     if (!booking) return { ok: false, error: 'invalid_data' };
-    if (!(await this.resources.exists(booking.resource))) {
-      return { ok: false, error: 'unknown_resource' };
-    }
+    const resource = await this.resources.findById(booking.resource);
+    if (!resource) return { ok: false, error: 'unknown_resource' };
     if (await this.bookings.findById(booking.id)) {
       return { ok: false, error: 'id_taken' };
     }
@@ -68,7 +67,8 @@ export class BookingsService {
       return { ok: false, error: 'conflict', conflicts };
     // ponytail: check-then-insert is not atomic; concurrency is out of scope (PRD).
     await this.bookings.insert(booking);
-    return { ok: true, booking };
+    const { id, name } = resource;
+    return { ok: true, booking: { ...booking, resource: { id, name } } };
   }
 
   // Read-only: checks run in the order invalid_data, unknown_resource, then

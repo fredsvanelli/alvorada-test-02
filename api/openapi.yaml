@@ -71,7 +71,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
-              example: { id: A, resource: R1, start: 10, end: 20, status: active }
+              example:
+                id: A
+                resource: { id: R1, name: Agora Room }
+                start: 10
+                end: 20
+                status: active
         '400':
           description: >
             Malformed JSON, or a top-level `null` or string body. Rejected by
@@ -224,13 +229,17 @@ components:
         end:
           $ref: '#/components/schemas/Time'
     Booking:
+      description: >
+        A booking as every response returns it. Requests send the resource id
+        (`"resource": "R1"`); responses nest the resource with its name
+        (docs/adr/0001-nested-resource-in-booking-responses.md).
       type: object
       required: [id, resource, start, end, status]
       properties:
         id:
           type: string
         resource:
-          type: string
+          $ref: '#/components/schemas/Resource'
         start:
           type: integer
         end:

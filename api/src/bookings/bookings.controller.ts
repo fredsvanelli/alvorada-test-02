@@ -6,7 +6,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { Booking } from './booking.entity.js';
+import type { BookingView } from './booking.entity.js';
 import {
   AvailabilityError,
   BookingsService,
@@ -41,7 +41,7 @@ export class BookingsController {
 
   // Maps the service result to HTTP: 201 with the booking, or the error body.
   @Post('bookings')
-  async create(@Body() body: unknown): Promise<Booking> {
+  async create(@Body() body: unknown): Promise<BookingView> {
     const result = await this.bookings.create(body);
     if (result.ok) return result.booking;
     throw new HttpException(

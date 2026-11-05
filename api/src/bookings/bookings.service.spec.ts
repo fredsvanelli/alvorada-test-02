@@ -9,9 +9,11 @@ describe('BookingsService', () => {
   const findActiveByResource = vi.fn();
   const insert = vi.fn();
   const exists = vi.fn();
+  const findResource = vi.fn();
   let service: BookingsService;
 
   const valid = { id: 'A', resource: 'R1', start: 10, end: 20 };
+  const agora = { id: 'R1', name: 'Agora Room' };
 
   const booking = (
     id: string,
@@ -21,10 +23,17 @@ describe('BookingsService', () => {
   ): Booking => ({ id, resource: 'R1', start, end, status });
 
   beforeEach(async () => {
-    for (const fn of [findById, findActiveByResource, insert, exists]) {
+    for (const fn of [
+      findById,
+      findActiveByResource,
+      insert,
+      exists,
+      findResource,
+    ]) {
       fn.mockReset();
     }
     exists.mockResolvedValue(true);
+    findResource.mockResolvedValue(agora);
     findById.mockResolvedValue(null);
     findActiveByResource.mockResolvedValue([]);
     insert.mockResolvedValue(undefined);
@@ -36,20 +45,23 @@ describe('BookingsService', () => {
           provide: BookingsRepository,
           useValue: { findById, findActiveByResource, insert },
         },
-        { provide: ResourcesService, useValue: { exists } },
+        {
+          provide: ResourcesService,
+          useValue: { exists, findById: findResource },
+        },
       ],
     }).compile();
     service = moduleRef.get(BookingsService);
   });
 
-  it('creates an active booking', async () => {
-    const created = { ...valid, status: 'active' };
+  it('creates an active booking and returns it with its resource nested', async () => {
     await expect(service.create(valid)).resolves.toStrictEqual({
       ok: true,
-      booking: created,
+      booking: { ...valid, resource: agora, status: 'active' },
     });
+    expect(findResource).toHaveBeenCalledWith('R1');
     expect(insert).toHaveBeenCalledTimes(1);
-    expect(insert).toHaveBeenCalledWith(created);
+    expect(insert).toHaveBeenCalledWith({ ...valid, status: 'active' });
   });
 
   it('converts digit-only times to numbers', async () => {
@@ -98,7 +110,7 @@ describe('BookingsService', () => {
       ok: false,
       error: 'invalid_data',
     });
-    expect(exists).not.toHaveBeenCalled();
+    expect(findResource).not.toHaveBeenCalled();
     expect(findById).not.toHaveBeenCalled();
     expect(insert).not.toHaveBeenCalled();
   });
@@ -109,7 +121,7 @@ describe('BookingsService', () => {
   });
 
   it('rejects an unknown resource', async () => {
-    exists.mockResolvedValue(false);
+    findResource.mockResolvedValue(null);
     await expect(service.create(valid)).resolves.toStrictEqual({
       ok: false,
       error: 'unknown_resource',
@@ -119,9 +131,9 @@ describe('BookingsService', () => {
   });
 
   it('passes resource unchanged', async () => {
-    exists.mockResolvedValue(false);
+    findResource.mockResolvedValue(null);
     const result = await service.create({ ...valid, resource: ' R1' });
-    expect(exists).toHaveBeenCalledWith(' R1');
+    expect(findResource).toHaveBeenCalledWith(' R1');
     expect(result).toStrictEqual({ ok: false, error: 'unknown_resource' });
   });
 
@@ -172,7 +184,7 @@ describe('BookingsService', () => {
   });
 
   it('checks in order', async () => {
-    exists.mockResolvedValue(false);
+    findResource.mockResolvedValue(null);
     findById.mockResolvedValue(booking('A', 50, 60));
     findActiveByResource.mockResolvedValue([booking('Z', 10, 20)]);
 
@@ -184,7 +196,7 @@ describe('BookingsService', () => {
     await expect(service.create(valid)).resolves.toMatchObject({
       error: 'unknown_resource',
     });
-    exists.mockResolvedValue(true);
+    findResource.mockResolvedValue(agora);
     await expect(service.create(valid)).resolves.toMatchObject({
       error: 'id_taken',
     });

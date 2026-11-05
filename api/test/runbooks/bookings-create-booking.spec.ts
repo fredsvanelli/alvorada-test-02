@@ -81,7 +81,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toStrictEqual({
       id: 'A',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 10,
       end: 20,
       status: 'active',
@@ -107,7 +107,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'A',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 10,
       end: 20,
       status: 'active',
@@ -202,7 +202,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'B',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 20,
       end: 30,
       status: 'active',
@@ -244,7 +244,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'C',
-      resource: 'R2',
+      resource: { id: 'R2', name: 'Pixel Room' },
       start: 19,
       end: 21,
       status: 'active',
@@ -264,7 +264,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'a',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 30,
       end: 40,
       status: 'active',
@@ -323,7 +323,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'A',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 0,
       end: 2147483647,
       status: 'active',
@@ -362,7 +362,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toStrictEqual({
       id: 'A',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 10,
       end: 20,
       status: 'active',
@@ -414,7 +414,7 @@ describe('Create a booking, or reject it without writing anything', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
       id: 'B',
-      resource: 'R1',
+      resource: { id: 'R1', name: 'Agora Room' },
       start: 0,
       end: 10,
       status: 'active',

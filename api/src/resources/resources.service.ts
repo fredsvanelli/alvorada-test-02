@@ -14,6 +14,10 @@ export class ResourcesService {
     return this.resources.find({ order: { id: 'ASC' } });
   }
 
+  findById(id: string): Promise<Resource | null> {
+    return this.resources.findOneBy({ id });
+  }
+
   exists(id: string): Promise<boolean> {
     return this.resources.exists({ where: { id } });
   }
