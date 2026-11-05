@@ -5,16 +5,20 @@ A booking system for a team's shared Resources that rejects overlapping Bookings
 - **Focus:** full stack, with the emphasis on the back end: the booking rules, the API contract and the tests. The web app is how the rules are shown.
 - **Time spent:** about 6 hours.
 
-Stack: Next.js (TypeScript, Tailwind, shadcn/ui) calling a Nest.js REST API (TypeScript), which stores data in Postgres 16 running in Docker.
+Stack:
+
+- Web: Next.js (TypeScript, Tailwind, shadcn/ui)
+- API: Nest.js (TypeScript)
+-  DB: Postgres 16 running in Docker
 
 ## Docs
 
 - [PRD](.issues/docs/PRD.md): the challenge as given.
 - [Architecture diagrams](docs/diagrams/architecture.md): containers, data model, backend modules and booking flows.
 - [Glossary](GLOSSARY.md): the domain terms this README uses (Resource, Booking, Interval, Conflict, Availability check, Id taken).
-- [Architecture decision records](docs/adr/).
+- [Architecture decision records (ADRs)](docs/adr/).
 - [API contract](api/openapi.yaml) (OpenAPI 3.1).
-- [Runbooks](docs/runbooks/README.md): the official record of how the product behaves, one runbook per flow.
+- [Runbooks](docs/runbooks/README.md): the official record of how the product behaves, one runbook per user flow.
 
 ## Setup
 
@@ -25,53 +29,86 @@ Prerequisites:
 - npm 10 or newer
 - Docker with Compose
 
-From the repo root:
+From the ***repo root,*** run the following commands:
+
+1- Install Node (first time only: installs the version in `.nvmrc`)
 
 ```sh
-nvm install   # first time only: installs the version in .nvmrc
-nvm use
-cp api/.env.example api/.env
-npm install
-docker compose up -d db
+nvm install
 ```
 
-`api/.env` holds the local Postgres settings, and Docker Compose reads the same file. The defaults work as they are.
+2- Switch to the required version
+
+```sh
+nvm use
+```
+
+3- Create the API environment variables
+
+```sh
+cp api/.env.example api/.env
+```
+
+ℹ️ You don't need to change any value. **The defaults work as they are**.
+
+4- Install the dependencies
+
+```sh
+npm install
+```
 
 ## Run
 
-From the **root** folder, run each command in its own terminal:
+From the ***root folder***, run each command in its own terminal:
+
+1- Start the database container
 
 ```sh
-npm run dev:api   # API on http://localhost:3001
-npm run dev:web   # web app on http://localhost:3000
+docker compose up db
 ```
 
-On start, the API runs the database migrations, which also seed the five Resources R1 to R5. `GET http://localhost:3001/health` answers `{"status":"ok"}` when the API can reach the database.
+2- Start the API (runs on `http://localhost:3001`)
+
+```sh
+npm run dev:api
+```
+
+3- Start the web app (runs on `http://localhost:3000`)
+
+```sh
+npm run dev:web
+```
+
+ℹ️ On start, the API runs the **database migrations**, which also seed the five `Resources`.
+
+ℹ️ `GET http://localhost:3001/health` answers `{"status":"ok"}` when the API can reach the database.
 
 ## Tests
 
 
-| Command                                              | What it runs                                                        | What it needs                                                                                                     |
-| ---------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                           | API unit tests, web unit tests and the API runbook scripts          | Postgres up (`docker compose up -d db`)                                                                           |
-| `npm run test:e2e`                                   | The UI runbook scripts (Playwright), replaying recorded API answers | Run `npx playwright install chromium` from `web/` once beforehand. Ports 3000 and 4010 free. No API, no Postgres. |
-| `npm run lint`, `npm run typecheck`, `npm run build` | Lint, type checks and production builds of both apps                | Nothing running                                                                                                   |
+| Command                                              | What it runs                                           | Prerequisites                                                                                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                                           | Web: unit tests.<br>API: unit tests. Integration tests | Postgres up (`docker compose up db`)                                                                                           |
+| `npm run test:e2e`                                   | Web: E2E tests                                         | Chromium installed. From `/web`, run `npx playwright install chromium` once.<br>Ports 3000 and 4010 free. No API, no Postgres. |
+| `npm run lint`, `npm run typecheck`, `npm run build` | Lint, type checks and production builds of both apps   | Nothing running                                                                                                                |
 
 
-`npm test` never touches your data. It uses a separate database, `bookings_test`, which is dropped, recreated and migrated before every run.
+ℹ️ `npm test` never touches your data. It uses a separate database, `bookings_test`, which is dropped, recreated and migrated before every run.
 
 ## Demo
 
-This demo replays the PRD example, first in the web app and then with `curl`. A fresh clone starts with no Bookings. To start over at any point, reset the database and restart the API, so it migrates and seeds again:
+This demo replays the PRD example, first in the web app and then with `curl`. A fresh install starts with no Bookings.
+
+ℹ️ To start over at any point, reset the database and restart the API, so it migrates and seeds again:
 
 ```sh
-docker compose down -v && docker compose up -d db   # deletes all local Bookings
+docker compose down -v && docker compose up db   # deletes all local Bookings
 npm run dev:api
 ```
 
 ### In the web app
 
-Open [http://localhost:3000](http://localhost:3000). As you fill the Operation form, the page asks the API whether the Interval is available, and whether the Id is still free. A Booking that would be rejected never reaches the create, so Book stays disabled.
+Open [http://localhost:3000](http://localhost:3000). As you fill the Operation form, the page asks the API whether the Interval is available, and whether the `Id` is still free. A Booking that would be rejected never reaches the create, so the "Book" CTA stays disabled.
 
 1. **Book A and B.** Enter Id `A`, Resource R1, Start `10`, End `20`, and click Book. Then enter `B`, R1, `20` to `30`, and click Book. Both are created. B is accepted because it starts exactly where A ends: R1 is free again at 20.
 2. **Try C on R1.** Enter `C`, R1, `19` to `21`. The preview reads "R1 [19,21) conflicts with A, B", the timeline rings A and B, and Book is disabled. Nothing is created.
@@ -84,63 +121,58 @@ Open [http://localhost:3000](http://localhost:3000). As you fill the Operation f
 The web app has just created A, B and C, and ids are never reused, so reset the database and restart the API (see above) before you run these. Each command is followed by the body and the HTTP status the API answers.
 
 1. Book A on R1 `[10,20)`:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
+```
+
 2. Book B on R1 `[20,30)`. It starts where A ends:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"B","resource":"R1","start":20,"end":30}'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"B","resource":"R1","start":20,"end":30}'
+```
+
 3. C on R1 `[19,21)` is rejected with its Conflicts, in ascending id order:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R1","start":19,"end":21}'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R1","start":19,"end":21}'
+```
+
 4. C on R2 `[19,21)` is accepted. The rejection did not take the id:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R2","start":19,"end":21}'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"C","resource":"R2","start":19,"end":21}'
+```
+
 5. Check R1 `[19,21)` without booking it:
-   ```sh
-    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=19&end=21'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=19&end=21'
+```
+
 6. Cancel A:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings/A/cancel
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings/A/cancel
+```
+
 7. R1 `[10,20)` is available again:
-   ```sh
-    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20'
-   ```
+
+```sh
+curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20'
+```
+
 8. The id A stays taken, both for a create and for an Availability check that names it:
-   ```sh
-    curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
-    curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20&id=A'
-   ```
 
-To see every Booking with its status, run `curl -s http://localhost:3001/bookings`. A shows as `canceled`, and B and C show as `active`.
+```sh
+curl -s -w '\n%{http_code}\n' -X POST http://localhost:3001/bookings -H 'Content-Type: application/json' -d '{"id":"A","resource":"R1","start":10,"end":20}'
+```
 
-## Highlighted tests
+```sh
+curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&start=10&end=20&id=A'
+```
 
-Each command runs one test on its own. Postgres must be up, because the test run recreates `bookings_test` first.
-
-1. **Touching Intervals do not overlap**: the `overlaps` case "touching: a ends where b starts", in `api/src/bookings/booking-rules.spec.ts`.
-   ```sh
-    npm test -w api -- src/bookings/booking-rules.spec.ts -t "touching"
-   ```
-   - Expected: `[10,20)` against `[20,30)` is not an overlap, in both argument orders.
-   - Catches: a closed-interval comparison (`<=` instead of `<`), which would reject B in the demo. Also catches a rule that gives different answers depending on which Booking comes first.
-2. **A rejected id stays free**: `bookings.create-booking` S09, in `api/test/runbooks/bookings-create-booking.spec.ts`.
-   ```sh
-    npm test -w api -- test/runbooks/bookings-create-booking.spec.ts -t "S09"
-   ```
-   - Expected: over HTTP against the real database, C on R1 `[19,21)` answers `409 conflict` with `["A","B"]`, then C on R2 `[19,21)` answers `201`.
-   - Catches: a create that writes the row before every check passes, which would leave the id C taken by a Booking that was rejected.
-3. **Conflicts come back in ascending id order, by character code**: `bookings.check-availability` S04, in `api/test/runbooks/bookings-check-availability.spec.ts`.
-   ```sh
-    npm test -w api -- test/runbooks/bookings-check-availability.spec.ts -t "S04"
-   ```
-   - Expected: with Bookings `B`, `a`, `10` and `9` created in that order, the conflicts are `["10","9","B","a"]`.
-   - Catches: ordering by the database's locale collation, by numeric value, or by creation order, any of which gives a different list.
+ℹ️ To see every Booking with its status, run `curl -s http://localhost:3001/bookings`. A shows as `canceled`, and B and C show as `active`.
 
 ## Decisions
 
@@ -165,19 +197,75 @@ Each command runs one test on its own. Postgres must be up, because the test run
 
 ## How AI was used
 
-The work was done with Claude Code, through a fixed workflow for each issue:
+The work was done with Claude Code, using SPEC-SS workflow for each task.
 
-1. The issues live in the repo (`.issues/`, managed with pmkit). Each one has acceptance criteria and its own branch.
-2. Before any code, a question-and-answer session sharpens the issue against the PRD and the glossary (grilling). It updates `GLOSSARY.md` and `docs/adr/` when a term or a hard-to-reverse decision comes up, and it ends in a written design in `docs/superpowers/specs/`.
-3. A plan comes from that design. Implementation follows test-driven development: a failing test first, then the code.
-4. Before each pull request, an automated review checks the branch against the issue. Its findings are fixed or listed with a reason.
-5. Each flow has a runbook in `docs/runbooks/`, verified by a test script: Vitest over HTTP for the API, Playwright for the web app.
+```
+[S] Specify
+[P] Plan
+[E] Execute
+[C] Check
+-
+[S] Secure
+[S] Ship
+```
 
-What was kept and what changed: the AI drafted the designs, the code and the tests. Every design and plan was reviewed and approved before any code was written, and a suggestion that did not fit was replaced. Decision 2 above is the example: the AI's `200` with `idTaken` was replaced by `409 id_taken`.
+### Spec
 
-How the result was checked: the unit tests, the runbook scripts and the CI run on every pull request (`.github/workflows/ci.yml`), plus a manual run of this demo in the browser and with `curl`.
+- pmkit: [https://fredvanelli.dev/pmkit/](https://fredvanelli.dev/pmkit/)
+- mattpocock-skills:grill-with-docs: [https://www.aihero.dev/skills-grill-with-docs](https://www.aihero.dev/skills-grill-with-docs)
+- superpowers:brainstorming: [https://github.com/obra/superpowers/tree/main#the-basic-workflow](https://github.com/obra/superpowers/tree/main#the-basic-workflow)
+
+The issues (tickets) are managed using **pmkit**. They live in the repo (`.issues/`). Each one has context, scope (in/out), acceptance criteria and comments (decisions history).
+
+Before any code is written, a question-and-answer session sharpens the issue against the PRD and the glossary (domain). It updates `GLOSSARY.md` and `docs/adr/` when a term or a hard-to-reverse decision comes up, and it ends in a written design in `docs/superpowers/specs/`.
+
+### Plan
+
+- superpowers:writing-plans
+
+A plan comes from that design
+
+### Execution
+
+- superpowers:executing-plans (small tasks)
+- superpowers:subagent-driven-development (medium+ tasks)
+
+Implementation follows test-driven development: a failing test first, then the code.
+
+### Check
+
+- Runbooks: [https://fredvanelli.dev/runbooks/](https://fredvanelli.dev/runbooks/)
+
+Each user flow is validated against a runbook in `docs/runbooks/`, verified by a E2E test script: Vitest for the API, Playwright for the web app.
+
+### Secure
+
+- utils:review-work: [https://fredvanelli.dev/utils/review-work/](https://fredvanelli.dev/utils/review-work/)
+
+Before each pull request, an automated review checks the branch against the following criteria:
+
+- Spec match
+- Scope and size
+- Readability and conventions
+- Tech debt
+- Unit tests
+- E2E tests
+- Security
+- Cyclomatic complexity
+- Error handling and edge cases
+- Performance
+- Backward compatibility
+- Documentation
+
+Its findings are fixed or listed with a reason.
+
+### Ship
+
+- superpowers:finishing-a-development-branch
+
+When the implementation is completed and all previous checks pass, including ***tests***, ***lint***, ***typecheck*** and ***build***, the PR is created and the CI process is monitored.
 
 ## What is left
 
-- **Concurrency:** this is a known limit. A create checks for Conflicts and then inserts, and the two steps are not atomic. So two creates sent at the same moment can both pass the check and overlap. The upgrade path is a Postgres exclusion constraint (`EXCLUDE USING gist`) on the Resource and the Interval, for Active Bookings, so the database itself rejects the overlap.
+- **Concurrency:** this is a known limit. A create command checks for Conflicts and then inserts, and the two steps are not atomic. So two creates sent at the same moment can both pass the check and overlap. The upgrade path is a Postgres exclusion constraint (`EXCLUDE USING gist`) on the Resource and the Interval, for Active Bookings, so the database itself rejects the overlap.
 - **Out of scope by the PRD:** authentication, payment and recurring bookings.
