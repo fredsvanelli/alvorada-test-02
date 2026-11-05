@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: Conflict-free bookings API
+  version: 0.0.1
+  description: >
+    REST API for booking shared resources without overlaps. Rules come from
+    `.issues/docs/PRD.md` and the design from `docs/diagrams/architecture.md`.
+    This file is the contract: keep it in sync with every controller.
+servers:
+  - url: http://localhost:3001
+# Authentication is out of scope (PRD).
+security: []
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check that the API can reach the database
+      responses:
+        '200':
+          description: The database answered `SELECT 1` within 2 seconds.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+        '503':
+          description: The database did not answer, or took longer than 2 seconds.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NestError'
+  /resources:
+    get:
+      operationId: listResources
+      summary: List the fixed resources, in ascending id order
+      responses:
+        '200':
+          description: Every resource, seeded R1 to R5.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+              example:
+                - { id: R1, name: Agora Room }
+                - { id: R2, name: Pixel Room }
+components:
+  schemas:
+    Resource:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          example: R1
+        name:
+          type: string
+          example: Agora Room
+    NestError:
+      description: Nest's default exception body.
+      type: object
+      required: [statusCode, message]
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string

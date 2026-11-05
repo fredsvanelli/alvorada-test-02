@@ -35,6 +35,10 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 - Modules: `ResourcesModule` (`GET /resources`, seeded R1 to R5), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
 - Create checks in this order: invalid_data → unknown_resource → id_taken → conflict → insert.
 
+## API contract
+
+`api/openapi.yaml` (OpenAPI 3.1) is the contract for every HTTP endpoint. Whenever you create, change or remove an endpoint, update it in the same commit. "Change" includes the path, method, query or path params, request body, response body, status codes and error codes. Validate it with `npx @redocly/cli lint api/openapi.yaml`.
+
 ## Design reference
 
 `.design/prototype-html/Main.dc.html` (plus `.design/prototype.pdf`) is a UI mockup exported from a design tool. Replicate its colors, spacing and layout in shadcn/Tailwind components. Don't copy its markup or runtime. To view it, serve the folder (`python3 -m http.server`) and open `Main.dc.html`.
