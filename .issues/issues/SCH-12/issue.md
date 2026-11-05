@@ -2,13 +2,13 @@
 id: SCH-12
 title: Prove over HTTP that an availability check holds nothing
 type: feature
-status: in_progress
+status: in_review
 estimate: 1
 assignee: fred-vanelli
 related: [SCH-7]
 branch: sch-12-prove-over-http-that-an-availability
 created: 2026-11-05T03:01:42.703Z
-updated: 2026-11-05T23:01:56Z
+updated: 2026-11-05T23:30:12Z
 ---
 
 ## Description
