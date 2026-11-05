@@ -14,6 +14,8 @@
     "test": "npm test -w api",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
-    "build": "npm run build --workspaces"
+    "build": "npm run build --workspaces",
+    "runbooks:ui": "node docs/runbooks/runbooks-ui.mjs",
+    "runbooks:upstream": "node web/e2e/runbooks-upstream.mjs"
   }
 }

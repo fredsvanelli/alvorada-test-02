@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "fredsvanelli": {
+      "source": {
+        "source": "github",
+        "repo": "fredsvanelli/skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "runbooks@fredsvanelli": true
+  }
+}

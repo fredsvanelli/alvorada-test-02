@@ -59,3 +59,26 @@ Follow the pmkit steps as written, with these changes:
 4. **Review before the PR (before step 9):** run `/utils:review-work --base main --spec .issues/issues/<issue id>/issue.md` on the branch. Fix the findings, or list the ones left open with a reason, before asking to open the PR.
 
 - The final README must cover setup, run, tests, a reproducible demo, two decisions, up to three highlighted tests and what is left (SCH-11, PRD "What to deliver").
+<!-- runbooks:start -->
+## Runbooks
+
+UAT runbooks in `docs/runbooks/` are the official record of how the product behaves. Read `docs/runbooks/README.md` before editing one. Commands below use Claude notation; in Codex use `$runbooks:runbooks-<command>` (replace further colons with hyphens), or ask the `$runbooks:runbooks` skill to perform that operation.
+
+- Feature work creates or updates the runbook of every flow it changes (`/runbooks:create` for a new flow, `/runbooks:update` for one that has a runbook).
+- Before calling work done, run `/runbooks:list --affected`, then `/runbooks:run --affected`. A failing runbook means the work is not done.
+- `ui` runbook results are verified in the browser, or by their script in mode `test` when the script has one test per step. The agent calls only the upstream server's control routes, which verify nothing. `api` runbook results are verified only by their scripts (the files in `scripts:`), run with the project's test command.
+
+### API scripts
+
+How this project's `api` runbook scripts are written. `to-test` follows it; `setup` rewrites it. No `api` runbook script exists yet, so this is the usual Nest + Vitest practice; the first `to-test` settles it.
+
+- Library and command: Vitest, run from `api/` with `npx vitest run {files} --reporter=junit --outputFile={junit}`. Scripts live in `api/test/runbooks/*.spec.ts`; `vitest.config.ts` includes `**/*.spec.ts`, so `npm test` runs them too and needs Postgres up (`docker compose up -d db`).
+- Naming: one test per runbook step, its name starting with the step id (`it('S2 rejects an overlapping booking with conflict', ...)`). Tests without a step prefix belong to the project, not to a runbook.
+- Isolation: each file boots the real `AppModule` (`api/src/app.module.ts`) with `Test.createTestingModule({ imports: [AppModule] })`, calls `app.listen(0)` once, and closes it in `afterAll`. `beforeEach` empties the `booking` table through the app's TypeORM `DataSource`; it runs against the docker compose database, so it wipes local bookings.
+- Data: resources R1 to R5 come from the migration seed (`api/src/database/migrations/1793750400000-InitSchema.ts`), run on boot (`migrationsRun: true`). Bookings are created in the test through `POST /bookings`, with ids chosen by the test.
+- Auth: none; authentication is out of scope (PRD).
+- Requests: Node's built-in `fetch` against the listening app's URL; no supertest.
+- Assertions: status first, then the body fields the step names (error `code`, conflicting ids in ascending order), then effects through a read-back call (`GET /bookings`, `GET /availability`). There are no side effects without an endpoint.
+- External services: none exist.
+- The runbook is the source of truth: change the script to match its Expected, never the other way round without asking.
+<!-- runbooks:end -->
