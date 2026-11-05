@@ -122,4 +122,31 @@ describe('Check whether an interval is free on a resource, without booking it', 
 
     await expectError(response, 404, 'unknown_resource');
   });
+
+  it('S07 A check writes nothing', async () => {
+    await given('A', 'R1', 10, 20);
+    await given('B', 'R1', 20, 30);
+    const before = await fetch(`${baseUrl}/bookings`);
+    expect(before.status, 'GET /bookings before').toBe(200);
+    const beforeBody: unknown = await before.json();
+
+    const response = await check('resource=R1&start=19&end=21');
+
+    expect(response.status).toBe(200);
+    const after = await fetch(`${baseUrl}/bookings`);
+    expect(after.status, 'GET /bookings after').toBe(200);
+    expect(await after.json()).toStrictEqual(beforeBody);
+  });
+
+  it('S08 A canceled booking no longer conflicts', async () => {
+    await given('A', 'R1', 10, 20);
+    const cancel = await fetch(`${baseUrl}/bookings/A/cancel`, {
+      method: 'POST',
+    });
+    expect(cancel.status, 'cancel A').toBe(200);
+
+    const response = await check('resource=R1&start=10&end=20');
+
+    await expectAnswer(response, true, []);
+  });
 });
