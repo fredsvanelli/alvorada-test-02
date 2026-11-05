@@ -133,7 +133,7 @@ sequenceDiagram
   W->>C: POST /bookings
   C->>S: create(dto)
 
-  alt Invalid data: missing field, not an integer, or start >= end
+  alt Invalid data: missing field, not an integer in 0..2147483647, or start >= end
     S-->>C: invalid_data
     C-->>W: 422 invalid_data
   else Unknown resource
@@ -182,7 +182,7 @@ sequenceDiagram
   W->>C: GET /availability?resource=R1&start=19&end=21
   C->>S: availability(resource, start, end)
 
-  alt Invalid data: missing field, not an integer, or start >= end
+  alt Invalid data: missing field, not an integer in 0..2147483647, or start >= end
     S-->>C: invalid_data
     C-->>W: 422 invalid_data
   else Unknown resource
