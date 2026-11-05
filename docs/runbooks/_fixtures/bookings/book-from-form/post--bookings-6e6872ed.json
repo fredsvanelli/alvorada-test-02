@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/bookings",
+    "body": {
+      "id": "C",
+      "resource": "R1",
+      "start": 19,
+      "end": 21
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"6e-DiLokBC7gyhVnwuSCOVl+sCuqOQ\"",
+      "date": "Thu, 05 Nov 2026 05:16:05 GMT"
+    },
+    "body": {
+      "error": "conflict",
+      "message": "The interval overlaps active bookings of this resource.",
+      "conflicts": [
+        "A",
+        "B"
+      ]
+    }
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

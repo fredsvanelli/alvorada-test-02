@@ -1,0 +1,48 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/bookings"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"118-ZOP26JD96Fsd9Gb3Q9COJK00mHQ\"",
+      "date": "Thu, 05 Nov 2026 05:08:27 GMT"
+    },
+    "body": [
+      {
+        "id": "A",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 10,
+        "end": 40,
+        "status": "active"
+      },
+      {
+        "id": "B",
+        "resource": {
+          "id": "R2",
+          "name": "Pixel Room"
+        },
+        "start": 90,
+        "end": 130,
+        "status": "active"
+      },
+      {
+        "id": "C",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 20,
+        "end": 50,
+        "status": "canceled"
+      }
+    ]
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

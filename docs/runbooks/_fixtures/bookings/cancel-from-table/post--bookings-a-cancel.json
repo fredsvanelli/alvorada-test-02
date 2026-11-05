@@ -1,0 +1,29 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/bookings/A/cancel"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"7d-ISKjxdoYw7lLtNc/OehQF8HkzXI\"",
+      "date": "Thu, 05 Nov 2026 05:19:54 GMT"
+    },
+    "body": {
+      "result": "canceled",
+      "booking": {
+        "id": "A",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 10,
+        "end": 20,
+        "status": "canceled"
+      }
+    }
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}

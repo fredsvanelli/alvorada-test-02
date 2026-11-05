@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/resources"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "x-powered-by": "Express",
+      "content-type": "application/json; charset=utf-8",
+      "etag": "W/\"a3-IiCSso3QarULD2ExPVHaCRq7hUc\"",
+      "date": "Thu, 05 Nov 2026 05:19:42 GMT"
+    },
+    "body": [
+      {
+        "id": "R1",
+        "name": "Agora Room"
+      },
+      {
+        "id": "R2",
+        "name": "Pixel Room"
+      },
+      {
+        "id": "R3",
+        "name": "4K Projector"
+      },
+      {
+        "id": "R4",
+        "name": "Orbit Room"
+      },
+      {
+        "id": "R5",
+        "name": "Focus Room"
+      }
+    ]
+  },
+  "source": "recorded 2026-11-05 from http://localhost:3001"
+}
