@@ -99,19 +99,21 @@ export function BookingsPage() {
   useEffect(() => {
     const n = ++previewSeq.current;
     if (!checkable) return;
-    const q = { resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings };
+    const q = { id: form.id, resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings };
     const timer = setTimeout(() => {
       const params = new URLSearchParams({ resource: q.resource, start: String(q.start), end: String(q.end) });
+      // The API also answers id_taken for a used id, so Book is never offered for one.
+      if (q.id !== "") params.set("id", q.id);
       void call("GET", `/availability?${params}`).then((reply) => {
         if (n === previewSeq.current) setChecked({ ...q, reply });
       });
     }, 250);
     return () => clearTimeout(timer);
-  }, [checkable, form.resource, form.start, form.end, bookings]);
+  }, [checkable, form.id, form.resource, form.start, form.end, bookings]);
 
   const { preview, box } = shownPreview(
     checked,
-    checkable ? { resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings } : null,
+    checkable ? { id: form.id, resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings } : null,
   );
   // Book only an interval the current check found available.
   const canBook = preview.tone === "available" && !shown.some((b) => b.pending === "add");

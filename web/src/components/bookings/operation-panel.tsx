@@ -14,6 +14,7 @@ const previewClass: Record<Preview["tone"], string> = {
   failed: "bg-preview-idle-bg text-preview-idle-fg",
   available: "bg-preview-available-bg text-preview-available-fg",
   conflict: "bg-preview-conflict-bg text-preview-conflict-fg",
+  taken: "bg-preview-conflict-bg text-preview-conflict-fg",
 };
 
 const resultClass: Record<ResultCard["tone"], { card: string; chip: string }> = {

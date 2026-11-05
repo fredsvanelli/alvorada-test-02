@@ -143,6 +143,10 @@ describe('previewOf', () => {
       assert.equal(p.text, "Couldn't check availability");
     }
   });
+  it('says the id is taken on a 409 id_taken', () => {
+    const p = previewOf(json(409, { error: 'id_taken', message: 'x' }), 'R1', 19, 21, 'A');
+    assert.deepEqual(p, { tone: 'taken', text: 'Id A was already used by another booking', conflicts: [] });
+  });
 });
 
 describe('applyOptimistic', () => {
@@ -214,8 +218,8 @@ describe('timelineRows', () => {
 
 describe('shownPreview', () => {
   const basis = [booking('A')];
-  const now = { resource: 'R1', start: 19, end: 21, basis };
-  const checked = { resource: 'R1', start: 19, end: 21, basis, reply: json(200, { available: false, conflicts: ['A'] }) };
+  const now = { id: 'C', resource: 'R1', start: 19, end: 21, basis };
+  const checked = { id: 'C', resource: 'R1', start: 19, end: 21, basis, reply: json(200, { available: false, conflicts: ['A'] }) };
   it('asks for an interval when the fields cannot be checked', () => {
     assert.equal(shownPreview(checked, null).preview.text, 'Pick a start and an end from 0 to 100');
     assert.equal(shownPreview(checked, null).box, null);
@@ -236,6 +240,15 @@ describe('shownPreview', () => {
   it('draws no box for a failed check', () => {
     const failedCheck = { ...checked, reply: json(422, { error: 'invalid_data', message: 'x' }) };
     assert.equal(shownPreview(failedCheck, now).box, null);
+  });
+  it('says it is checking while the answer is for another id', () => {
+    assert.equal(shownPreview(checked, { ...now, id: 'D' }).preview.text, 'Checking R1 [19,21)…');
+  });
+  it('says the id is taken and draws no box', () => {
+    const takenCheck = { ...checked, id: 'A', reply: json(409, { error: 'id_taken', message: 'x' }) };
+    const s = shownPreview(takenCheck, { ...now, id: 'A' });
+    assert.equal(s.preview.text, 'Id A was already used by another booking');
+    assert.equal(s.box, null);
   });
 });
 
