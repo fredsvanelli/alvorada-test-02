@@ -12,6 +12,12 @@ export type CreateResult =
   | { ok: false; error: Exclude<CreateError, 'conflict'> }
   | { ok: false; error: 'conflict'; conflicts: string[] };
 
+export type AvailabilityError = 'invalid_data' | 'unknown_resource';
+
+export type AvailabilityResult =
+  | { ok: true; available: boolean; conflicts: string[] }
+  | { ok: false; error: AvailabilityError };
+
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 // A resource id to look up: a non-empty string. Arrays (a repeated query
@@ -63,6 +69,24 @@ export class BookingsService {
     // ponytail: check-then-insert is not atomic; concurrency is out of scope (PRD).
     await this.bookings.insert(booking);
     return { ok: true, booking };
+  }
+
+  // Read-only: checks run in the order invalid_data, unknown_resource, then
+  // the conflict lookup. Nothing is written. Takes the raw query values.
+  async availability(
+    resource: unknown,
+    start: unknown,
+    end: unknown,
+  ): Promise<AvailabilityResult> {
+    const interval = parseInterval(start, end);
+    if (!isResourceId(resource) || !interval) {
+      return { ok: false, error: 'invalid_data' };
+    }
+    if (!(await this.resources.exists(resource))) {
+      return { ok: false, error: 'unknown_resource' };
+    }
+    const conflicts = await this.findConflicts(resource, interval);
+    return { ok: true, available: conflicts.length === 0, conflicts };
   }
 
   // The one conflict lookup, shared by create and availability so they cannot
