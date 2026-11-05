@@ -5,3 +5,5 @@
 {"at":"2026-11-04T22:26:04Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
 {"at":"2026-11-04T23:23:03Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
 {"at":"2026-11-04T23:29:04Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-05T03:53:50Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-05T03:53:50Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-10-build-the-web-ui-to-list-create-check"}
