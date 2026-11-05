@@ -26,6 +26,8 @@ function parseBooking(body: unknown): Booking | null {
     !ID.test(id) ||
     typeof resource !== 'string' ||
     resource === '' ||
+    // Postgres text cannot hold NUL: it would throw a 500 instead of invalid_data.
+    resource.includes('\u0000') ||
     interval === null
   ) {
     return null;

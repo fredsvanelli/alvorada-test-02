@@ -87,6 +87,7 @@ describe('BookingsService', () => {
     ['a missing resource', { ...valid, resource: undefined }],
     ['a numeric resource', { ...valid, resource: 7 }],
     ['an empty resource', { ...valid, resource: '' }],
+    ['a resource with a NUL character', { ...valid, resource: 'R\u0000' }],
     ['a missing start', { ...valid, start: undefined }],
     ['a negative start', { ...valid, start: -1 }],
     ['an end above the integer range', { ...valid, end: 2147483648 }],
