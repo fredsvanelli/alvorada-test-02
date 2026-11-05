@@ -6,3 +6,5 @@
 {"at":"2026-11-04T23:23:03Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
 {"at":"2026-11-04T23:28:02Z","by":"fred-vanelli","op":"update","field":"description"}
 {"at":"2026-11-05T01:57:59Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T01-57-59Z-fred-vanelli.md"}
+{"at":"2026-11-05T17:53:07Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"canceled"}
+{"at":"2026-11-05T17:53:08Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T17-53-08Z-fred-vanelli.md"}

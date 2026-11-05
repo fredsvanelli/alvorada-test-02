@@ -2,14 +2,14 @@
 id: SCH-10
 title: "Build the web UI to list, create, check and cancel bookings"
 type: feature
-status: in_progress
+status: done
 estimate: 5
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-6, SCH-7, SCH-8]
 branch: sch-10-build-the-web-ui-to-list-create-check
 created: 2026-11-04T20:00:44.885Z
-updated: 2026-11-05T03:53:50Z
+updated: 2026-11-05T17:53:08Z
 ---
 
 ## Acceptance criteria

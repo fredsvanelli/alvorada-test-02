@@ -2,13 +2,14 @@
 id: SCH-11
 title: "Write the README: setup, run, tests, demo, decisions and what is left"
 type: task
-status: backlog
+status: in_progress
 estimate: 2
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-9, SCH-10]
+branch: sch-11-write-the-readme-setup-run-tests-demo
 created: 2026-11-04T20:00:44.994Z
-updated: 2026-11-04T23:29:21Z
+updated: 2026-11-05T17:54:38Z
 ---
 
 ## Acceptance criteria
