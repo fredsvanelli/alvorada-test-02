@@ -8,13 +8,13 @@ assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-4, SCH-5]
 created: 2026-11-04T20:00:44.439Z
-updated: 2026-11-04T23:26:33Z
+updated: 2026-11-05T00:03:34Z
 ---
 
 ## Acceptance criteria
 
 - [ ] `POST /bookings` with a valid `id`, `resource`, `start` and `end` returns 201 and the booking with status `active`
-- [ ] A missing field, a non-integer time or `start >= end` returns 422 `invalid_data`
+- [ ] A missing field, a time that is not an integer from 0 to 2147483647, or `start >= end` returns 422 `invalid_data` (from `parseInterval`)
 - [ ] An unknown resource returns 404 `unknown_resource`
 - [ ] An id already used, by an active or a canceled booking, returns 409 `id_taken`
 - [ ] An overlap with an active booking of the same resource returns 409 `conflict` with the conflicting ids in ascending order; canceled bookings and other resources never conflict
@@ -26,7 +26,7 @@ updated: 2026-11-04T23:26:33Z
 
 ### Context
 
-Fourth step of SCH-2, blocked by SCH-4 (the `booking` table and `ResourcesService.exists`) and SCH-5 (`validInterval` and `overlaps`). It builds the create flow from section 4.1 of `docs/diagrams/architecture.md`. SCH-4 left the `Booking` entity to this issue.
+Fourth step of SCH-2, blocked by SCH-4 (the `booking` table and `ResourcesService.exists`) and SCH-5 (`parseInterval` and `overlaps`). It builds the create flow from section 4.1 of `docs/diagrams/architecture.md`. SCH-4 left the `Booking` entity to this issue.
 
 SCH-7 and SCH-8 add to the same `BookingsModule`. Whichever of the three starts first creates the module, the entity and `BookingsRepository`; the others extend them.
 
@@ -47,7 +47,7 @@ SCH-7 and SCH-8 add to the same `BookingsModule`. Whichever of the three starts 
 
 ### Open questions for the design step
 
-- How is the body validated: by hand with `validInterval`, or with `class-validator` and `ValidationPipe` (not installed)? Either way it must return 422 `invalid_data`, not Nest's default 400
+- How is the body validated: by hand with `parseInterval` (it takes the raw values and converts digit-only strings), or with `class-validator` and `ValidationPipe` (not installed)? Either way it must return 422 `invalid_data`, not Nest's default 400
 - The error body shared by every endpoint (for example `{ error, conflicts? }`), and whether the service returns a result union or throws Nest exceptions
 - What makes an `id` invalid: empty, too long, which characters
 - Is a `resource` of the wrong type (a number, an empty string) `invalid_data` or `unknown_resource`?

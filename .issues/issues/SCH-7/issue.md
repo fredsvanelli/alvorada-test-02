@@ -8,7 +8,7 @@ assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-4, SCH-5]
 created: 2026-11-04T20:00:44.546Z
-updated: 2026-11-04T23:26:50Z
+updated: 2026-11-05T00:03:34Z
 ---
 
 ## Acceptance criteria
@@ -24,7 +24,7 @@ updated: 2026-11-04T23:26:50Z
 
 ### Context
 
-Fifth step of SCH-2, blocked by SCH-4 (the `booking` table and `ResourcesService.exists`) and SCH-5 (`validInterval` and `overlaps`). It builds the availability flow from section 4.2 of `docs/diagrams/architecture.md`: a read-only question of whether an interval on a resource has any active conflicts, answered with the conflicts in ascending id order.
+Fifth step of SCH-2, blocked by SCH-4 (the `booking` table and `ResourcesService.exists`) and SCH-5 (`parseInterval` and `overlaps`). It builds the availability flow from section 4.2 of `docs/diagrams/architecture.md`: a read-only question of whether an interval on a resource has any active conflicts, answered with the conflicts in ascending id order.
 
 It uses the same rules and the same "active bookings of a resource ordered by id" query as create (SCH-6), so the two can never disagree. Whichever of SCH-6, SCH-7 and SCH-8 starts first creates `BookingsModule`, the `Booking` entity and `BookingsRepository`.
 
@@ -33,7 +33,7 @@ It uses the same rules and the same "active bookings of a resource ordered by id
 - `GET /availability?resource=&start=&end=` in `BookingsController`
 - `BookingsService.availability(resource, start, end)`: the same `invalid_data` (422) and `unknown_resource` (404) checks as create, then the active bookings of the resource ordered by id, kept where `overlaps` is true
 - A 200 response with `available` and `conflicts` in ascending id order
-- Parsing the query string values into integers before `validInterval`, so `start=abc` or `start=1.5` is `invalid_data`
+- Passing the raw query string values to `parseInterval`, which converts digit-only strings, so `start=abc`, `start=1.5`, `start=-1` or a missing `start` is `invalid_data`
 - Unit tests for the service and the controller, including one that shows nothing is written
 
 ### Out of scope
