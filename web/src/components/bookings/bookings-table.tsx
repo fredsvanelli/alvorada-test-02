@@ -1,6 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -81,15 +91,30 @@ export function BookingsTable({ bookings, onCancel }: { bookings: ShownBooking[]
                   </TableCell>
                   <TableCell className={cn(cellClass, "py-1.5 text-right")}>
                     {isActive && (
-                      <button
-                        type="button"
-                        onClick={() => onCancel(b.id)}
-                        disabled={b.pending !== undefined}
-                        aria-label={`Cancel booking ${b.id}`}
-                        className="min-h-9 cursor-pointer rounded-lg border border-input bg-white px-3 text-[13px] text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          disabled={b.pending !== undefined}
+                          aria-label={`Cancel booking ${b.id}`}
+                          className="min-h-9 cursor-pointer rounded-lg border border-input bg-white px-3 text-[13px] text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Cancel
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Cancel booking {b.id}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {b.resource.id} {formatInterval(b.start, b.end)} becomes free. The id {b.id} stays taken.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                            {/* A Close, so the dialog shuts as the cancel starts. */}
+                            <AlertDialogCancel variant="destructive" onClick={() => onCancel(b.id)}>
+                              Cancel booking
+                            </AlertDialogCancel>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </TableCell>
                 </TableRow>

@@ -10,19 +10,22 @@ upstream: mocked
 covers:
   entries: ["/", "GET /resources", "GET /bookings", "POST /bookings/{id}/cancel"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10"]
-scripts: []
+sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "text \"Cancel in the Bookings table opens a confirmation dialog: Keep booking or Escape closes it and sends nothing, Cancel booking closes it and sends the cancel followed by GET /bookings\""]
+scripts: ["web/e2e/bookings/cancel-from-table.runbook.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "a7cb566"
+  commit: "500ef6c"
   result: passed
-  report: _runs/2026-11-05-0326-bookings.cancel-from-table.md
+  report: _runs/2026-11-05-1332-bookings.cancel-from-table.md
   runs:
-    r1: { date: 2026-11-05, commit: "a7cb566", report: _runs/2026-11-05-0326-bookings.cancel-from-table.md }
+    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1332-bookings.cancel-from-table.md }
   cells:
     S01: passed r1
+    S09: passed r1
+    S10: passed r1
+    S11: passed r1
     S02: passed r1
     S03: passed r1
     S04: passed r1
@@ -38,7 +41,7 @@ last_run:
 
 ## Goal
 
-On the bookings home page, a user presses Cancel on an active booking in the Bookings table. The page sends the cancel, re-fetches the list, and shows the booking as Canceled in the table and on the timeline. The result card says it was canceled and that its id stays taken, and the row no longer offers Cancel.
+On the bookings home page, a user presses Cancel on an active booking in the Bookings table. A confirmation dialog asks first: "Keep booking" or Escape closes it and sends nothing, and "Cancel booking" confirms. On confirm the page sends the cancel, re-fetches the list, and shows the booking as Canceled in the table and on the timeline. The result card says it was canceled and that its id stays taken, and the row no longer offers Cancel.
 
 ---
 
@@ -48,7 +51,7 @@ On the bookings home page, a user presses Cancel on an active booking in the Boo
 - Accounts: none. Authentication is out of scope (PRD).
 - Data: the fixtures in `docs/runbooks/_fixtures/bookings/cancel-from-table/`. They hold the resources R1 to R5 (R1 "Agora Room", R2 "Pixel Room") and two active bookings: A on R1 `[10,20)` and B on R2 `[30,40)`. After the cancel in S02, `GET /bookings` answers with A `canceled` and B still `active`.
 - Recording (`/runbooks:run bookings.cancel-from-table --record` only): start from an empty `booking` table in the dev database, emptied only after the user approves it. Before S01, create the two bookings with `POST /bookings` sent straight to the API at `http://localhost:3001` (not through the upstream server, so the creates are not recorded): `{"id":"A","resource":"R1","start":10,"end":20}` and then `{"id":"B","resource":"R2","start":30,"end":40}`. Each one must return 201. Nothing else may be in the table.
-- Step order: S02 and the steps after it run on the page S01 left open, without a reload or navigation. `GET /bookings` answers differently before the cancel (S01) and after it (S02), so the page has to load under S01 and the cancel has to happen with S02 selected. Steps S03 to S08 send no request: they read the screen S02 left.
+- Step order: S01, then S09, S10 and S11 (the confirmation dialog, which sends no request), then S02 and S03 to S08. All of them run on the page S01 left open, without a reload or navigation. `GET /bookings` answers differently before the cancel (S01) and after it (S02), so the page has to load under S01 and the confirmed cancel has to happen with S02 selected. Steps S09 to S11 leave A active and the dialog closed, as S01 left it. Steps S03 to S08 send no request: they read the screen S02 left.
 - The Id, Start and End fields stay empty for the whole run, so the page sends no `GET /availability`.
 
 ---
@@ -74,7 +77,7 @@ On the Timeline, the R1 row has an active bar (solid blue, white text) reading "
 
 ---
 
-### S02. Pressing Cancel sends the cancel for A, then re-fetches the list
+### S09. Pressing Cancel opens a confirmation dialog and sends nothing
 
 Parents: S01
 Requirement: none
@@ -83,9 +86,53 @@ Page: `/`
 Actions:
 
 1. On the page S01 left open (no reload), click the "Cancel" button labelled "Cancel booking A".
-2. Wait until the result card (`role="status"`) appears under Book.
 
-Expected: `GET /__runbooks/state` lists in `requests` exactly two requests since S02 was selected, in this order:
+Expected: a confirmation dialog (`role="alertdialog"`) opens over the page. Its title is "Cancel booking A?" and its description is "R1 [10,20) becomes free. The id A stays taken.". It has two buttons, "Keep booking" (outlined) and "Cancel booking" (red text on a light red background). `GET /__runbooks/state` lists no request in `requests` since S09 was selected, and `unmatched` is empty. No result card is shown under Book, and the Operation log has no entries.
+
+---
+
+### S10. Keep booking closes the dialog and sends nothing
+
+Parents: S09
+Requirement: none
+Page: `/`
+
+Actions:
+
+1. With the dialog S09 opened, click "Keep booking".
+
+Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S10 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log has no entries.
+
+---
+
+### S11. Escape closes the dialog and sends nothing
+
+Parents: S09
+Requirement: none
+Page: `/`
+
+Actions:
+
+1. Without reloading, click the "Cancel" button labelled "Cancel booking A". The dialog "Cancel booking A?" opens.
+2. Press Escape.
+
+Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S11 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log has no entries.
+
+---
+
+### S02. Confirming in the dialog sends the cancel for A, then re-fetches the list
+
+Parents: S09
+Requirement: none
+Page: `/`
+
+Actions:
+
+1. On the page S01 left open (no reload), click the "Cancel" button labelled "Cancel booking A". The dialog "Cancel booking A?" opens.
+2. In the dialog, click "Cancel booking".
+3. Wait until the result card (`role="status"`) appears under Book.
+
+Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists in `requests` exactly two requests since S02 was selected, in this order:
 
 1. `POST /bookings/A/cancel` with no body, status 200.
 2. `GET /bookings`, status 200.
