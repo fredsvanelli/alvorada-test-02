@@ -194,8 +194,9 @@ paths:
                       status: canceled
         '400':
           description: >
-            Malformed JSON body. Rejected by the JSON parser before the handler,
-            so it has Nest's default body.
+            Malformed JSON body, or a path id with an invalid percent-encoding
+            (for example `%ZZ`). Rejected before the handler, so it has Nest's
+            default body.
           content:
             application/json:
               schema:

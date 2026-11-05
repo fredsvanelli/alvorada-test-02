@@ -9,7 +9,7 @@ roles: []
 covers:
   entries: ["GET /bookings"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel now exists; add the step listing active and canceled bookings together\""]
+sources: ["docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel now exists; add the step listing active and canceled bookings together\"", "text \"fix the Not covered line about read-back\""]
 scripts: ["api/test/runbooks/bookings-list-bookings.spec.ts"]
 status: active
 last_run:
@@ -156,7 +156,7 @@ The whole body equals this array (strict equality): exactly these two bookings, 
 
 - Unknown query params (for example `?status=active`) are ignored: left out of the agreed steps. The controller takes no query (`api/src/bookings/bookings.controller.ts`, `@Get('bookings')`).
 - Invalid input (422): the endpoint takes no query and no body, so no input can be invalid.
-- A read-back: the endpoint only reads; it is itself the read-back of `bookings.create-booking` and, later, `bookings.cancel-booking`.
+- A read-back: the endpoint only reads, so no separate read-back is needed. `bookings.cancel-booking` (S01, S02, S04) and `bookings.check-availability` (S07) use it as their read-back.
 - Filters, paging and sorting options: non-goals of the SCH-8 spec; the web app filters on the client.
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
 - A database failure during the list: the code has no handler of its own for it (Nest's default 500). Database reachability is proven by `health.check-database`.

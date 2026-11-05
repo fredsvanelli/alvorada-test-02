@@ -29,7 +29,7 @@ export class BookingsRepository {
   }
 
   // Ascending id order by character code: the database's en_US collation
-  // would put "a" before "B". This is the one place that order is defined.
+  // would put "a" before "B". findViews below orders by the same COLLATE "C".
   findActiveByResource(resource: string): Promise<Booking[]> {
     return this.bookings
       .createQueryBuilder('booking')

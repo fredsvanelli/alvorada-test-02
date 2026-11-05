@@ -9,7 +9,7 @@ roles: []
 covers:
   entries: ["POST /bookings"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel and GET /bookings now exist; point the canceled-booking Not covered entry to bookings.cancel-booking and drop the claims that GET /bookings does not exist\""]
+sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel and GET /bookings now exist; point the canceled-booking Not covered entry to bookings.cancel-booking and drop the claims that GET /bookings does not exist\"", "text \"fix the line reference in the concurrency Not covered entry\""]
 scripts: ["api/test/runbooks/bookings-create-booking.spec.ts"]
 status: active
 last_run:
@@ -617,7 +617,7 @@ Intervals are half-open: `[0,10)` ends before A starts at 10. S07 proves the oth
 ## Not covered
 
 - A canceled booking never conflicts, and a canceled booking's id still returns `id_taken`: both are proven against Postgres by `bookings.cancel-booking` (`docs/runbooks/bookings/cancel-booking.md`), S05 (a canceled booking no longer conflicts) and S06 (its id stays taken), which cancel through `POST /bookings/:id/cancel`.
-- Concurrent creates with the same id or overlapping intervals: concurrency is out of scope (PRD). The check-then-insert is not atomic (`api/src/bookings/bookings.service.ts:60-69`); two simultaneous creates with the same id hit the primary key and return 500.
+- Concurrent creates with the same id or overlapping intervals: concurrency is out of scope (PRD). The check-then-insert is not atomic (`api/src/bookings/bookings.service.ts:66-73`); two simultaneous creates with the same id hit the primary key and return 500.
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
 - Read-back through `GET /bookings`: left out of the agreed steps, which prove what was saved through a follow-up `POST /bookings` instead. `bookings.list-bookings` (`docs/runbooks/bookings/list-bookings.md`) proves what `GET /bookings` returns.
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.
