@@ -8,6 +8,8 @@ export async function call(method: 'GET' | 'POST', path: string, body?: unknown)
   try {
     const res = await fetch(`${API_URL}${path}`, {
       method,
+      // Bookings change under us: never answer from the HTTP cache (a 304 revalidation also breaks fixture recording).
+      cache: 'no-store',
       headers: body === undefined ? undefined : { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

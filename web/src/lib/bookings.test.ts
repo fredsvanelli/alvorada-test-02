@@ -183,6 +183,11 @@ describe('call', () => {
     assert.equal(new Headers(seen[0].init.headers).get('content-type'), 'application/json');
     assert.equal(seen[0].init.body, '{"id":"A"}');
   });
+  it('never reuses a cached answer', async () => {
+    const seen = stub(async () => new Response('[]', { status: 200 }));
+    await call('GET', '/bookings');
+    assert.equal(seen[0].init.cache, 'no-store');
+  });
   it('sends no body or content type without one', async () => {
     const seen = stub(async () => new Response('[]', { status: 200 }));
     await call('GET', '/bookings');
