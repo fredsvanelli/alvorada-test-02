@@ -2,14 +2,14 @@
 id: SCH-7
 title: "Check availability with GET /availability, conflicts in ascending id order"
 type: feature
-status: in_progress
+status: in_review
 estimate: 3
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-4, SCH-5]
 branch: sch-7-check-availability-with-get-availability
 created: 2026-11-04T20:00:44.546Z
-updated: 2026-11-05T02:14:27Z
+updated: 2026-11-05T02:59:12Z
 ---
 
 ## Acceptance criteria
