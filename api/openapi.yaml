@@ -49,6 +49,75 @@ paths:
               example:
                 - { id: R1, name: Agora Room }
                 - { id: R2, name: Pixel Room }
+  /bookings:
+    post:
+      operationId: createBooking
+      summary: Create a booking, or reject it without writing anything
+      description: >
+        Checks run in this order and the first failure wins: `invalid_data`,
+        `unknown_resource`, `id_taken`, `conflict`. A rejection writes no row,
+        so its id can be used again. Extra fields in the body are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+            example: { id: A, resource: R1, start: 10, end: 20 }
+      responses:
+        '201':
+          description: Created with status `active`. Times are numbers, even when sent as strings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+              example: { id: A, resource: R1, start: 10, end: 20, status: active }
+        '400':
+          description: >
+            Malformed JSON, or a top-level `null` or string body. Rejected by
+            the JSON parser before validation, so it has Nest's default body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NestError'
+        '404':
+          description: '`unknown_resource`: the resource is not in the fixed list (exact match).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: unknown_resource
+                message: This resource does not exist.
+        '409':
+          description: >
+            `id_taken`: a booking with this id exists, active or canceled.
+            `conflict`: the interval overlaps active bookings of the same resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              examples:
+                id_taken:
+                  value:
+                    error: id_taken
+                    message: This id was already used by another booking.
+                conflict:
+                  value:
+                    error: conflict
+                    message: The interval overlaps active bookings of this resource.
+                    conflicts: [A, B]
+        '422':
+          description: >
+            `invalid_data`: the body is not an object, or a field is missing or
+            invalid (see `CreateBookingRequest`), or `start >= end`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: invalid_data
+                message: Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.
 components:
   schemas:
     Resource:
@@ -61,6 +130,63 @@ components:
         name:
           type: string
           example: Agora Room
+    Time:
+      description: An integer time from 0 to 2147483647, as a number or a digit-only string.
+      oneOf:
+        - type: integer
+          minimum: 0
+          maximum: 2147483647
+        - type: string
+          pattern: '^\d+$'
+    CreateBookingRequest:
+      description: '`start` must be before `end`: the interval is half-open, `[start, end)`.'
+      type: object
+      required: [id, resource, start, end]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          description: Chosen by the client. Case-sensitive.
+        resource:
+          type: string
+          minLength: 1
+          example: R1
+        start:
+          $ref: '#/components/schemas/Time'
+        end:
+          $ref: '#/components/schemas/Time'
+    Booking:
+      type: object
+      required: [id, resource, start, end, status]
+      properties:
+        id:
+          type: string
+        resource:
+          type: string
+        start:
+          type: integer
+        end:
+          type: integer
+        status:
+          type: string
+          enum: [active, canceled]
+    BookingError:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [invalid_data, unknown_resource, id_taken, conflict]
+        message:
+          type: string
+          description: For people; clients branch on `error`.
+        conflicts:
+          type: array
+          items:
+            type: string
+          description: >
+            Only on `conflict`: the ids of the overlapping active bookings, in
+            ascending id order by character code (`10` before `9`, `B` before `a`).
     NestError:
       description: Nest's default exception body.
       type: object
