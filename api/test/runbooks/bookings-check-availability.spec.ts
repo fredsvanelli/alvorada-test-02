@@ -12,6 +12,19 @@ describe('Check whether an interval is free on a resource, without booking it', 
   // Sends GET /availability with the query string exactly as written.
   const check = (query: string) => fetch(`${baseUrl}/availability?${query}`);
 
+  // Sends POST /bookings and returns the response; the caller asserts it.
+  const createBooking = (
+    id: string,
+    resource: string,
+    start: number,
+    end: number,
+  ) =>
+    fetch(`${baseUrl}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, resource, start, end }),
+    });
+
   // Creates a "Given" booking through POST /bookings; each must return 201.
   const given = async (
     id: string,
@@ -19,11 +32,7 @@ describe('Check whether an interval is free on a resource, without booking it', 
     start: number,
     end: number,
   ) => {
-    const response = await fetch(`${baseUrl}/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, resource, start, end }),
-    });
+    const response = await createBooking(id, resource, start, end);
     expect(response.status, `given ${id}`).toBe(201);
   };
 
@@ -199,5 +208,13 @@ describe('Check whether an interval is free on a resource, without booking it', 
     for (const [name, query] of Object.entries(queries)) {
       await expectError(await check(query), 422, 'invalid_data', name);
     }
+  });
+
+  it('S14 An available check claims nothing, so the same interval and id can be booked right after', async () => {
+    const response = await check('resource=R1&start=10&end=20&id=X');
+
+    await expectAnswer(response, true, []);
+    const create = await createBooking('X', 'R1', 10, 20);
+    expect(create.status, 'POST /bookings after').toBe(201);
   });
 });

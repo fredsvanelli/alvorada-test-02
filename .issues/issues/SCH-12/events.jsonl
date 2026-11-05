@@ -1,2 +1,7 @@
 {"at":"2026-11-05T03:01:42Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-12","title":"Prove over HTTP that an availability check holds nothing","type":"feature","status":"backlog","estimate":1,"assignee":"fred-vanelli","labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-05T03:01:42.703Z","updated":"2026-11-05T03:01:42Z"}}
 {"at":"2026-11-05T03:01:42Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-7"}
+{"at":"2026-11-05T22:55:11Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-05T22:55:11Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-12-prove-over-http-that-an-availability"}
+{"at":"2026-11-05T23:01:56Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-05T23:30:12Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T23-30-12Z-fred-vanelli.md"}
+{"at":"2026-11-05T23:30:12Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
