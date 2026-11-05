@@ -33,5 +33,5 @@ Ids compared character by character by character code, so `10` comes before `9` 
 _Avoid_: alphabetical order, natural order
 
 **Availability check**:
-A read-only question of whether an Interval on a Resource has any Conflicts, answered with the Conflicts in ascending id order.
+A read-only question of whether an Interval on a Resource has any Conflicts. The answer is **available** when there are none, and otherwise lists the Conflicts in ascending id order. The check claims nothing: an available Interval can still be taken by the next create.
 _Avoid_: query, lookup
