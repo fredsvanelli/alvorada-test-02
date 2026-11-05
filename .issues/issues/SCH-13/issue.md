@@ -2,12 +2,13 @@
 id: SCH-13
 title: Name the Availability response type and assert no insert in the available case
 type: feature
-status: backlog
+status: in_progress
 estimate: 1
 assignee: fred-vanelli
 related: [SCH-7]
+branch: sch-13-name-the-availability-response-type-and
 created: 2026-11-05T03:01:42.874Z
-updated: 2026-11-05T03:01:43Z
+updated: 2026-11-05T23:42:19Z
 ---
 
 ## Description
