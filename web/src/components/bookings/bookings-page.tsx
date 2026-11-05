@@ -75,7 +75,8 @@ export function BookingsPage() {
       setLog((l) => addLog(l, { call: describeCall("POST", path, body), reply: describeReply(reply), tone: card.tone }));
       // A failed re-fetch keeps the last good list.
       if (list.status === 200 && Array.isArray(list.body)) setBookings(list.body as Booking[]);
-      if (card.code === "created") setForm((f) => ({ ...f, id: "" }));
+      // Clearing the times too: re-checking them against the new list would report the new booking as a conflict.
+      if (card.code === "created") setForm((f) => ({ ...f, id: "", start: "", end: "" }));
     });
   }
 
@@ -93,7 +94,6 @@ export function BookingsPage() {
 
   const ready = load === "ready";
   const checkable = ready && form.resource !== "" && isBookable(form.start, form.end);
-  const canBook = checkable && !shown.some((b) => b.pending === "add");
 
   // Live availability check: debounced, and only the latest answer counts. Re-runs after each write's re-fetch.
   useEffect(() => {
@@ -113,6 +113,8 @@ export function BookingsPage() {
     checked,
     checkable ? { resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings } : null,
   );
+  // Book only an interval the current check found available.
+  const canBook = preview.tone === "available" && !shown.some((b) => b.pending === "add");
 
   return (
     <main className="mx-auto box-border flex w-full max-w-[1240px] flex-col gap-6 px-5 pt-8 pb-12">
