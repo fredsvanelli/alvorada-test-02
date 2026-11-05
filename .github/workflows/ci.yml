@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        # Same credentials as api/.env.example, which the job copies to api/.env.
+        env:
+          POSTGRES_USER: bookings
+          POSTGRES_PASSWORD: bookings
+          POSTGRES_DB: bookings
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bookings -d bookings"
+          --health-interval 2s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: cp api/.env.example api/.env
+      - run: npm test -w api
