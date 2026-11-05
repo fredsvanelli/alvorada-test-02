@@ -5,15 +5,19 @@ import { BookingsService } from './bookings.service.js';
 
 describe('BookingsController', () => {
   const create = vi.fn();
+  const availability = vi.fn();
   let controller: BookingsController;
 
   const body = { id: 'A', resource: 'R1', start: 10, end: 20 };
 
   beforeEach(async () => {
     create.mockReset();
+    availability.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [BookingsController],
-      providers: [{ provide: BookingsService, useValue: { create } }],
+      providers: [
+        { provide: BookingsService, useValue: { create, availability } },
+      ],
     }).compile();
     controller = moduleRef.get(BookingsController);
   });
@@ -57,6 +61,50 @@ describe('BookingsController', () => {
       error: 'conflict',
       message: expect.any(String),
       conflicts: ['A', 'B'],
+    });
+  });
+
+  describe('availability', () => {
+    async function thrownByAvailability(): Promise<HttpException> {
+      const error: unknown = await controller
+        .availability('R1', '19', '21')
+        .catch((e) => e);
+      expect(error).toBeInstanceOf(HttpException);
+      return error as HttpException;
+    }
+
+    it('returns available and conflicts', async () => {
+      availability.mockResolvedValue({
+        ok: true,
+        available: false,
+        conflicts: ['A', 'B'],
+      });
+      await expect(
+        controller.availability('R1', '19', '21'),
+      ).resolves.toStrictEqual({ available: false, conflicts: ['A', 'B'] });
+      expect(availability).toHaveBeenCalledWith('R1', '19', '21');
+    });
+
+    it.each([
+      ['invalid_data', 422],
+      ['unknown_resource', 404],
+    ])('maps availability %s to %i', async (code, status) => {
+      availability.mockResolvedValue({ ok: false, error: code });
+      const error = await thrownByAvailability();
+      expect(error.getStatus()).toBe(status);
+      expect(error.getResponse()).toStrictEqual({
+        error: code,
+        message: expect.any(String),
+      });
+    });
+
+    it('asks for resource, start and end on invalid_data', async () => {
+      availability.mockResolvedValue({ ok: false, error: 'invalid_data' });
+      const error = await thrownByAvailability();
+      expect(error.getResponse()).toMatchObject({
+        message:
+          'Send resource, and integer start and end from 0 to 2147483647 with start before end.',
+      });
     });
   });
 });

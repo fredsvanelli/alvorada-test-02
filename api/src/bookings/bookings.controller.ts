@@ -1,6 +1,17 @@
-import { Body, Controller, HttpException, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Booking } from './booking.entity.js';
-import { BookingsService, CreateError } from './bookings.service.js';
+import {
+  AvailabilityError,
+  BookingsService,
+  CreateError,
+} from './bookings.service.js';
 
 const STATUS: Record<CreateError, number> = {
   invalid_data: 422,
@@ -17,12 +28,19 @@ const MESSAGE: Record<CreateError, string> = {
   conflict: 'The interval overlaps active bookings of this resource.',
 };
 
-@Controller('bookings')
+// Availability takes no id, so its invalid_data message does not ask for one.
+const AVAILABILITY_MESSAGE: Record<AvailabilityError, string> = {
+  invalid_data:
+    'Send resource, and integer start and end from 0 to 2147483647 with start before end.',
+  unknown_resource: MESSAGE.unknown_resource,
+};
+
+@Controller()
 export class BookingsController {
   constructor(private readonly bookings: BookingsService) {}
 
   // Maps the service result to HTTP: 201 with the booking, or the error body.
-  @Post()
+  @Post('bookings')
   async create(@Body() body: unknown): Promise<Booking> {
     const result = await this.bookings.create(body);
     if (result.ok) return result.booking;
@@ -32,6 +50,24 @@ export class BookingsController {
         message: MESSAGE[result.error],
         ...(result.error === 'conflict' && { conflicts: result.conflicts }),
       },
+      STATUS[result.error],
+    );
+  }
+
+  // Read-only: 200 with available and conflicts, or the error body. The raw
+  // query values go to the service, which validates them.
+  @Get('availability')
+  async availability(
+    @Query('resource') resource: unknown,
+    @Query('start') start: unknown,
+    @Query('end') end: unknown,
+  ): Promise<{ available: boolean; conflicts: string[] }> {
+    const result = await this.bookings.availability(resource, start, end);
+    if (result.ok) {
+      return { available: result.available, conflicts: result.conflicts };
+    }
+    throw new HttpException(
+      { error: result.error, message: AVAILABILITY_MESSAGE[result.error] },
       STATUS[result.error],
     );
   }

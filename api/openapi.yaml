@@ -118,6 +118,74 @@ paths:
               example:
                 error: invalid_data
                 message: Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.
+  /availability:
+    get:
+      operationId: checkAvailability
+      summary: Check whether an interval on a resource is free, without booking it
+      description: >
+        Read-only: writes nothing and holds nothing, so an available interval
+        can still be taken by the next create. Checks run in this order and the
+        first failure wins: `invalid_data`, `unknown_resource`. Only active
+        bookings of the same resource conflict, with the half-open rule
+        `[start, end)`. Extra query params are ignored; a repeated `resource`,
+        `start` or `end` is `invalid_data`.
+      parameters:
+        - name: resource
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            example: R1
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d+$'
+            example: '19'
+          description: An integer time from 0 to 2147483647, before `end`.
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d+$'
+            example: '21'
+          description: An integer time from 0 to 2147483647, after `start`.
+      responses:
+        '200':
+          description: Answered, available or not.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Availability'
+              examples:
+                available:
+                  value: { available: true, conflicts: [] }
+                notAvailable:
+                  value: { available: false, conflicts: [A, B] }
+        '404':
+          description: '`unknown_resource`: the resource is not in the fixed list (exact match).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: unknown_resource
+                message: This resource does not exist.
+        '422':
+          description: >
+            `invalid_data`: `resource`, `start` or `end` is missing, empty or
+            repeated, a time is not an integer from 0 to 2147483647, or
+            `start >= end`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: invalid_data
+                message: Send resource, and integer start and end from 0 to 2147483647 with start before end.
 components:
   schemas:
     Resource:
@@ -186,6 +254,20 @@ components:
             type: string
           description: >
             Only on `conflict`: the ids of the overlapping active bookings, in
+            ascending id order by character code (`10` before `9`, `B` before `a`).
+    Availability:
+      type: object
+      required: [available, conflicts]
+      properties:
+        available:
+          type: boolean
+          description: True when `conflicts` is empty.
+        conflicts:
+          type: array
+          items:
+            type: string
+          description: >
+            The ids of the overlapping active bookings of the resource, in
             ascending id order by character code (`10` before `9`, `B` before `a`).
     NestError:
       description: Nest's default exception body.

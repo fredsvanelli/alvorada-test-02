@@ -195,4 +195,82 @@ describe('BookingsService', () => {
     });
     expect(insert).not.toHaveBeenCalled();
   });
+
+  describe('availability', () => {
+    it('is available when nothing overlaps', async () => {
+      await expect(service.availability('R1', 10, 20)).resolves.toStrictEqual({
+        ok: true,
+        available: true,
+        conflicts: [],
+      });
+      expect(findActiveByResource).toHaveBeenCalledWith('R1');
+    });
+
+    it('lists the overlapping bookings in repository order', async () => {
+      findActiveByResource.mockResolvedValue([
+        booking('A', 10, 20),
+        booking('B', 20, 30),
+      ]);
+      await expect(
+        service.availability('R1', '19', '21'),
+      ).resolves.toStrictEqual({
+        ok: true,
+        available: false,
+        conflicts: ['A', 'B'],
+      });
+    });
+
+    it('keeps the order the repository returns', async () => {
+      findActiveByResource.mockResolvedValue(
+        ['10', '9', 'B', 'a'].map((id) => booking(id, 0, 5)),
+      );
+      await expect(service.availability('R1', 0, 5)).resolves.toMatchObject({
+        conflicts: ['10', '9', 'B', 'a'],
+      });
+    });
+
+    it('treats [20,30) after [10,20) as available', async () => {
+      findActiveByResource.mockResolvedValue([booking('A', 10, 20)]);
+      await expect(service.availability('R1', 20, 30)).resolves.toMatchObject({
+        available: true,
+        conflicts: [],
+      });
+    });
+
+    it('never writes', async () => {
+      findActiveByResource.mockResolvedValue([booking('A', 10, 20)]);
+      await service.availability('R1', 15, 25);
+      expect(insert).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a missing resource', undefined, 10, 20],
+      ['an empty resource', '', 10, 20],
+      ['a repeated resource', ['R1', 'R2'], 10, 20],
+      ['a resource with NUL', 'R\u00001', 10, 20],
+      ['a missing start', 'R1', undefined, 20],
+      ['an empty start', 'R1', '', 20],
+      ['a repeated start', 'R1', ['1', '2'], 20],
+      ['a non-numeric start', 'R1', 'abc', 20],
+      ['a decimal start', 'R1', '1.5', 20],
+      ['a negative start', 'R1', '-1', 20],
+      ['an end above the integer range', 'R1', 0, 2147483648],
+      ['start equal to end', 'R1', 10, 10],
+      ['start after end', 'R1', 20, 10],
+    ])('rejects %s as invalid_data', async (_, resource, start, end) => {
+      await expect(
+        service.availability(resource, start, end),
+      ).resolves.toStrictEqual({ ok: false, error: 'invalid_data' });
+      expect(exists).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown resource', async () => {
+      exists.mockResolvedValue(false);
+      await expect(service.availability('r1', 10, 20)).resolves.toStrictEqual({
+        ok: false,
+        error: 'unknown_resource',
+      });
+      expect(findActiveByResource).not.toHaveBeenCalled();
+    });
+  });
 });
