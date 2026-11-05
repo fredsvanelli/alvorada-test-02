@@ -5,3 +5,6 @@
 {"at":"2026-11-04T23:27:15Z","by":"fred-vanelli","op":"update","field":"description"}
 {"at":"2026-11-05T01:57:59Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T01-57-59Z-fred-vanelli.md"}
 {"at":"2026-11-05T02:47:23Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T02-47-23Z-fred-vanelli.md"}
+{"at":"2026-11-05T03:08:12Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-05T03:08:12Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-8-cancel-and-list-bookings-with-post"}
+{"at":"2026-11-05T03:24:38Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T03-24-38Z-fred-vanelli.md"}
