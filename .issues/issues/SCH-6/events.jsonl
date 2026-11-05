@@ -11,3 +11,4 @@
 {"at":"2026-11-05T01:19:58Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-6-create-a-booking-with-post-bookings"}
 {"at":"2026-11-05T02:06:51Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T02-06-51Z-fred-vanelli.md"}
 {"at":"2026-11-05T02:06:51Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-05T02:11:10Z","by":"fred-vanelli","op":"move","field":"status","from":"in_review","to":"done"}
