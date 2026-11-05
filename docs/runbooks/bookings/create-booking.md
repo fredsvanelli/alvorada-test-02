@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["POST /bookings"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md"]
+sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel and GET /bookings now exist; point the canceled-booking Not covered entry to bookings.cancel-booking and drop the claims that GET /bookings does not exist\"", "text \"fix the line reference in the concurrency Not covered entry\""]
 scripts: ["api/test/runbooks/bookings-create-booking.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-bookings.create-booking.md
+  report: _runs/2026-11-05-0037-bookings.create-booking.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-bookings.create-booking.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.create-booking.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -49,7 +49,7 @@ last_run:
 
 ## Goal
 
-Prove that `POST /bookings` creates an `active` booking for a free `[start, end)` interval of a known resource, and otherwise rejects it with `invalid_data` (422), `unknown_resource` (404), `id_taken` (409) or `conflict` (409, with the conflicting ids in ascending order by character code), checked in that order, without writing a row, so a rejected id stays free.
+Prove that `POST /bookings` creates an `active` booking for a free `[start, end)` interval of a known resource, returning it with the resource nested as `{ id, name }` (ADR `docs/adr/0001-nested-resource-in-booking-responses.md`), and otherwise rejects it with `invalid_data` (422), `unknown_resource` (404), `id_taken` (409) or `conflict` (409, with the conflicting ids in ascending order by character code), checked in that order, without writing a row, so a rejected id stays free.
 
 ---
 
@@ -58,9 +58,9 @@ Prove that `POST /bookings` creates an `active` booking for a free `[start, end)
 - Test environment: Postgres up (`docker compose up -d db`) and `api/.env` copied from `api/.env.example`. The script boots the real `AppModule` (`api/src/app.module.ts`) with `Test.createTestingModule({ imports: [AppModule] })`, calls `app.listen(0)` once, closes the app in `afterAll`, and sends requests with Node's built-in `fetch`. Run from `api/` with `npx vitest run {files} --reporter=junit --outputFile={junit}`.
 - Database schema and seed: the script runs against the disposable test database `bookings_test` (`POSTGRES_DB` in `api/vitest.config.ts`), which `api/test/global-setup.ts` drops, recreates and migrates before every Vitest run. The `booking` table and the resources R1 to R5 come from the migration `api/src/database/migrations/1793750400000-InitSchema.ts`.
 - Auth: none. Authentication is out of scope (PRD), and `api/openapi.yaml` declares `security: []`.
-- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, with the ids the step names, before the request under test; each of those creates must return 201. Resources come only from the seed.
-- Requests: every request with a body sends `Content-Type: application/json`. A request written as `{ id, resource, [start,end) }` in a step title means the JSON body `{ "id": ..., "resource": ..., "start": start, "end": end }`, with numbers unless the step says otherwise.
-- Read-back: there is no `GET /bookings` yet (SCH-8), so a step proves what was or was not saved with a follow-up `POST /bookings` whose result depends on it (a conflict naming the saved booking, or a 201 that a saved row would have refused).
+- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, with the ids the step names, before the request under test; each of those creates must return 201. Resources come only from the seed, with these names: R1 `Agora Room`, R2 `Pixel Room`, R3 `4K Projector`.
+- Requests: every request with a body sends `Content-Type: application/json`. A request written as `{ id, resource, [start,end) }` in a step title means the JSON body `{ "id": ..., "resource": ..., "start": start, "end": end }`, with numbers unless the step says otherwise. Requests send the resource as its id string (`"resource": "R1"`); a 201 body returns it as an object (`"resource": { "id": "R1", "name": "Agora Room" }`).
+- Read-back: a step proves what was or was not saved with a follow-up `POST /bookings` whose result depends on it (a conflict naming the saved booking, or a 201 that a saved row would have refused). A read-back through `GET /bookings` was left out of the agreed steps; `bookings.list-bookings` proves what that list returns.
 
 ---
 
@@ -84,10 +84,10 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "A", "resource": "R1", "start": 10, "end": 20, "status": "active" }
+{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 10, "end": 20, "status": "active" }
 ```
 
-The body has exactly these five keys. Read-back: a following `POST /bookings` with `{ "id": "B", "resource": "R1", "start": 15, "end": 25 }` returns 409 with `{ "error": "conflict", "conflicts": ["A"] }`, so A was saved as an active booking of R1 at `[10,20)`.
+The body has exactly these five keys, and `resource` exactly `id` and `name`: the request sent `"resource": "R1"`, and the response nests R1 with its seeded name. Read-back: a following `POST /bookings` with `{ "id": "B", "resource": "R1", "start": 15, "end": 25 }` returns 409 with `{ "error": "conflict", "conflicts": ["A"] }`, so A was saved as an active booking of R1 at `[10,20)`.
 
 ---
 
@@ -109,7 +109,7 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "A", "resource": "R1", "start": 10, "end": 20, "status": "active" }
+{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 10, "end": 20, "status": "active" }
 ```
 
 `start` and `end` are JSON numbers, not strings. Read-back: a following `POST /bookings` with `{ "id": "B", "resource": "R1", "start": 19, "end": 21 }` returns 409 with `{ "error": "conflict", "conflicts": ["A"] }`.
@@ -267,7 +267,7 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "B", "resource": "R1", "start": 20, "end": 30, "status": "active" }
+{ "id": "B", "resource": { "id": "R1", "name": "Agora Room" }, "start": 20, "end": 30, "status": "active" }
 ```
 
 Intervals are half-open: `[10,20)` frees R1 at 20.
@@ -319,10 +319,10 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "C", "resource": "R2", "start": 19, "end": 21, "status": "active" }
+{ "id": "C", "resource": { "id": "R2", "name": "Pixel Room" }, "start": 19, "end": 21, "status": "active" }
 ```
 
-The rejected attempt wrote no row, so id C is free, and the bookings of R1 do not conflict with R2.
+The rejected attempt wrote no row, so id C is free, and the bookings of R1 do not conflict with R2. `resource` names R2, not R1.
 
 ---
 
@@ -345,7 +345,7 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "a", "resource": "R1", "start": 30, "end": 40, "status": "active" }
+{ "id": "a", "resource": { "id": "R1", "name": "Agora Room" }, "start": 30, "end": 40, "status": "active" }
 ```
 
 `a` and `A` are different ids.
@@ -480,7 +480,7 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "A", "resource": "R1", "start": 0, "end": 2147483647, "status": "active" }
+{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 0, "end": 2147483647, "status": "active" }
 ```
 
 `0` and `2147483647`, the upper bound of the Postgres `integer` columns, are valid times.
@@ -530,10 +530,10 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "A", "resource": "R1", "start": 10, "end": 20, "status": "active" }
+{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 10, "end": 20, "status": "active" }
 ```
 
-The body has exactly these five keys: no `note`. Read-back: a following `POST /bookings` with `{ "id": "B", "resource": "R1", "start": 15, "end": 25 }` returns 409 with `{ "error": "conflict", "conflicts": ["A"] }`, so A was saved as active (a canceled booking never conflicts).
+The body has exactly these five keys, and `resource` exactly `id` and `name`: no `note`. Read-back: a following `POST /bookings` with `{ "id": "B", "resource": "R1", "start": 15, "end": 25 }` returns 409 with `{ "error": "conflict", "conflicts": ["A"] }`, so A was saved as active (a canceled booking never conflicts).
 
 ---
 
@@ -607,7 +607,7 @@ Content-Type: application/json
 Expected: 201.
 
 ```json
-{ "id": "B", "resource": "R1", "start": 0, "end": 10, "status": "active" }
+{ "id": "B", "resource": { "id": "R1", "name": "Agora Room" }, "start": 0, "end": 10, "status": "active" }
 ```
 
 Intervals are half-open: `[0,10)` ends before A starts at 10. S07 proves the other side of the boundary.
@@ -616,10 +616,10 @@ Intervals are half-open: `[0,10)` ends before A starts at 10. S07 proves the oth
 
 ## Not covered
 
-- A canceled booking never conflicts, and a canceled booking's id still returns `id_taken`: no endpoint cancels a booking yet (`POST /bookings/:id/cancel`, SCH-8), and the script creates data only through the API. The unit tests in `api/src/bookings/bookings.service.spec.ts` cover both with a mocked repository; add the steps when SCH-8 ships, through `/runbooks:update`.
-- Concurrent creates with the same id or overlapping intervals: concurrency is out of scope (PRD). The check-then-insert is not atomic (`api/src/bookings/bookings.service.ts:60`); two simultaneous creates with the same id hit the primary key and return 500.
+- A canceled booking never conflicts, and a canceled booking's id still returns `id_taken`: both are proven against Postgres by `bookings.cancel-booking` (`docs/runbooks/bookings/cancel-booking.md`), S05 (a canceled booking no longer conflicts) and S06 (its id stays taken), which cancel through `POST /bookings/:id/cancel`.
+- Concurrent creates with the same id or overlapping intervals: concurrency is out of scope (PRD). The check-then-insert is not atomic (`api/src/bookings/bookings.service.ts:66-73`); two simultaneous creates with the same id hit the primary key and return 500.
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
-- Read-back through `GET /bookings`: the endpoint does not exist yet (SCH-8). Each step proves what was saved through a follow-up `POST /bookings` instead.
+- Read-back through `GET /bookings`: left out of the agreed steps, which prove what was saved through a follow-up `POST /bookings` instead. `bookings.list-bookings` (`docs/runbooks/bookings/list-bookings.md`) proves what `GET /bookings` returns.
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.
 - A database failure during the create: the code has no handler of its own for it (Nest's default 500). Database reachability is proven by `health.check-database`.
 

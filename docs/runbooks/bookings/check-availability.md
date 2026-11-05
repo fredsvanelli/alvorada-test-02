@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["GET /availability"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md"]
+sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md"]
 scripts: ["api/test/runbooks/bookings-check-availability.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-bookings.check-availability.md
+  report: _runs/2026-11-05-0037-bookings.check-availability.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-bookings.check-availability.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-bookings.check-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -27,6 +27,8 @@ last_run:
     S04: passed r1
     S05: passed r1
     S06: passed r1
+    S07: passed r1
+    S08: passed r1
 ---
 
 # Check whether an interval is free on a resource, without booking it
@@ -44,7 +46,7 @@ Prove that `GET /availability` answers 200 with `{ available, conflicts }` for a
 - Test environment: Postgres up (`docker compose up -d db`) and `api/.env` copied from `api/.env.example`. The script boots the real `AppModule` (`api/src/app.module.ts`) with `Test.createTestingModule({ imports: [AppModule] })`, calls `app.listen(0)` once, closes the app in `afterAll`, and sends requests with Node's built-in `fetch`. Run from `api/` with `npx vitest run {files} --reporter=junit --outputFile={junit}`.
 - Database schema and seed: the script runs against the disposable test database `bookings_test` (`POSTGRES_DB` in `api/vitest.config.ts`), which `api/test/global-setup.ts` drops, recreates and migrates before every Vitest run. The `booking` table and the resources R1 to R5 come from the migration `api/src/database/migrations/1793750400000-InitSchema.ts`.
 - Auth: none. Authentication is out of scope (PRD), and `api/openapi.yaml` declares `security: []`.
-- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, in the order listed and with the ids the step names, before the request under test; each of those creates must return 201. A booking written as `A R1 [10,20)` means the JSON body `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }`. Resources come only from the seed.
+- Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, in the order listed and with the ids the step names, before the request under test; each of those creates must return 201. A booking written as `A R1 [10,20)` means the JSON body `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }`. "A canceled" means `POST /bookings/A/cancel` was sent, with no body, after the create and returned 200. Resources come only from the seed.
 - Requests: query values are sent exactly as written in the request line, with no body.
 
 ---
@@ -196,10 +198,50 @@ The body has no `conflicts` key and no `available` key. R9 is not one of the see
 
 ---
 
+### S07. A check writes nothing
+
+Parents: S01
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)` and B R1 `[20,30)`. Then `GET /bookings` is sent and returns 200; its body is the "before" read-back.
+Request:
+
+```http
+GET /availability?resource=R1&start=19&end=21
+```
+
+Expected: 200.
+
+Read-back: `GET /bookings` sent after the check returns 200, and its body is strictly equal to the "before" read-back: the same bookings, in the same order, with the same fields and values. The check holds nothing and changes no status. Its own body is the one S01 checks.
+
+---
+
+### S08. A canceled booking no longer conflicts
+
+Parents: S01
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: A R1 `[10,20)`, A canceled.
+Request:
+
+```http
+GET /availability?resource=R1&start=10&end=20
+```
+
+Expected: 200.
+
+```json
+{ "available": true, "conflicts": [] }
+```
+
+The body has exactly these two keys. A, while active, overlaps this exact interval; only active bookings count (the repository reads `status = 'active'`, `api/src/bookings/bookings.repository.ts`).
+
+---
+
 ## Not covered
 
-- A canceled booking no longer conflicts: no endpoint cancels a booking yet (`POST /bookings/:id/cancel`, SCH-8), and the script creates data only through the API. The repository reads only `status = 'active'` bookings (`api/src/bookings/bookings.repository.ts`). SCH-8 adds this step through `/runbooks:update`.
-- The check writes nothing, proven by a `GET /bookings` read-back after it: the endpoint does not exist yet (SCH-8), which adds this step. Today the unit test "never writes" in `api/src/bookings/bookings.service.spec.ts` asserts that `insert` is never called by `availability`.
 - The other `invalid_data` inputs (empty or NUL resource, missing, empty, repeated, decimal or negative start, end above 2147483647, start equal to end) and `invalid_data` winning over `unknown_resource`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" in `api/src/bookings/bookings.service.spec.ts` covers each input and that the resource lookup is not reached. Create shares the same `parseInterval`, and `bookings.create-booking` S03, S16 and S18 prove those rules over HTTP.
 - An exact, case-sensitive resource match (`r1` is unknown): left out of the agreed steps. Availability uses the same `ResourcesService.exists` as create, which `bookings.create-booking` S05 proves with `r1`.
 - Unknown query params (for example `id`) are ignored: left out of the agreed steps. The controller reads only `resource`, `start` and `end` (`api/src/bookings/bookings.controller.ts`, `@Get('availability')`).

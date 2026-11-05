@@ -12,13 +12,13 @@ sources: ["route GET /health"]
 scripts: ["api/test/runbooks/health-check-database.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-health.check-database.md
+  report: _runs/2026-11-05-0037-health.check-database.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-health.check-database.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-health.check-database.md }
   cells:
     S01: passed r1
     S02: passed r1

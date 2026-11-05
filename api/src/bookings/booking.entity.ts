@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 export type BookingStatus = 'active' | 'canceled';
 
-// Properties use the API names, so a Booking is also the response body.
+// The stored row. Properties use the API names; responses use BookingView.
 @Entity('booking')
 export class Booking {
   @PrimaryColumn('text')
@@ -20,3 +20,13 @@ export class Booking {
   @Column('text')
   status: BookingStatus;
 }
+
+// A booking as every response returns it: the resource nested with its name
+// (docs/adr/0001-nested-resource-in-booking-responses.md).
+export type BookingView = {
+  id: string;
+  resource: { id: string; name: string };
+  start: number;
+  end: number;
+  status: BookingStatus;
+};

@@ -13,13 +13,13 @@ sources: ["map a93f56d", "api/src/resources/resources.controller.spec.ts", "api/
 scripts: ["api/test/runbooks/resources-list-resources.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-04
-  oldest: 2026-11-04
-  commit: "946989c"
+  date: 2026-11-05
+  oldest: 2026-11-05
+  commit: "877471d"
   result: passed
-  report: _runs/2026-11-04-2350-resources.list-resources.md
+  report: _runs/2026-11-05-0037-resources.list-resources.md
   runs:
-    r1: { date: 2026-11-04, commit: "946989c", report: _runs/2026-11-04-2350-resources.list-resources.md }
+    r1: { date: 2026-11-05, commit: "877471d", report: _runs/2026-11-05-0037-resources.list-resources.md }
   cells:
     S01: passed r1
 ---

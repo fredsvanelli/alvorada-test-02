@@ -6,6 +6,8 @@ import { BookingsService } from './bookings.service.js';
 describe('BookingsController', () => {
   const create = vi.fn();
   const availability = vi.fn();
+  const list = vi.fn();
+  const cancel = vi.fn();
   let controller: BookingsController;
 
   const body = { id: 'A', resource: 'R1', start: 10, end: 20 };
@@ -13,10 +15,15 @@ describe('BookingsController', () => {
   beforeEach(async () => {
     create.mockReset();
     availability.mockReset();
+    list.mockReset();
+    cancel.mockReset();
     const moduleRef = await Test.createTestingModule({
       controllers: [BookingsController],
       providers: [
-        { provide: BookingsService, useValue: { create, availability } },
+        {
+          provide: BookingsService,
+          useValue: { create, availability, list, cancel },
+        },
       ],
     }).compile();
     controller = moduleRef.get(BookingsController);
@@ -28,8 +35,12 @@ describe('BookingsController', () => {
     return error as HttpException;
   }
 
-  it('returns the created booking', async () => {
-    const booking = { ...body, status: 'active' };
+  it('returns the created booking with its resource nested', async () => {
+    const booking = {
+      ...body,
+      resource: { id: 'R1', name: 'Agora Room' },
+      status: 'active',
+    };
     create.mockResolvedValue({ ok: true, booking });
     await expect(controller.create(body)).resolves.toBe(booking);
     expect(create).toHaveBeenCalledWith(body);
@@ -61,6 +72,53 @@ describe('BookingsController', () => {
       error: 'conflict',
       message: expect.any(String),
       conflicts: ['A', 'B'],
+    });
+  });
+
+  it('lists bookings', async () => {
+    const views = [
+      {
+        id: 'A',
+        resource: { id: 'R1', name: 'Agora Room' },
+        start: 10,
+        end: 20,
+        status: 'active',
+      },
+    ];
+    list.mockResolvedValue(views);
+    await expect(controller.list()).resolves.toBe(views);
+  });
+
+  describe('cancel', () => {
+    const booking = {
+      id: 'A',
+      resource: { id: 'R1', name: 'Agora Room' },
+      start: 10,
+      end: 20,
+      status: 'canceled',
+    };
+
+    it.each(['canceled', 'already_canceled'])(
+      'returns %s with the booking',
+      async (result) => {
+        cancel.mockResolvedValue({ ok: true, result, booking });
+        await expect(controller.cancel('A')).resolves.toStrictEqual({
+          result,
+          booking,
+        });
+        expect(cancel).toHaveBeenCalledWith('A');
+      },
+    );
+
+    it('maps not_found to 404', async () => {
+      cancel.mockResolvedValue({ ok: false, error: 'not_found' });
+      const error: unknown = await controller.cancel('Z').catch((e) => e);
+      expect(error).toBeInstanceOf(HttpException);
+      expect((error as HttpException).getStatus()).toBe(404);
+      expect((error as HttpException).getResponse()).toStrictEqual({
+        error: 'not_found',
+        message: 'No booking has this id.',
+      });
     });
   });
 

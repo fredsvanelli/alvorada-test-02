@@ -50,6 +50,33 @@ paths:
                 - { id: R1, name: Agora Room }
                 - { id: R2, name: Pixel Room }
   /bookings:
+    get:
+      operationId: listBookings
+      summary: List every booking, active and canceled, in ascending id order
+      description: >
+        Takes no query params; unknown ones are ignored. Ids are ordered by
+        character code (`10` before `9`, `B` before `a`). Returns `[]` when
+        there are no bookings.
+      responses:
+        '200':
+          description: Every booking with its status and its resource nested.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+              example:
+                - id: A
+                  resource: { id: R1, name: Agora Room }
+                  start: 10
+                  end: 20
+                  status: canceled
+                - id: B
+                  resource: { id: R1, name: Agora Room }
+                  start: 20
+                  end: 30
+                  status: active
     post:
       operationId: createBooking
       summary: Create a booking, or reject it without writing anything
@@ -71,7 +98,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
-              example: { id: A, resource: R1, start: 10, end: 20, status: active }
+              example:
+                id: A
+                resource: { id: R1, name: Agora Room }
+                start: 10
+                end: 20
+                status: active
         '400':
           description: >
             Malformed JSON, or a top-level `null` or string body. Rejected by
@@ -118,6 +150,70 @@ paths:
               example:
                 error: invalid_data
                 message: Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.
+  /bookings/{id}/cancel:
+    post:
+      operationId: cancelBooking
+      summary: Cancel a booking, keeping its id taken
+      description: >
+        Sets the booking's status to `canceled` and keeps the row, so its
+        interval is free again but its id still answers `id_taken` on create.
+        Canceling a canceled booking changes nothing and answers
+        `already_canceled`. The request body is ignored.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The booking id, matched exactly (case-sensitive).
+      responses:
+        '200':
+          description: Canceled now, or already canceled; `result` tells which.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelResult'
+              examples:
+                canceled:
+                  value:
+                    result: canceled
+                    booking:
+                      id: A
+                      resource: { id: R1, name: Agora Room }
+                      start: 10
+                      end: 20
+                      status: canceled
+                alreadyCanceled:
+                  value:
+                    result: already_canceled
+                    booking:
+                      id: A
+                      resource: { id: R1, name: Agora Room }
+                      start: 10
+                      end: 20
+                      status: canceled
+        '400':
+          description: >
+            Malformed JSON body, or a path id with an invalid percent-encoding
+            (for example `%ZZ`). Rejected before the handler, so it has Nest's
+            default body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NestError'
+        '404':
+          description: >
+            `not_found`: no booking has this id, or the id cannot exist (not 1
+            to 64 letters, digits, `-` or `_`). An empty id or one containing
+            `/` never reaches the handler and gets Nest's default 404 body
+            (`NestError`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingError'
+              example:
+                error: not_found
+                message: No booking has this id.
   /availability:
     get:
       operationId: checkAvailability
@@ -224,13 +320,17 @@ components:
         end:
           $ref: '#/components/schemas/Time'
     Booking:
+      description: >
+        A booking as every response returns it. Requests send the resource id
+        (`"resource": "R1"`); responses nest the resource with its name
+        (docs/adr/0001-nested-resource-in-booking-responses.md).
       type: object
       required: [id, resource, start, end, status]
       properties:
         id:
           type: string
         resource:
-          type: string
+          $ref: '#/components/schemas/Resource'
         start:
           type: integer
         end:
@@ -244,7 +344,7 @@ components:
       properties:
         error:
           type: string
-          enum: [invalid_data, unknown_resource, id_taken, conflict]
+          enum: [invalid_data, unknown_resource, id_taken, conflict, not_found]
         message:
           type: string
           description: For people; clients branch on `error`.
@@ -255,6 +355,16 @@ components:
           description: >
             Only on `conflict`: the ids of the overlapping active bookings, in
             ascending id order by character code (`10` before `9`, `B` before `a`).
+    CancelResult:
+      type: object
+      required: [result, booking]
+      properties:
+        result:
+          type: string
+          enum: [canceled, already_canceled]
+          description: '`canceled` when this call canceled it; `already_canceled` when nothing changed.'
+        booking:
+          $ref: '#/components/schemas/Booking'
     Availability:
       type: object
       required: [available, conflicts]

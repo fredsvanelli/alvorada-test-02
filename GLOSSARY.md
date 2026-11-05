@@ -20,6 +20,10 @@ _Avoid_: period, slot, range
 The two statuses of a Booking. A Canceled Booking keeps its id but no longer occupies its Interval.
 _Avoid_: deleted, freed
 
+**Cancel**:
+To turn an Active Booking into a Canceled one, which frees its Interval and keeps its id taken. Canceling a Canceled Booking changes nothing and is answered **already canceled**. There is no way back from Canceled to Active.
+_Avoid_: delete, remove, release
+
 **Conflict**:
 An Active Booking of the same Resource whose Interval overlaps the one being asked about.
 _Avoid_: clash, collision
@@ -29,7 +33,7 @@ A create attempt that is refused with a reason and writes nothing, so its id sta
 _Avoid_: failed booking
 
 **Ascending id order**:
-Ids compared character by character by character code, so `10` comes before `9` and `B` before `a`. Every list of Conflicts uses it.
+Ids compared character by character by character code, so `10` comes before `9` and `B` before `a`. Every list of Conflicts and every list of Bookings uses it.
 _Avoid_: alphabetical order, natural order
 
 **Availability check**:

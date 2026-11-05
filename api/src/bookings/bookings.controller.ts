@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
-import { Booking } from './booking.entity.js';
+import type { BookingView } from './booking.entity.js';
 import {
   AvailabilityError,
   BookingsService,
@@ -41,7 +43,7 @@ export class BookingsController {
 
   // Maps the service result to HTTP: 201 with the booking, or the error body.
   @Post('bookings')
-  async create(@Body() body: unknown): Promise<Booking> {
+  async create(@Body() body: unknown): Promise<BookingView> {
     const result = await this.bookings.create(body);
     if (result.ok) return result.booking;
     throw new HttpException(
@@ -52,6 +54,26 @@ export class BookingsController {
       },
       STATUS[result.error],
     );
+  }
+
+  // 200 for both outcomes (Nest answers POST with 201 by default), or 404.
+  @Post('bookings/:id/cancel')
+  @HttpCode(200)
+  async cancel(@Param('id') id: string): Promise<{
+    result: 'canceled' | 'already_canceled';
+    booking: BookingView;
+  }> {
+    const result = await this.bookings.cancel(id);
+    if (result.ok) return { result: result.result, booking: result.booking };
+    throw new HttpException(
+      { error: result.error, message: 'No booking has this id.' },
+      404,
+    );
+  }
+
+  @Get('bookings')
+  list(): Promise<BookingView[]> {
+    return this.bookings.list();
   }
 
   // Read-only: 200 with available and conflicts, or the error body. The raw
