@@ -10,3 +10,5 @@
 {"at":"2026-11-05T02:26:42Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T02-26-42Z-fred-vanelli.md"}
 {"at":"2026-11-05T02:59:12Z","by":"fred-vanelli","op":"comment","to":"2026-11-05T02-59-12Z-fred-vanelli.md"}
 {"at":"2026-11-05T02:59:12Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-05T03:01:42Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-12"}
+{"at":"2026-11-05T03:01:43Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-13"}

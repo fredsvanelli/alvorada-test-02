@@ -7,9 +7,10 @@ estimate: 3
 assignee: fred-vanelli
 parent: SCH-2
 blocked_by: [SCH-4, SCH-5]
+related: [SCH-12, SCH-13]
 branch: sch-7-check-availability-with-get-availability
 created: 2026-11-04T20:00:44.546Z
-updated: 2026-11-05T02:59:12Z
+updated: 2026-11-05T03:01:43Z
 ---
 
 ## Acceptance criteria
