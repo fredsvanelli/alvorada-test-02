@@ -1,4 +1,9 @@
 {
+  "enabledPlugins": {
+    "runbooks@fredsvanelli": true,
+    "superpowers@claude-plugins-official": true,
+    "utils@fredsvanelli": true
+  },
   "extraKnownMarketplaces": {
     "fredsvanelli": {
       "source": {
@@ -6,8 +11,5 @@
         "repo": "fredsvanelli/skills"
       }
     }
-  },
-  "enabledPlugins": {
-    "runbooks@fredsvanelli": true
   }
 }
