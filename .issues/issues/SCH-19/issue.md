@@ -2,11 +2,13 @@
 id: SCH-19
 title: "Show every API call in the Operation log, with multiline JSON and a taller scrolling panel"
 type: feature
-status: backlog
+status: in_progress
 priority: medium
 estimate: 3
+assignee: fred-vanelli
+branch: sch-19-show-every-api-call-in-the-operation-log
 created: 2026-11-06T02:31:26.860Z
-updated: 2026-11-06T02:31:26Z
+updated: 2026-11-06T04:52:42Z
 ---
 
 ## Description

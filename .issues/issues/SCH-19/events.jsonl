@@ -1,1 +1,5 @@
 {"at":"2026-11-06T02:31:26Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-19","title":"Show every API call in the Operation log, with multiline JSON and a taller scrolling panel","type":"feature","status":"backlog","priority":"medium","estimate":3,"labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-06T02:31:26.860Z","updated":"2026-11-06T02:31:26Z"}}
+{"at":"2026-11-06T04:51:55Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
+{"at":"2026-11-06T04:51:55Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-06T04:52:42Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-19-show-every-api-call-in-the-operation-log"}
+{"at":"2026-11-06T05:03:24Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T05-03-24Z-fred-vanelli.md"}
