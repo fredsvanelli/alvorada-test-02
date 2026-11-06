@@ -103,6 +103,29 @@ npm run dev:web
 
 ℹ️ `npm test` never touches your data. It uses a separate database, `bookings_test`, which is dropped, recreated and migrated before every run.
 
+### Highlighted tests
+
+#### 1. A value at the boundary of a rule
+
+`touching: a ends where b starts`, in `api/src/bookings/booking-rules.spec.ts`.
+
+- **Expected result:** `[10,20)` and `[20,30)` do not overlap, in both argument orders.
+- **Error it catches:** a `<=` where `overlaps` needs a `<`, which would reject a Booking that starts exactly where another ends. Checking both orders matters: with `<=` on only one side of the condition, one of the two orders still gives the right answer.
+
+#### 2. The interaction between two rules
+
+`S09 A rejected id stays free, and another resource never conflicts`, in `api/test/runbooks/bookings-create-booking.spec.ts`.
+
+- **Expected result:** with A on R1 `[10,20)` and B on R1 `[20,30)`, creating C on R1 `[19,21)` answers `409 conflict` with the Conflicts A and B. Creating C on R2 `[19,21)` then answers `201`.
+- **Error it catches:** a create that writes the row or reserves the id before its checks, so the Rejection takes the id. It also catches a Conflict lookup that ignores the Resource.
+
+#### 3. An invalid input
+
+`S03 Each invalid body returns invalid_data and writes nothing`, in `api/test/runbooks/bookings-create-booking.spec.ts`.
+
+- **Expected result:** eight invalid bodies each answer `422 invalid_data`: a missing `end`, a negative `start`, an `end` of 101, an empty Interval, an id with a space, a 65-character id, a `resource` that is not a string, and an array body. `GET /bookings` then returns an empty list, and a valid create with the id `A` answers `201`.
+- **Error it catches:** a validation gap that lets bad data through, and a Rejection that leaves a row behind or holds on to the id. It runs over HTTP against Postgres, so it also catches invalid input that reaches the database and comes back as a 500.
+
 ## Demo
 
 This demo replays the PRD example, first in the web app and then with `curl`. A fresh install starts with no Bookings.
