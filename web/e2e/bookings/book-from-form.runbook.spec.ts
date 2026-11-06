@@ -9,7 +9,7 @@ const GREEN = 'rgb(134, 239, 172)';
 const RED = 'rgb(252, 165, 165)';
 
 const INVALID_DATA =
-  'Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.';
+  'Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 100 with start before end.';
 const PICK = 'Pick a start and an end from 0 to 100';
 
 // The page checks availability 250 ms after the last change; waiting longer proves no check follows.

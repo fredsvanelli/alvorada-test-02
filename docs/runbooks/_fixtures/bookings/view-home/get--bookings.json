@@ -7,9 +7,7 @@
     "status": 200,
     "headers": {
       "x-powered-by": "Express",
-      "content-type": "application/json; charset=utf-8",
-      "etag": "W/\"118-ZOP26JD96Fsd9Gb3Q9COJK00mHQ\"",
-      "date": "Thu, 05 Nov 2026 05:08:27 GMT"
+      "content-type": "application/json; charset=utf-8"
     },
     "body": [
       {
@@ -28,8 +26,8 @@
           "id": "R2",
           "name": "Pixel Room"
         },
-        "start": 90,
-        "end": 130,
+        "start": 80,
+        "end": 100,
         "status": "active"
       },
       {
@@ -44,5 +42,5 @@
       }
     ]
   },
-  "source": "recorded 2026-11-05 from http://localhost:3001"
+  "source": "hand-written: the 2026-11-05 recording with B's start changed to 80 and its end changed to 100 for SCH-16"
 }

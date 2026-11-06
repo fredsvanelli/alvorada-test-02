@@ -1,0 +1,13 @@
+{
+  "request": { "method": "GET", "path": "/bookings" },
+  "response": {
+    "status": 200,
+    "headers": { "content-type": "application/json; charset=utf-8" },
+    "body": [
+      { "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 10, "end": 40, "status": "active" },
+      { "id": "B", "resource": { "id": "R2", "name": "Pixel Room" }, "start": 90, "end": 130, "status": "active" },
+      { "id": "C", "resource": { "id": "R1", "name": "Agora Room" }, "start": 20, "end": 50, "status": "canceled" }
+    ]
+  },
+  "source": "hand-written: a booking stored before the bookable window existed, which POST /bookings can no longer create"
+}

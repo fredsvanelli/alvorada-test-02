@@ -1,4 +1,6 @@
-// Pure view logic for the bookings page. No imports, so `node --test` runs it directly.
+import { MAX_TIME } from 'config';
+
+// Pure view logic for the bookings page. Its one import is plain JavaScript, so `node --test` runs it directly.
 // The booking rules themselves live in the API: nothing here computes overlaps or sorts ids.
 
 export type Resource = { id: string; name: string };
@@ -25,14 +27,14 @@ export function formatInterval(start: number, end: number): string {
   return `[${start},${end})`;
 }
 
-// The UI only offers whole times from 0 to 100; start >= end is left for the API to reject.
+// The UI only offers whole times from 0 to MAX_TIME; start >= end is left for the API to reject.
 export function isBookable(start: string, end: string): boolean {
-  return [start, end].every((v) => /^\d+$/.test(v) && Number(v) <= 100);
+  return [start, end].every((v) => /^\d+$/.test(v) && Number(v) <= MAX_TIME);
 }
 
 // ponytail: one huge booking (from curl or a test) squeezes the others into slivers; add zoom or clipping if that matters.
 export function axis(ends: number[]): { max: number; ticks: number[] } {
-  const max = Math.ceil(Math.max(100, ...ends) / 10) * 10;
+  const max = Math.ceil(Math.max(MAX_TIME, ...ends) / 10) * 10;
   const step = Math.max(5, Math.ceil(max / 6 / 5) * 5);
   const ticks: number[] = [];
   for (let t = 0; t <= max; t += step) ticks.push(t);
@@ -93,7 +95,7 @@ export function cancelResult(reply: ApiReply, id: string): ResultCard {
 }
 
 export function previewOf(reply: ApiReply | null, resource: string, start: number, end: number, id = ''): Preview {
-  if (reply === null) return { tone: 'idle', text: 'Pick a start and an end from 0 to 100', conflicts: [] };
+  if (reply === null) return { tone: 'idle', text: `Pick a start and an end from 0 to ${MAX_TIME}`, conflicts: [] };
   if (reply.status === 409 && field(reply.body, 'error') === 'id_taken') {
     return { tone: 'taken', text: `Id ${id} was already used by another booking`, conflicts: [] };
   }

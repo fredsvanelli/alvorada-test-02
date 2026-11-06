@@ -84,6 +84,8 @@ paths:
         Checks run in this order and the first failure wins: `invalid_data`,
         `unknown_resource`, `id_taken`, `conflict`. A rejection writes no row,
         so its id can be used again. Extra fields in the body are ignored.
+        Since SCH-16, a time above 100 answers `invalid_data`; bookings stored
+        earlier stay valid.
       requestBody:
         required: true
         content:
@@ -149,7 +151,7 @@ paths:
                 $ref: '#/components/schemas/BookingError'
               example:
                 error: invalid_data
-                message: Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.
+                message: Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 100 with start before end.
   /bookings/{id}/cancel:
     post:
       operationId: cancelBooking
@@ -241,7 +243,7 @@ paths:
             type: string
             pattern: '^\d+$'
             example: '19'
-          description: An integer time from 0 to 2147483647, before `end`.
+          description: An integer time from 0 to 100, before `end`.
         - name: end
           in: query
           required: true
@@ -249,7 +251,7 @@ paths:
             type: string
             pattern: '^\d+$'
             example: '21'
-          description: An integer time from 0 to 2147483647, after `start`.
+          description: An integer time from 0 to 100, after `start`.
         - name: id
           in: query
           required: false
@@ -293,7 +295,7 @@ paths:
         '422':
           description: >
             `invalid_data`: `resource`, `start` or `end` is missing, empty or
-            repeated, a time is not an integer from 0 to 2147483647,
+            repeated, a time is not an integer from 0 to 100,
             `start >= end`, or `id` is sent empty, repeated or not 1 to 64
             letters, digits, `-` or `_`.
           content:
@@ -302,7 +304,7 @@ paths:
                 $ref: '#/components/schemas/BookingError'
               example:
                 error: invalid_data
-                message: Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).
+                message: Send resource, integer start and end from 0 to 100 with start before end, and optionally an id (1 to 64 letters, digits, - or _).
 components:
   schemas:
     Resource:
@@ -316,11 +318,11 @@ components:
           type: string
           example: Agora Room
     Time:
-      description: An integer time from 0 to 2147483647, as a number or a digit-only string.
+      description: An integer time from 0 to 100, as a number or a digit-only string.
       oneOf:
         - type: integer
           minimum: 0
-          maximum: 2147483647
+          maximum: 100
         - type: string
           pattern: '^\d+$'
     CreateBookingRequest:
@@ -344,7 +346,8 @@ components:
       description: >
         A booking as every response returns it. Requests send the resource id
         (`"resource": "R1"`); responses nest the resource with its name
-        (docs/adr/0001-nested-resource-in-booking-responses.md).
+        (docs/adr/0001-nested-resource-in-booking-responses.md). A booking
+        stored before the bookable window existed may end past 100.
       type: object
       required: [id, resource, start, end, status]
       properties:

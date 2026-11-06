@@ -180,7 +180,7 @@ curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&st
 
 - **What was checked:** create and the Availability check must never disagree about whether two Intervals overlap. An invalid time must never reach the database and come back as a 500.
 - **How it was investigated:**
-  - The time columns are Postgres `integer`, so a time above 2147483647 would fail inside the database. That set the valid range, `0..2147483647`, for the parse step.
+  - The time columns are Postgres `integer`, so a time above 2147483647 would fail inside the database. That set the first valid range for the parse step. SCH-16 later lowered it to 0 to 100, the limit the web form has, so a direct API call can't create a booking the form couldn't. The API and the form both read that maximum from the `config` workspace.
   - Query strings reach the API as text. So the validation function became `parseInterval` (it was planned as `validInterval`), and it accepts integers or digit-only strings and returns the Interval or `null`.
 - **What was concluded:** `api/src/bookings/booking-rules.ts` holds `parseInterval()` and `overlaps()`, with no Nest or TypeORM imports. `BookingsService` uses the same two functions for create and for availability, so they cannot drift apart. The tests are tables of boundary cases, and each `overlaps` case is checked in both argument orders.
 

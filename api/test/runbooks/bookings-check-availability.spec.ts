@@ -117,6 +117,7 @@ describe('Check whether an interval is free on a resource, without booking it', 
     const queries: Record<string, string> = {
       'start not a number': 'resource=R1&start=abc&end=20',
       'start after end': 'resource=R1&start=20&end=10',
+      'end above the bookable window': 'resource=R1&start=0&end=101',
       'missing resource': 'start=10&end=20',
       'repeated resource': 'resource=R1&resource=R2&start=10&end=20',
     };
@@ -216,5 +217,11 @@ describe('Check whether an interval is free on a resource, without booking it', 
     await expectAnswer(response, true, []);
     const create = await createBooking('X', 'R1', 10, 20);
     expect(create.status, 'POST /bookings after').toBe(201);
+  });
+
+  it('S15 Times at both ends of the bookable window are accepted', async () => {
+    const response = await check('resource=R1&start=0&end=100');
+
+    await expectAnswer(response, true, []);
   });
 });

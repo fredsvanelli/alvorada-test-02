@@ -8,6 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { MAX_TIME } from 'config';
 import type { BookingView } from './booking.entity.js';
 import {
   Availability,
@@ -25,7 +26,7 @@ const STATUS: Record<CreateError, number> = {
 
 const MESSAGE: Record<CreateError, string> = {
   invalid_data:
-    'Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 2147483647 with start before end.',
+    `Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to ${MAX_TIME} with start before end.`,
   unknown_resource: 'This resource does not exist.',
   id_taken: 'This id was already used by another booking.',
   conflict: 'The interval overlaps active bookings of this resource.',
@@ -34,7 +35,7 @@ const MESSAGE: Record<CreateError, string> = {
 // Availability's id is optional, so its invalid_data message says so.
 const AVAILABILITY_MESSAGE: Record<AvailabilityError, string> = {
   invalid_data:
-    'Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).',
+    `Send resource, integer start and end from 0 to ${MAX_TIME} with start before end, and optionally an id (1 to 64 letters, digits, - or _).`,
   unknown_resource: MESSAGE.unknown_resource,
   id_taken: MESSAGE.id_taken,
 };

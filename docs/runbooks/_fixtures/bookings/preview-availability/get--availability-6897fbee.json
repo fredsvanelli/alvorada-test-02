@@ -12,14 +12,12 @@
     "status": 422,
     "headers": {
       "x-powered-by": "Express",
-      "content-type": "application/json; charset=utf-8",
-      "etag": "W/\"79-DNJ9rw/ZVTi0Vt5j89qG4IUSPUA\"",
-      "date": "Thu, 05 Nov 2026 05:11:28 GMT"
+      "content-type": "application/json; charset=utf-8"
     },
     "body": {
       "error": "invalid_data",
-      "message": "Send resource, and integer start and end from 0 to 2147483647 with start before end."
+      "message": "Send resource, integer start and end from 0 to 100 with start before end, and optionally an id (1 to 64 letters, digits, - or _)."
     }
   },
-  "source": "recorded 2026-11-05 from http://localhost:3001"
+  "source": "hand-written: the 2026-11-05 recording with the invalid_data message changed for SCH-16"
 }

@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "api",
+    "config",
     "web"
   ],
   "engines": {
@@ -11,10 +12,10 @@
   "scripts": {
     "dev:api": "npm run start:dev -w api",
     "dev:web": "npm run dev -w web",
-    "test": "npm test --workspaces",
-    "lint": "npm run lint --workspaces",
-    "typecheck": "npm run typecheck --workspaces",
-    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
     "runbooks": "npm run runbooks:ui",
     "runbooks:ui": "node docs/runbooks/runbooks-ui.mjs",
     "runbooks:upstream": "node web/e2e/runbooks-upstream.mjs",

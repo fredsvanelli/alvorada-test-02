@@ -10,7 +10,7 @@ Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (T
 
 ## Commands
 
-npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). Run everything from the repo root.
+npm workspaces: `api/` (Nest.js, Vitest, oxlint), `web/` (Next.js, ESLint) and `config/` (configuration the API and the web app share, such as `MAX_TIME`). Run everything from the repo root.
 
 - One-time setup: `nvm use` (Node from `.nvmrc`, 22.18 or newer; the web unit tests run `.ts` with `node --test`), `cp api/.env.example api/.env`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
 - `WEB_ORIGIN` (in `api/.env`) is the one origin the API allows through CORS, `http://localhost:3000` by default. An `api/.env` copied before SCH-10 needs that line added, or the API does not start.
@@ -23,7 +23,7 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 
 ## Domain rules (from the PRD, easy to get wrong)
 
-- Intervals are half-open `[start, end)`: a booking `[10,20)` frees the resource at 20, so `[20,30)` is accepted. Time is plain non-negative integers within Postgres `integer` (`0..2147483647`), with `start < end`.
+- Intervals are half-open `[start, end)`: a booking `[10,20)` frees the resource at 20, so `[20,30)` is accepted. Time is a plain integer from 0 to 100 (the bookable window `[0, 100)`), with `start < end`. A booking stored before the window may end past 100, and it still lists, cancels and counts for overlap.
 - Overlap only counts **active** bookings of the **same** resource.
 - The client chooses the booking id. A **rejected** attempt writes no row, so its id stays free. A **created** booking's id is never reused, even after cancellation (cancel sets `status = canceled` and keeps the row).
 - Availability check is read-only and returns conflicts in **ascending id** order.
@@ -33,7 +33,7 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint) and `web/` (Next.js, ESLint). R
 
 ## Backend shape (planned)
 
-- The `[start, end)` rule lives in one place: pure functions `parseInterval(start, end)` (returns `Interval | null`; accepts integers or digit-only strings in `0..2147483647` with `start < end`, and `null` means `invalid_data`) and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
+- The `[start, end)` rule lives in one place: pure functions `parseInterval(start, end)` (returns `Interval | null`; accepts integers or digit-only strings in `0..100` with `start < end`, and `null` means `invalid_data`) and `overlaps(a, b)` (`a.start < b.end && b.start < a.end`) in `booking-rules.ts`. `BookingsService` uses them for both create and availability.
 - Controllers only map HTTP to service calls and results to status codes.
 - Modules: `ResourcesModule` (`GET /resources`, seeded R1 to R5), `BookingsModule` (`POST /bookings`, `GET /bookings`, `GET /availability`, `POST /bookings/:id/cancel`, `BookingsRepository`), `DatabaseModule`.
 - Create checks in this order: invalid_data → unknown_resource → id_taken → conflict → insert.
