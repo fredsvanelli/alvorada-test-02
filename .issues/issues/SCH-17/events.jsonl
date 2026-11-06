@@ -9,3 +9,5 @@
 {"at":"2026-11-06T02:52:49Z","by":"fred-vanelli","op":"update","field":"description"}
 {"at":"2026-11-06T02:58:59Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T02-58-59Z-fred-vanelli.md"}
 {"at":"2026-11-06T03:02:33Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
+{"at":"2026-11-06T03:03:48Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T03-03-48Z-fred-vanelli.md"}
+{"at":"2026-11-06T03:03:48Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}

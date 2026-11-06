@@ -2,13 +2,13 @@
 id: SCH-17
 title: Start the Playwright MCP servers on a fresh clone without .env.local
 type: bug
-status: in_progress
+status: in_review
 estimate: 1
 assignee: fred-vanelli
 related: [SCH-16]
 branch: sch-17-start-the-playwright-mcp-servers-on-a
 created: 2026-11-06T02:17:39.503Z
-updated: 2026-11-06T03:02:33Z
+updated: 2026-11-06T03:03:48Z
 ---
 
 ## Description
