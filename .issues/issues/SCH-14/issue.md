@@ -2,14 +2,15 @@
 id: SCH-14
 title: "Run the web unit tests, lint, typecheck and build in CI"
 type: feature
-status: in_progress
+status: done
 estimate: 2
 assignee: fred-vanelli
 related: [SCH-11]
 branch: sch-14-run-the-web-unit-tests-lint-typecheck
 created: 2026-11-05T19:35:05.530Z
-updated: 2026-11-06T00:27:09Z
+updated: 2026-11-06T00:56:36Z
 ---
+
 ## Description
 
 ### Context
