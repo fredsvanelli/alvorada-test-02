@@ -10,17 +10,17 @@ upstream: mocked
 covers:
   entries: ["/", "GET /resources", "GET /bookings"]
   requirements: ["SCH-10#AC1"]
-sources: ["map a93f56d", "docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10"]
+sources: ["map a93f56d", "docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "SCH-16"]
 scripts: []
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "a7cb566"
+  commit: "b9ba3c1"
   result: passed
-  report: _runs/2026-11-05-0326-bookings.view-home.md
+  report: _runs/2026-11-05-2308-bookings.view-home.md
   runs:
-    r1: { date: 2026-11-05, commit: "a7cb566", report: _runs/2026-11-05-0326-bookings.view-home.md }
+    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2308-bookings.view-home.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -48,16 +48,17 @@ A user opens the app and sees the five resources and every booking, active and c
 - Services: the project's upstream server, `npm run runbooks:upstream` (it listens on `http://127.0.0.1:4010`), and the web app started against it, `NEXT_PUBLIC_API_URL=http://127.0.0.1:4010 npm run dev:web`, at `http://localhost:3000`. The API and Postgres are needed only to record the fixtures.
 - Accounts: none. Authentication is out of scope (PRD).
 - Data: the fixtures in `docs/runbooks/_fixtures/bookings/view-home/`.
-  - Runbook folder: `GET /resources` (R1 to R5 from the migration seed) and `GET /bookings`, recorded from S01. Every step without a folder of its own gets these two answers.
+  - Runbook folder: `GET /resources` (R1 to R5 from the migration seed), recorded from S01, and `GET /bookings`, the S01 recording with B's start changed to 80 and its end changed to 100 by hand for SCH-16. Every step without a folder of its own gets these two answers.
+  - `S04/get--bookings.json`: hand-written, `GET /bookings` answers A [10,40) active, B [90,130) active and C [20,50) canceled. B is a booking stored before the bookable window existed, which `POST /bookings` can no longer create.
   - `S07/get--bookings.json`: hand-written, `GET /bookings` answers `[]`.
   - `S08/get--bookings.json`: hand-written, `GET /bookings` answers 500.
-- Recording (not done yet): with `docker compose up -d db` and `npm run dev:api` running and the `booking` table empty, create these bookings through the API, in this order:
+- Recording: with `docker compose up -d db` and `npm run dev:api` running and the `booking` table empty, create these bookings through the API, in this order:
   1. `POST /bookings` `{"id":"C","resource":"R1","start":20,"end":50}`
   2. `POST /bookings/C/cancel`
   3. `POST /bookings` `{"id":"A","resource":"R1","start":10,"end":40}`
-  4. `POST /bookings` `{"id":"B","resource":"R2","start":90,"end":130}`
+  4. `POST /bookings` `{"id":"B","resource":"R2","start":80,"end":100}`
 
-  `GET /bookings` then answers A (R1 · Agora Room, [10,40), active), B (R2 · Pixel Room, [90,130), active), C (R1 · Agora Room, [20,50), canceled), in that order. Then run `/runbooks:run bookings.view-home --record --steps S01`. Record S01 only: S02 to S06 and S09 send no request of their own beyond S01's two, and in `record` mode the server proxies every request, so recording S07 or S08 would save the live list in their step folders next to the hand-written fixtures.
+  `GET /bookings` then answers A (R1 · Agora Room, [10,40), active), B (R2 · Pixel Room, [80,100), active), C (R1 · Agora Room, [20,50), canceled), in that order. Then run `/runbooks:run bookings.view-home --record --steps S01`. Record S01 only: S02, S03, S05, S06 and S09 send no request of their own beyond S01's two. S04, S07 and S08 have their own folders, and in `record` mode the server proxies every request, so recording any of them would replace its hand-written fixture with the live list.
 - S09 starts on the screen S08 leaves. A script reproduces it by selecting step S08, opening `/`, waiting for "Retry", then selecting S09 before it clicks "Retry".
 
 ---
@@ -98,7 +99,7 @@ Expected: the card is titled "Bookings". Its chips read "All (3)", "Active (2)" 
 | ID | Resource | Interval | Status | Action |
 |---|---|---|---|---|
 | A | R1 · Agora Room | [10,40) | Active | a "Cancel" button named "Cancel booking A" |
-| B | R2 · Pixel Room | [90,130) | Active | a "Cancel" button named "Cancel booking B" |
+| B | R2 · Pixel Room | [80,100) | Active | a "Cancel" button named "Cancel booking B" |
 | C | R1 · Agora Room | [20,50) | Canceled | empty: no button, no text |
 
 The text "No bookings in this filter." does not show.
@@ -118,21 +119,23 @@ Actions:
 
 Expected:
 - R1 · Agora Room row: an active bar with the text "A [10,40)" (blue fill, white text, tooltip "Booking A · [10,40) · active") and a canceled bar with the text "C [20,50)" (light gray fill, dashed gray border, struck-through gray text, tooltip "Booking C · [20,50) · canceled"). Where they overlap, from 20 to 40, bar A is drawn over bar C.
-- R2 · Pixel Room row: an active bar with the text "B [90,130)", tooltip "Booking B · [90,130) · active".
+- R2 · Pixel Room row: an active bar with the text "B [80,100)", tooltip "Booking B · [80,100) · active".
 - R3 · 4K Projector, R4 · Orbit Room and R5 · Focus Room rows: no bar.
 - No dashed preview box shows on any row.
 
 ---
 
-### S04. The Timeline axis stretches past 100 to fit a booking that ends later
+### S04. The Timeline axis stretches past 100 to fit a booking stored before the bookable window existed
 
-Parents: S01
+Parents: none
 Requirement: none
 Page: `/`
 
 Actions:
 
-1. Look at the tick labels above the Timeline rows.
+1. Open `http://localhost:3000/`.
+2. Wait until the "Timeline" card shows.
+3. Look at the tick labels above the Timeline rows.
 
 Expected: the tick labels read "0", "25", "50", "75", "100", "125", left to right. Bar "B [90,130)" ends at the right edge of the R2 track, because the axis runs from 0 to 130.
 

@@ -16,11 +16,11 @@ status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "37e3b09"
+  commit: "b9ba3c1"
   result: passed
-  report: _runs/2026-11-05-2047-bookings.preview-availability.md
+  report: _runs/2026-11-05-2306-bookings.preview-availability.md
   runs:
-    r1: { date: 2026-11-05, commit: "37e3b09", report: _runs/2026-11-05-2047-bookings.preview-availability.md }
+    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2306-bookings.preview-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -232,7 +232,7 @@ Expected: the preview line reads "R1 [30,40) is available", in green (`#166534` 
 - Which ids count as taken (an active or a canceled booking's id) and which ids the API rejects: the API decides, and the page shows its 409 as in S09. Proven by the `bookings.check-availability` api runbook (S09, S10, S13).
 - An Id the API rejects as `invalid_data` (422), such as "a b": the page shows "Couldn't check availability" through the same branch as S04's 422 (`previewOf` in `web/src/lib/bookings.ts`), so S04 stands for it.
 - The preview running again after a Cancel, for example "R1 [19,21) conflicts with A, B" turning into "R1 [19,21) conflicts with B" once A is canceled (`bookings-page.tsx:110`, `bookings` in the effect's dependencies): the fixtures answer one response per query within a step, so the switch cannot be replayed in a mocked step. Canceling itself is `bookings.cancel-from-table`. A created booking runs no re-check: the form clears "Id", "Start" and "End" (`bookings-page.tsx:79`), which `bookings.book-from-form` proves.
-- Decimals and negative values ("2.5", "-1") in "Start" or "End": the same `isBookable` branch as S08 (`web/src/lib/bookings.ts:22-24`), so S08 stands for them.
+- Decimals and negative values ("2.5", "-1") in "Start" or "End": the same `isBookable` branch as S08 (`web/src/lib/bookings.ts:24-26`), so S08 stands for them.
 
 ---
 
