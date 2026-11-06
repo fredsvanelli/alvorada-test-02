@@ -42,6 +42,8 @@ npm workspaces: `api/` (Nest.js, Vitest, oxlint), `web/` (Next.js, ESLint) and `
 
 `api/openapi.yaml` (OpenAPI 3.1) is the contract for every HTTP endpoint. Whenever you create, change or remove an endpoint, update it in the same commit. "Change" includes the path, method, query or path params, request body, response body, status codes and error codes. Validate it with `npx @redocly/cli lint api/openapi.yaml`.
 
+`api/.bruno/bookings/` is the Bruno collection, with one request file per endpoint. Update it in that same commit: add a file for a new endpoint, delete the file of a removed one, and edit the file when the path, method, params or request body change. URLs use `{{baseUrl}}` (from `environments/local.yml`), never a hardcoded host.
+
 ## Design reference
 
 `.design/prototype-html/Main.dc.html` (plus `.design/prototype.pdf`) is a UI mockup exported from a design tool. Replicate its colors, spacing and layout in shadcn/Tailwind components. Don't copy its markup or runtime. To view it, serve the folder (`python3 -m http.server`) and open `Main.dc.html`.
