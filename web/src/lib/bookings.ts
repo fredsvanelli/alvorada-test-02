@@ -13,13 +13,13 @@ export type ResultCard = { tone: Tone; title: string; detail: string; code: stri
 export type Preview = { tone: 'idle' | 'available' | 'conflict' | 'taken' | 'failed'; text: string; conflicts: string[] };
 export type OptimisticChange = { kind: 'add'; booking: Booking } | { kind: 'cancel'; id: string };
 export type BookRequest = { id: string; resource: string; start: number; end: number };
-export type LogEntry = { n: number; call: string; reply: string; tone: Tone };
+export type LogEntry = { n: number; call: string; request?: string; reply: string; tone: Tone };
 export type TimelinePreview = { resource: string; start: number; end: number; tone: Preview['tone']; conflicts: string[] };
 // `basis` is the booking list the check ran against: a new list (after a write) makes the answer stale.
 // `id` is the form's id, sent with the check when not empty ('' means none was sent).
 export type Checked = { id: string; resource: string; start: number; end: number; basis: unknown; reply: ApiReply };
 
-const LOG_SIZE = 14;
+const LOG_SIZE = 30;
 
 const REJECTIONS = ['invalid_data', 'unknown_resource', 'id_taken', 'conflict'];
 
@@ -170,10 +170,17 @@ export function shownPreview(
   return { preview, box: drawn ? { resource: now.resource, start: now.start, end: now.end, tone: preview.tone, conflicts: preview.conflicts } : null };
 }
 
-export function describeCall(method: string, path: string, body?: unknown): string {
-  return body === undefined ? `${method} ${path}` : `${method} ${path} ${JSON.stringify(body)}`;
+export function logEntry(method: string, path: string, body: unknown, reply: ApiReply, tone: Tone): Omit<LogEntry, 'n'> {
+  const request = body === undefined ? undefined : JSON.stringify(body, null, 2);
+  return { call: `${method} ${path}`, request, reply: describeReply(reply), tone };
 }
 
+// `body` is null when `raw` is not JSON (a literal `null` reply prints the same either way).
 export function describeReply(reply: ApiReply): string {
-  return reply.status === null ? `request failed: ${reply.error}` : `${reply.status} ${reply.raw}`;
+  if (reply.status === null) return `request failed: ${reply.error}`;
+  return `${reply.status}\n${reply.body === null ? reply.raw : JSON.stringify(reply.body, null, 2)}`;
+}
+
+export function replyTone(reply: ApiReply): Tone {
+  return reply.status !== null && reply.status >= 200 && reply.status < 300 ? 'ok' : 'error';
 }

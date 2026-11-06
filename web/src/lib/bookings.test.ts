@@ -6,13 +6,14 @@ import {
   axis,
   bookResult,
   cancelResult,
-  describeCall,
   describeReply,
   filterBookings,
   formatInterval,
   isBookable,
+  logEntry,
   position,
   previewOf,
+  replyTone,
   shownPreview,
   timelineRows,
   type ApiReply,
@@ -171,12 +172,12 @@ describe('addLog', () => {
     const log = addLog(addLog([], entry), { ...entry, call: 'second' });
     assert.deepEqual(log.map((e) => [e.n, e.call]), [[2, 'second'], [1, 'POST /bookings']]);
   });
-  it('keeps at most 14 entries', () => {
+  it('keeps at most 30 entries and keeps counting up', () => {
     let log: LogEntry[] = [];
-    for (let i = 0; i < 15; i++) log = addLog(log, entry);
-    assert.equal(log.length, 14);
-    assert.equal(log[0].n, 15);
-    assert.equal(log[13].n, 2);
+    for (let i = 0; i < 31; i++) log = addLog(log, entry);
+    assert.equal(log.length, 30);
+    assert.equal(log[0].n, 31);
+    assert.equal(log[29].n, 2);
   });
 });
 
@@ -258,13 +259,26 @@ describe('shownPreview', () => {
 });
 
 describe('log text', () => {
-  it('describes a call with and without a body', () => {
-    assert.equal(describeCall('POST', '/bookings', { id: 'C' }), 'POST /bookings {"id":"C"}');
-    assert.equal(describeCall('POST', '/bookings/A/cancel'), 'POST /bookings/A/cancel');
+  it('puts the path on the call line and the request body, indented, under it', () => {
+    const reply = json(201, {});
+    assert.deepEqual(logEntry('POST', '/bookings', { id: 'C', start: 1 }, reply, 'ok'), {
+      call: 'POST /bookings',
+      request: '{\n  "id": "C",\n  "start": 1\n}',
+      reply: '201\n{}',
+      tone: 'ok',
+    });
+    assert.equal(logEntry('GET', '/resources', undefined, reply, 'ok').request, undefined);
   });
-  it('describes a reply', () => {
-    assert.equal(describeReply({ status: 409, body: null, raw: '{"error":"conflict"}' }), '409 {"error":"conflict"}');
+  it('prints a JSON reply on indented lines under its status', () => {
+    assert.equal(describeReply(json(409, { error: 'conflict', conflicts: ['A'] })), '409\n{\n  "error": "conflict",\n  "conflicts": [\n    "A"\n  ]\n}');
+  });
+  it('shows a reply that is not JSON, and a failed request, as they came', () => {
+    assert.equal(describeReply({ status: 500, body: null, raw: 'Internal Server Error' }), '500\nInternal Server Error');
     assert.equal(describeReply({ status: null, error: 'Failed to fetch' }), 'request failed: Failed to fetch');
+  });
+  it('colors a 2xx reply ok and anything else as an error', () => {
+    assert.deepEqual([200, 201, 404, 409, 422, 500].map((s) => replyTone(json(s, {}))), ['ok', 'ok', 'error', 'error', 'error', 'error']);
+    assert.equal(replyTone({ status: null, error: 'Failed to fetch' }), 'error');
   });
 });
 
