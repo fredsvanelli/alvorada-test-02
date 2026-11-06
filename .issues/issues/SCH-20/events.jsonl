@@ -1,0 +1,5 @@
+{"at":"2026-11-06T06:21:11Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-20","title":"Mostrar um (x) para cancelar ao passar o mouse sobre uma barra ativa da Timeline","type":"feature","status":"backlog","priority":"medium","estimate":3,"labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-06T06:21:11.031Z","updated":"2026-11-06T06:21:11Z"}}
+{"at":"2026-11-06T06:26:46Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
+{"at":"2026-11-06T06:26:46Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-06T06:27:03Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-20-mostrar-um-x-para-cancelar-ao-passar-o"}
+{"at":"2026-11-06T06:34:56Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T06-34-56Z-fred-vanelli.md"}
