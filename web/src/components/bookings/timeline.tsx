@@ -74,7 +74,7 @@ export function Timeline({
                     key={`${b.pending ?? "row"}:${b.id}`}
                     title={`Booking ${b.id} · ${formatInterval(b.start, b.end)} · ${b.status}`}
                     className={cn(
-                      "absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium hover:z-10 hover:min-w-max",
+                      "absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium transition-transform duration-150 hover:z-10 hover:min-w-max hover:-translate-y-0.5 motion-reduce:transition-none",
                       b.status === "active"
                         ? "border border-bar-active bg-bar-active text-white"
                         : "border border-dashed border-bar-canceled-border bg-bar-canceled text-muted-foreground line-through",
