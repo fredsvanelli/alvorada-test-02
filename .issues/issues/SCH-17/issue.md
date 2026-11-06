@@ -8,7 +8,7 @@ assignee: fred-vanelli
 related: [SCH-16]
 branch: sch-17-start-the-playwright-mcp-servers-on-a
 created: 2026-11-06T02:17:39.503Z
-updated: 2026-11-06T02:52:49Z
+updated: 2026-11-06T03:02:33Z
 ---
 
 ## Description
@@ -36,7 +36,7 @@ Found during SCH-16. An empty `.env.local` in the repo root let the server start
 
 ## Acceptance criteria
 
-- [ ] With no `.env.local` in the repo root, both servers in `.mcp.json` start and answer an MCP `initialize` request. `.mcp.json` no longer passes `--secrets`.
-- [ ] The cause of `runbooks-playwright` staying down is recorded in a comment on SCH-17.
-- [ ] The README setup has a step that runs `cp web/.env.example web/.env.local`, and `npm run dev:web` works after following the steps in order.
-- [ ] `npm run test:e2e` passes with `web/.env.local` in place.
+- [x] With no `.env.local` in the repo root, both servers in `.mcp.json` start and answer an MCP `initialize` request. `.mcp.json` no longer passes `--secrets`.
+- [x] The cause of `runbooks-playwright` staying down is recorded in a comment on SCH-17.
+- [x] The README setup has a step that runs `cp web/.env.example web/.env.local`, and `npm run dev:web` works after following the steps in order.
+- [x] `npm run test:e2e` passes with `web/.env.local` in place.
