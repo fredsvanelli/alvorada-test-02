@@ -1,0 +1,35 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/resources"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": "R1",
+        "name": "Agora Room"
+      },
+      {
+        "id": "R2",
+        "name": "Pixel Room"
+      },
+      {
+        "id": "R3",
+        "name": "4K Projector"
+      },
+      {
+        "id": "R4",
+        "name": "Orbit Room"
+      },
+      {
+        "id": "R5",
+        "name": "Focus Room"
+      }
+    ]
+  },
+  "source": "hand-written: SCH-20 changes no API; written from api/openapi.yaml and the bookings.cancel-from-table recordings, not recorded (coordinator decision)"
+}

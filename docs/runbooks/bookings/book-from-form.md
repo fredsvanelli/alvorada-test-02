@@ -16,11 +16,11 @@ status: active
 last_run:
   date: 2026-11-06
   oldest: 2026-11-06
-  commit: "5269ad5"
+  commit: "35b4bfb"
   result: passed
-  report: _runs/2026-11-06-0257-bookings.book-from-form.md
+  report: _runs/2026-11-06-0356-bookings.book-from-form.md
   runs:
-    r1: { date: 2026-11-06, commit: "5269ad5", report: _runs/2026-11-06-0257-bookings.book-from-form.md }
+    r1: { date: 2026-11-06, commit: "35b4bfb", report: _runs/2026-11-06-0356-bookings.book-from-form.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -276,7 +276,7 @@ Expected:
 - The `conflict` result card ("Conflicts: A, B") and the `invalid_data` card for Start equal to End: the form cannot send these any more, because "Book" stays disabled for them: an overlapping interval gets a conflict from the check (S03), and Start equal to End is never checked (S05). A conflict could still reach `POST /bookings` only when another client books the interval between the check and the click, and concurrency is out of scope (PRD). The API's answers are proved by `bookings.create-booking`, and the card mapping by the unit test of `bookResult` in `web/src/lib/bookings.test.ts`.
 - `unknown_resource`: the UI cannot send it, because "Resource" is a select filled from `GET /resources`. Its card mapping is covered by the unit test of `bookResult` in `web/src/lib/bookings.test.ts`.
 - "Book" disabled while the check is pending, with the preview line "Checking R1 [a,b)…" (`web/src/lib/bookings.ts:162-164`, `web/src/components/bookings/bookings-page.tsx:119`): it lasts only the 250 ms debounce plus the mocked answer, too short to observe reliably. The steps wait for the answer instead. The text is covered by the unit test of `shownPreview` in `web/src/lib/bookings.test.ts`.
-- The pending booking at 50% opacity in the table and the Timeline (`web/src/components/bookings/bookings-table.tsx:75`, `web/src/components/bookings/timeline.tsx:81`) and Book disabled while its request is in flight (`web/src/components/bookings/bookings-page.tsx:119`): both last only until the API answers, and the mocked server answers at once, so the browser cannot hold that state long enough to check it. The steps check the end state instead: a created booking at full opacity, and no row or bar for a rejected one.
+- The pending booking at 50% opacity in the table and the Timeline (`web/src/components/bookings/bookings-table.tsx:66`, `web/src/components/bookings/timeline.tsx:85`) and Book disabled while its request is in flight (`web/src/components/bookings/bookings-page.tsx:119`): both last only until the API answers, and the mocked server answers at once, so the browser cannot hold that state long enough to check it. The steps check the end state instead: a created booking at full opacity, and no row or bar for a rejected one.
 - "Request failed" cards (network failure, Nest's 400, a 5xx, a 201 whose id does not match; `web/src/lib/bookings.ts:51-80`) and a failed re-fetch of `GET /bookings` that keeps the last good list (`web/src/components/bookings/bookings-page.tsx:77`): they need the API to fail, which a recording from the live API does not produce. A separate mocked runbook with hand-written failing fixtures (`bookings.book-from-form-upstream-errors`) could hold them; the mapping is covered by `web/src/lib/bookings.test.ts`.
 - Book disabled until the first load succeeds, and the load error panel: part of opening the page, `bookings.view-home`.
 - The preview's colors (the conflict colors of a taken id too), the Timeline preview box and its absence for a taken id, the rings on conflicting bars, and a failed availability request (network error or 5xx): `bookings.preview-availability`. The steps here read the preview line only as the condition that enables or disables "Book".

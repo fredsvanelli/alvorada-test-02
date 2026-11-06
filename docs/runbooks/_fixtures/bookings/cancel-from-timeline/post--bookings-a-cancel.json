@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/bookings/A/cancel"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "body": {
+      "result": "canceled",
+      "booking": {
+        "id": "A",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 10,
+        "end": 20,
+        "status": "canceled"
+      }
+    }
+  },
+  "source": "hand-written: SCH-20 changes no API; written from api/openapi.yaml and the bookings.cancel-from-table recordings, not recorded (coordinator decision)"
+}

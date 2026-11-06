@@ -1,0 +1,45 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/bookings"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "body": [
+      {
+        "id": "A",
+        "resource": {
+          "id": "R1",
+          "name": "Agora Room"
+        },
+        "start": 10,
+        "end": 20,
+        "status": "active"
+      },
+      {
+        "id": "B",
+        "resource": {
+          "id": "R2",
+          "name": "Pixel Room"
+        },
+        "start": 30,
+        "end": 40,
+        "status": "active"
+      },
+      {
+        "id": "C",
+        "resource": {
+          "id": "R3",
+          "name": "4K Projector"
+        },
+        "start": 50,
+        "end": 60,
+        "status": "canceled"
+      }
+    ]
+  },
+  "source": "hand-written: SCH-20 changes no API; written from api/openapi.yaml and the bookings.cancel-from-table recordings, not recorded (coordinator decision)"
+}
