@@ -8,9 +8,9 @@ import {
   applyOptimistic,
   bookResult,
   cancelResult,
-  describeCall,
-  describeReply,
   isBookable,
+  logEntry,
+  replyTone,
   shownPreview,
   type ApiReply,
   type Booking,
@@ -21,6 +21,7 @@ import {
   type Resource,
   type ResultCard,
   type ShownBooking,
+  type Tone,
 } from "@/lib/bookings";
 import { BookingsTable } from "./bookings-table";
 import { OperationLog } from "./operation-log";
@@ -29,7 +30,7 @@ import { Timeline } from "./timeline";
 
 type Load = "loading" | "ready" | "failed";
 
-// Both lists, or null when either call fails or answers outside the contract.
+// Both lists, or null when either call fails or answers outside the contract. Not logged: the user did not ask for them.
 async function fetchAll(): Promise<{ resources: Resource[]; bookings: Booking[] } | null> {
   const [res, list] = await Promise.all([call("GET", "/resources"), call("GET", "/bookings")]);
   if (res.status === 200 && Array.isArray(res.body) && list.status === 200 && Array.isArray(list.body)) {
@@ -49,6 +50,21 @@ export function BookingsPage() {
   const [, startTransition] = useTransition();
   const [checked, setChecked] = useState<Checked | null>(null);
   const previewSeq = useRef(0);
+  const loaded = useRef(false);
+  // The fields the preview effect last saw, and whether the user changed them since the last check was sent.
+  const fieldsSeen = useRef("");
+  const edited = useRef(false);
+
+  // The calls a user action sends (Book, Cancel, a check after editing the fields) go through here, so the Operation
+  // log shows each one when it answers. The list loads, the re-fetch after a write and the re-check it triggers are not.
+  const logged = useCallback(
+    async (method: "GET" | "POST", path: string, body?: unknown, toneOf: (reply: ApiReply) => Tone = replyTone) => {
+      const reply = await call(method, path, body);
+      setLog((l) => addLog(l, logEntry(method, path, body, reply, toneOf(reply))));
+      return reply;
+    },
+    [],
+  );
 
   const apply = useCallback((data: Awaited<ReturnType<typeof fetchAll>>) => {
     if (!data) return setLoad("failed");
@@ -60,19 +76,22 @@ export function BookingsPage() {
 
   useEffect(() => {
     // Initial fetch from the browser; the API is the source of truth.
+    // Once only: StrictMode runs effects twice in dev, which would send both loads twice.
+    if (loaded.current) return;
+    loaded.current = true;
     void fetchAll().then(apply);
   }, [apply]);
 
   // Runs inside a transition: the optimistic entry shows until the API answers and the list is re-fetched.
   async function write(change: OptimisticChange, path: string, body: unknown, toCard: (reply: ApiReply) => ResultCard) {
     addOptimistic(change);
-    const reply = await call("POST", path, body);
+    // A Book or Cancel entry keeps the tone of its result card (amber for already_canceled).
+    const reply = await logged("POST", path, body, (r) => toCard(r).tone);
     const card = toCard(reply);
     const list = await call("GET", "/bookings");
     // Updates after an await are not part of the transition unless wrapped again (React 19).
     startTransition(() => {
       setResult(card);
-      setLog((l) => addLog(l, { call: describeCall("POST", path, body), reply: describeReply(reply), tone: card.tone }));
       // A failed re-fetch keeps the last good list.
       if (list.status === 200 && Array.isArray(list.body)) setBookings(list.body as Booking[]);
       // Clearing the times too: re-checking them against the new list would report the new booking as a conflict.
@@ -98,18 +117,27 @@ export function BookingsPage() {
   // Live availability check: debounced, and only the latest answer counts. Re-runs after each write's re-fetch.
   useEffect(() => {
     const n = ++previewSeq.current;
+    const fields = [form.id, form.resource, form.start, form.end].join("\n");
+    // Kept until a check is sent: a new list arriving within the debounce does not make an edit's check unlogged.
+    if (fields !== fieldsSeen.current) {
+      fieldsSeen.current = fields;
+      edited.current = true;
+    }
     if (!checkable) return;
     const q = { id: form.id, resource: form.resource, start: Number(form.start), end: Number(form.end), basis: bookings };
     const timer = setTimeout(() => {
       const params = new URLSearchParams({ resource: q.resource, start: String(q.start), end: String(q.end) });
       // The API also answers id_taken for a used id, so Book is never offered for one.
       if (q.id !== "") params.set("id", q.id);
-      void call("GET", `/availability?${params}`).then((reply) => {
+      // An edit's check is logged even when a newer check replaces it; a re-check only a new list triggers is not.
+      const send = edited.current ? logged : call;
+      edited.current = false;
+      void send("GET", `/availability?${params}`).then((reply) => {
         if (n === previewSeq.current) setChecked({ ...q, reply });
       });
     }, 250);
     return () => clearTimeout(timer);
-  }, [checkable, form.id, form.resource, form.start, form.end, bookings]);
+  }, [checkable, form.id, form.resource, form.start, form.end, bookings, logged]);
 
   const { preview, box } = shownPreview(
     checked,

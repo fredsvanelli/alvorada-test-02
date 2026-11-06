@@ -1,5 +1,6 @@
 // Runbook bookings.cancel-from-table (docs/runbooks/bookings/cancel-from-table.md). Change the runbook first, then /runbooks:to-test bookings.cancel-from-table.
 import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { LOG_GREEN, expectEntry, logEntries } from './operation-log';
 
 const RUNBOOK = 'bookings.cancel-from-table';
 const UPSTREAM = process.env.RUNBOOKS_UPSTREAM_URL;
@@ -12,10 +13,11 @@ const BAR_CANCELED_BORDER = 'rgb(138, 145, 158)'; // --color-bar-canceled-border
 const MUTED_FG = 'rgb(86, 93, 107)'; // --muted-foreground #565D6B
 const CHIP_CANCELED = { background: 'rgb(238, 240, 243)', color: 'rgb(58, 64, 76)' }; // --color-chip-canceled-*
 const OK = { background: 'rgb(236, 247, 240)', border: 'rgb(167, 215, 184)', color: 'rgb(20, 83, 45)', chip: 'rgb(21, 128, 61)' }; // --color-ok-*
-const LOG_OK = 'rgb(134, 239, 172)'; // --color-log-ok #86EFAC
 
-const CANCEL_REPLY =
-  '200 {"result":"canceled","booking":{"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"canceled"}}';
+const CANCEL_REPLY = {
+  result: 'canceled',
+  booking: { id: 'A', resource: { id: 'R1', name: 'Agora Room' }, start: 10, end: 20, status: 'canceled' },
+};
 
 type Step = 'S01' | 'S02' | 'S03' | 'S04' | 'S05' | 'S06' | 'S07' | 'S08' | 'S09' | 'S10' | 'S11';
 
@@ -47,7 +49,7 @@ const ui = (page: Page) => {
     empty: page.getByText('No bookings in this filter.', { exact: true }),
     r1Bars: bars('R1 · Agora Room'),
     r2Bars: bars('R2 · Pixel Room'),
-    entries: page.getByRole('region', { name: 'Operation log' }).getByRole('listitem'),
+    entries: logEntries(page),
     dialog: page.getByRole('alertdialog'),
     // Exact names: the row trigger is "Cancel booking A".
     confirm: page.getByRole('alertdialog').getByRole('button', { name: 'Cancel booking', exact: true }),
@@ -121,7 +123,7 @@ test.describe('Cancel an active booking from the Bookings table', () => {
     await select(request, 'S01');
     await page.goto('/');
     await expect(ui(page).rows).toHaveCount(2);
-    // Dev mode (React Strict Mode) loads the lists twice: let both answers land before S02's fixtures take over.
+    // Let both page-load answers land before another step's fixtures take over.
     await page.waitForLoadState('networkidle');
     if (step === 'S01') return;
     // S09 to S11 send no request: the runbook-level fixtures answer them.
@@ -239,17 +241,12 @@ test.describe('Cancel an active booking from the Bookings table', () => {
     await expect(bar).toHaveAttribute('style', A_POSITION);
   });
 
-  test('S06 The Operation log records the cancel and the API\'s answer', async ({ page }) => {
+  test('S06 The Operation log records only the cancel, with the API\'s answer', async ({ page }) => {
     const { entries } = ui(page);
 
     await expect(entries).toHaveCount(1);
-    const entry = entries.first();
-    await expect(entry.locator('span').nth(0)).toHaveText('#1');
-    await expect(entry.locator('span').nth(1)).toHaveText('POST /bookings/A/cancel');
-    const reply = entry.locator(':scope > div').nth(1);
-    await expect(reply).toHaveText(`→ ${CANCEL_REPLY}`);
-    await expect(reply).toHaveCSS('color', LOG_OK);
-    await expect(reply).toHaveCSS('padding-left', '28px');
+    const reply = await expectEntry(entries.first(), { n: 1, call: 'POST /bookings/A/cancel', status: 200, color: LOG_GREEN });
+    expect(reply).toEqual(CANCEL_REPLY);
   });
 
   test('S07 The filter chips count A as Canceled, and the Canceled filter shows it', async ({ page }) => {
