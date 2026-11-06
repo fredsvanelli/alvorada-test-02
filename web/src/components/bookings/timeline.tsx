@@ -69,20 +69,27 @@ export function Timeline({
                     style={{ left: `${position(t, max)}%` }}
                   />
                 ))}
-                {bars.map(({ booking: b, left, width, ringed }) => (
+                {bars.map(({ booking: b, left, width, right, ringed, growsLeft }) => (
                   <div
                     key={`${b.pending ?? "row"}:${b.id}`}
                     title={`Booking ${b.id} · ${formatInterval(b.start, b.end)} · ${b.status}`}
                     className={cn(
-                      "absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium text-ellipsis whitespace-nowrap",
+                      "absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium transition-transform duration-150 hover:z-10 hover:min-w-max hover:-translate-y-0.5 motion-reduce:transition-none",
                       b.status === "active"
                         ? "border border-bar-active bg-bar-active text-white"
                         : "border border-dashed border-bar-canceled-border bg-bar-canceled text-muted-foreground line-through",
                       b.pending && "opacity-50",
                     )}
-                    style={{ left: `${left}%`, width: `${width}%`, boxShadow: ringed ? RING : undefined }}
+                    style={{
+                      ...(growsLeft ? { right: `${right}%` } : { left: `${left}%` }),
+                      width: `${width}%`,
+                      boxShadow: ringed ? RING : undefined,
+                    }}
                   >
-                    {b.id} {formatInterval(b.start, b.end)}
+                    {/* text-overflow needs a block box; on the flex bar itself it cuts the text with no ellipsis. */}
+                    <span className="truncate">
+                      {b.id} {formatInterval(b.start, b.end)}
+                    </span>
                   </div>
                 ))}
                 {box && (

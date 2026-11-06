@@ -139,6 +139,9 @@ export function timelineRows<T extends Booking>(resources: Resource[], bookings:
         booking,
         ...span(booking.start, booking.end),
         ringed: booking.status === 'active' && !!here?.conflicts.includes(booking.id),
+        // A hovered bar widens to fit its label; one past the middle widens left to stay inside the track.
+        growsLeft: booking.start > max / 2,
+        right: 100 - position(booking.end, max),
       }));
     const box = here && (here.tone === 'available' || here.tone === 'conflict') ? { ...span(here.start, here.end), tone: here.tone } : null;
     return { resource, bars, box };

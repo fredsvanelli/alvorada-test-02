@@ -9,18 +9,18 @@ roles: []
 upstream: mocked
 covers:
   entries: ["/", "GET /resources", "GET /bookings"]
-  requirements: ["SCH-10#AC1"]
-sources: ["map a93f56d", "docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "SCH-16"]
+  requirements: ["SCH-10#AC1", "SCH-18#AC1", "SCH-18#AC2", "SCH-18#AC3", "SCH-18#AC4"]
+sources: ["map a93f56d", "docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "SCH-16", "SCH-18"]
 scripts: []
 status: active
 last_run:
-  date: 2026-11-05
-  oldest: 2026-11-05
-  commit: "b9ba3c1"
+  date: 2026-11-06
+  oldest: 2026-11-06
+  commit: "137e1bd"
   result: passed
-  report: _runs/2026-11-05-2308-bookings.view-home.md
+  report: _runs/2026-11-06-0122-bookings.view-home.md
   runs:
-    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2308-bookings.view-home.md }
+    r1: { date: 2026-11-06, commit: "137e1bd", report: _runs/2026-11-06-0122-bookings.view-home.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -31,6 +31,7 @@ last_run:
     S07: passed r1
     S08: passed r1
     S09: passed r1
+    S10: passed r1
 ---
 
 # Open the bookings page and see every resource and booking
@@ -39,7 +40,7 @@ last_run:
 
 ## Goal
 
-A user opens the app and sees the five resources and every booking, active and canceled, on the Timeline and in the Bookings table, and can filter the table by status. When the API cannot be reached on load, the page says so, offers Retry and keeps the form disabled.
+A user opens the app and sees the five resources and every booking, active and canceled, on the Timeline and in the Bookings table, and can filter the table by status. A Timeline bar whose label does not fit ends it with an ellipsis, and hovering a bar lifts it slightly and shows its full label above the bars around it. When the API cannot be reached on load, the page says so, offers Retry and keeps the form disabled.
 
 ---
 
@@ -52,13 +53,14 @@ A user opens the app and sees the five resources and every booking, active and c
   - `S04/get--bookings.json`: hand-written, `GET /bookings` answers A [10,40) active, B [90,130) active and C [20,50) canceled. B is a booking stored before the bookable window existed, which `POST /bookings` can no longer create.
   - `S07/get--bookings.json`: hand-written, `GET /bookings` answers `[]`.
   - `S08/get--bookings.json`: hand-written, `GET /bookings` answers 500.
+  - `S10/get--bookings.json`: hand-written, `GET /bookings` answers A (R1 · Agora Room, [10,40), active), B (R2 · Pixel Room, [90,100), active) and C (R1 · Agora Room, [20,50), canceled), in that order. B is a 10-unit bar, too narrow for its label at 1280 by 720.
 - Recording: with `docker compose up -d db` and `npm run dev:api` running and the `booking` table empty, create these bookings through the API, in this order:
   1. `POST /bookings` `{"id":"C","resource":"R1","start":20,"end":50}`
   2. `POST /bookings/C/cancel`
   3. `POST /bookings` `{"id":"A","resource":"R1","start":10,"end":40}`
   4. `POST /bookings` `{"id":"B","resource":"R2","start":80,"end":100}`
 
-  `GET /bookings` then answers A (R1 · Agora Room, [10,40), active), B (R2 · Pixel Room, [80,100), active), C (R1 · Agora Room, [20,50), canceled), in that order. Then run `/runbooks:run bookings.view-home --record --steps S01`. Record S01 only: S02, S03, S05, S06 and S09 send no request of their own beyond S01's two. S04, S07 and S08 have their own folders, and in `record` mode the server proxies every request, so recording any of them would replace its hand-written fixture with the live list.
+  `GET /bookings` then answers A (R1 · Agora Room, [10,40), active), B (R2 · Pixel Room, [80,100), active), C (R1 · Agora Room, [20,50), canceled), in that order. Then run `/runbooks:run bookings.view-home --record --steps S01`. Record S01 only: S02, S03, S05, S06 and S09 send no request of their own beyond S01's two. S04, S07, S08 and S10 have their own folders, and in `record` mode the server proxies every request, so recording any of them would replace its hand-written fixture with the live list.
 - S09 starts on the screen S08 leaves. A script reproduces it by selecting step S08, opening `/`, waiting for "Retry", then selecting S09 before it clicks "Retry".
 
 ---
@@ -106,22 +108,24 @@ The text "No bookings in this filter." does not show.
 
 ---
 
-### S03. The Timeline draws each booking on its resource's row, the canceled one under the active one
+### S03. The Timeline draws each booking on its resource's row, the canceled one under the active one until it is hovered
 
 Parents: S01
-Requirement: SCH-10#AC1
+Requirement: SCH-10#AC1, SCH-18#AC3
 Page: `/`
 
 Actions:
 
 1. Look at the rows of the "Timeline" card.
 2. Hover each bar to read its tooltip.
+3. Move the pointer off the bars, then onto bar C's visible end on the R1 · Agora Room row: a point between 40 and 50 on the axis, right of bar A's end (for example at 45). Bar C's center, at 35, sits under bar A, so hovering C by its center hovers A.
 
 Expected:
-- R1 · Agora Room row: an active bar with the text "A [10,40)" (blue fill, white text, tooltip "Booking A · [10,40) · active") and a canceled bar with the text "C [20,50)" (light gray fill, dashed gray border, struck-through gray text, tooltip "Booking C · [20,50) · canceled"). Where they overlap, from 20 to 40, bar A is drawn over bar C.
+- R1 · Agora Room row: an active bar with the text "A [10,40)" (blue fill, white text, tooltip "Booking A · [10,40) · active") and a canceled bar with the text "C [20,50)" (light gray fill, dashed gray border, struck-through gray text, tooltip "Booking C · [20,50) · canceled"). Where they overlap, from 20 to 40, bar A is drawn over bar C, so C's label, which starts at 20, is hidden: `document.elementFromPoint` at the center of C's label returns bar A or its label, not bar C. Only C's empty end, from 40 to 50, shows. The text "C [20,50)" is still in the page text.
 - R2 · Pixel Room row: an active bar with the text "B [80,100)", tooltip "Booking B · [80,100) · active".
 - R3 · 4K Projector, R4 · Orbit Room and R5 · Focus Room rows: no bar.
 - No dashed preview box shows on any row.
+- After action 3, while the pointer rests on C's visible end: bar C is drawn above bar A and its full label "C [20,50)" shows, struck through (`document.elementFromPoint` at the center of C's label now returns bar C or its label). Bar C keeps its start at 20 and its end at 50. Bar C sits 2px higher than at rest: once the 150ms transition settles, its bounding top is 2px less than before the hover. Moving the pointer off bar C draws bar A over it again and returns bar C to its rest position: its bounding top is the same as before the hover.
 
 ---
 
@@ -214,6 +218,27 @@ Expected: the error panel is gone. The Timeline shows the five resource rows wit
 
 ---
 
+### S10. A bar too narrow for its label ends it with an ellipsis and shows it in full on hover
+
+Parents: none
+Requirement: SCH-18#AC1, SCH-18#AC2, SCH-18#AC3
+Page: `/`
+
+Actions:
+
+1. Set the browser viewport to 1280 by 720.
+2. Open `http://localhost:3000/`.
+3. Wait until the "Timeline" card shows.
+4. Look at bar B on the R2 · Pixel Room row, then read its tooltip.
+5. Hover bar B.
+
+Expected:
+- Before the hover: bar B, the active bar on the R2 · Pixel Room row, is too narrow for its label, and its visible label ends with "…". The label element inside the bar (the `span` that holds "B [90,100)") has a `scrollWidth` greater than its `clientWidth`, and its computed `text-overflow` is `ellipsis`. The page text still holds the full label "B [90,100)". The tooltip reads "Booking B · [90,100) · active".
+- While the pointer rests on bar B: the bar widens to show its full label "B [90,100)", with no ellipsis (the label element's `scrollWidth` is no greater than its `clientWidth`), and is drawn above the bars next to it. Its right edge stays at the right end of the R2 track, and its left edge stays inside the track: the bar widens to the left. Bar B sits 2px higher than at rest: once the 150ms transition settles, its bounding top is 2px less than before the hover.
+- After moving the pointer off bar B: it returns to its rest position: its bounding top is the same as before the hover.
+
+---
+
 ## Not covered
 
 - What the API stores and the order it returns: this runbook is mocked, so it proves only what the page shows from the fixtures. The list and its ascending id order are proven by the `api` runbooks `bookings.list-bookings` and `resources.list-resources`.
@@ -223,6 +248,10 @@ Expected: the error panel is gone. The Timeline shows the five resource rows wit
 - The loading state between opening the page and the two answers (form disabled, Timeline and table empty): mocked answers arrive at once, so no step can hold it.
 - Book, the live preview, Cancel, the result card, log entries and pending rows at 50% opacity: covered by `bookings.book-from-form`, `bookings.preview-availability` and `bookings.cancel-from-table`.
 - Colors, sizes and spacing beyond the states named in the steps: the config has no design reference.
+- A canceled bar that lies entirely under an active bar: no part of it can be hovered, so its label never shows on the Timeline. It stays in the page text, in the bar's tooltip and in the Bookings table.
+- A bar too narrow to show even the ellipsis: it shows no text, and none of the fixtures holds a bar that narrow at 1280 by 720.
+- Keyboard focus on a bar: it does not expand the bar (SCH-18), and bars are not in the tab order, so no step can focus one.
+- The motion of the hover lift: the steps check only the settled 2px offset, not the 150ms easing (`transition-transform duration-150`, `web/src/components/bookings/timeline.tsx:77`) frame by frame, and not the reduced-motion case, where `motion-reduce:transition-none` applies the lift with no transition.
 
 ---
 
