@@ -27,9 +27,9 @@ export function formatInterval(start: number, end: number): string {
   return `[${start},${end})`;
 }
 
-// The UI only offers whole times from 0 to MAX_TIME; start >= end is left for the API to reject.
+// The UI only offers whole times from 0 to MAX_TIME with start before end: anything else is never sent.
 export function isBookable(start: string, end: string): boolean {
-  return [start, end].every((v) => /^\d+$/.test(v) && Number(v) <= MAX_TIME);
+  return [start, end].every((v) => /^\d+$/.test(v) && Number(v) <= MAX_TIME) && Number(start) < Number(end);
 }
 
 // ponytail: one huge booking (from curl or a test) squeezes the others into slivers; add zoom or clipping if that matters.

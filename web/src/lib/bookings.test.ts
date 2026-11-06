@@ -32,13 +32,14 @@ describe('formatInterval', () => {
 });
 
 describe('isBookable', () => {
-  it('accepts whole numbers from 0 to 100, in any order', () => {
+  it('accepts whole numbers from 0 to 100 with start before end', () => {
     assert.ok(isBookable('0', '100'));
-    assert.ok(isBookable('20', '20'));
-    assert.ok(isBookable('20', '10'));
+    assert.ok(isBookable('19', '20'));
+    // Compared as numbers, not text.
+    assert.ok(isBookable('9', '10'));
   });
-  it('rejects empty, out of range and non-whole values', () => {
-    for (const [s, e] of [['', '5'], ['5', '101'], ['2.5', '5'], ['1e2', '5'], ['-1', '5']]) {
+  it('rejects empty, out of range and non-whole values, and an end not after the start', () => {
+    for (const [s, e] of [['', '5'], ['5', '101'], ['2.5', '5'], ['1e2', '5'], ['-1', '5'], ['20', '20'], ['20', '10']]) {
       assert.equal(isBookable(s, e), false, `${s}/${e}`);
     }
   });
