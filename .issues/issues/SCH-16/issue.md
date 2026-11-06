@@ -2,14 +2,14 @@
 id: SCH-16
 title: "Cap API booking times to the [0, 100) window"
 type: feature
-status: in_review
+status: done
 priority: medium
 estimate: 3
 assignee: fred-vanelli
 related: [SCH-17, SCH-18]
 branch: sch-16-cap-api-booking-times-to-the-0-100
 created: 2026-11-06T01:11:31.832Z
-updated: 2026-11-06T02:17:48Z
+updated: 2026-11-06T03:15:51Z
 ---
 
 ## Description

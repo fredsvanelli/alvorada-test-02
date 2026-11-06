@@ -7,3 +7,4 @@
 {"at":"2026-11-06T02:14:13Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
 {"at":"2026-11-06T02:17:48Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-17"}
 {"at":"2026-11-06T02:17:48Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-18"}
+{"at":"2026-11-06T03:15:51Z","by":"fred-vanelli","op":"move","field":"status","from":"in_review","to":"done"}
