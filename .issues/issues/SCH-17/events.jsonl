@@ -1,2 +1,9 @@
 {"at":"2026-11-06T02:17:39Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-17","title":"Start the Playwright MCP servers on a fresh clone without .env.local","type":"bug","status":"backlog","labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-06T02:17:39.503Z","updated":"2026-11-06T02:17:39Z"}}
 {"at":"2026-11-06T02:17:48Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-16"}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"update","field":"estimate","from":null,"to":1}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-06T02:48:24Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-17-start-the-playwright-mcp-servers-on-a"}
+{"at":"2026-11-06T02:52:49Z","by":"fred-vanelli","op":"update","field":"description"}
