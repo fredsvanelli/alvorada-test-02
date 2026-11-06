@@ -7,3 +7,4 @@
 {"at":"2026-11-06T07:20:40Z","by":"fred-vanelli","op":"update","field":"title","from":"Mostrar um (x) para cancelar ao passar o mouse sobre uma barra ativa da Timeline","to":"Show an (x) to cancel when hovering an active Timeline bar"}
 {"at":"2026-11-06T07:22:06Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T07-22-06Z-fred-vanelli.md"}
 {"at":"2026-11-06T07:22:06Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-06T07:28:14Z","by":"fred-vanelli","op":"move","field":"status","from":"in_review","to":"done"}

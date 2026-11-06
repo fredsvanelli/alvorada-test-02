@@ -2,13 +2,13 @@
 id: SCH-20
 title: Show an (x) to cancel when hovering an active Timeline bar
 type: feature
-status: in_review
+status: done
 priority: medium
 estimate: 3
 assignee: fred-vanelli
 branch: sch-20-show-cancel-x-on-timeline-bar-hover
 created: 2026-11-06T06:21:11.031Z
-updated: 2026-11-06T07:22:06Z
+updated: 2026-11-06T07:28:14Z
 ---
 
 ## Description
