@@ -1,0 +1,29 @@
+info:
+  name: Check availability
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{baseUrl}}/availability?resource=R1&start=19&end=21"
+  params:
+    - name: resource
+      value: R1
+      type: query
+    - name: start
+      value: "19"
+      type: query
+    - name: end
+      value: "21"
+      type: query
+    - name: id
+      value: C
+      type: query
+      disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
