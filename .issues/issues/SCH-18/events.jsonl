@@ -7,3 +7,5 @@
 {"at":"2026-11-06T03:48:43Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-18-show-timeline-bar-text-when-a-bar-is"}
 {"at":"2026-11-06T04:00:10Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
 {"at":"2026-11-06T04:01:20Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T04-01-20Z-fred-vanelli.md"}
+{"at":"2026-11-06T04:36:29Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T04-36-29Z-fred-vanelli.md"}
+{"at":"2026-11-06T04:36:29Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
