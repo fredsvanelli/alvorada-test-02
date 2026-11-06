@@ -12,9 +12,9 @@ Planned stack: Next.js (TypeScript, Tailwind, shadcn/ui) → Nest.js REST API (T
 
 npm workspaces: `api/` (Nest.js, Vitest, oxlint), `web/` (Next.js, ESLint) and `config/` (configuration the API and the web app share, such as `MAX_TIME`). Run everything from the repo root.
 
-- One-time setup: `nvm use` (Node from `.nvmrc`, 22.18 or newer; the web unit tests run `.ts` with `node --test`), `cp api/.env.example api/.env`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
+- One-time setup: `nvm use` (Node from `.nvmrc`, 22.18 or newer; the web unit tests run `.ts` with `node --test`), `cp api/.env.example api/.env`, `cp web/.env.example web/.env.local`, `npm install`, `docker compose up -d db`. Compose reads the Postgres credentials from `api/.env` too.
 - `WEB_ORIGIN` (in `api/.env`) is the one origin the API allows through CORS, `http://localhost:3000` by default. An `api/.env` copied before SCH-10 needs that line added, or the API does not start.
-- `NEXT_PUBLIC_API_URL` is where the browser calls the API, `http://localhost:3001` when unset. To change it, `cp web/.env.example web/.env.local` and edit it.
+- `NEXT_PUBLIC_API_URL` is where the browser calls the API, `http://localhost:3001` when unset. To change it, edit `web/.env.local`.
 - Run: `npm run dev:api` (port 3001, `GET /health` checks the database) and `npm run dev:web` (port 3000).
 - Check: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 - UI runbook scripts (Playwright, `web/e2e/`): `npm run test:e2e`. It starts the runbooks upstream server (:4010) and a web dev server (:3000) pointed at it, so both ports must be free; no API or Postgres needed (fixtures replay). Not part of `npm test`. `npm run test:e2e:headed` shows the browser; any Playwright flag passes through (`npm run test:e2e -- --headed`, `-- --ui`, `-- -g S03`).
@@ -68,6 +68,7 @@ Follow the pmkit steps as written, with these changes:
 UAT runbooks in `docs/runbooks/` are the official record of how the product behaves. Read `docs/runbooks/README.md` before editing one. Commands below use Claude notation; in Codex use `$runbooks:runbooks-<command>` (replace further colons with hyphens), or ask the `$runbooks:runbooks` skill to perform that operation.
 
 - Feature work creates or updates the runbook of every flow it changes (`/runbooks:create` for a new flow, `/runbooks:update` for one that has a runbook).
+- `.mcp.json` omits `--secrets` on both Playwright servers, because `accounts` in `docs/runbooks/runbooks.config.json` is empty and the flag crashes a server when the file is missing. `/runbooks:setup` and `/runbooks:settings mcp` can write it back, so remove it again if they do. Restore it once `accounts` has entries.
 - Before calling work done, run `/runbooks:list --affected`, then `/runbooks:run --affected`. A failing runbook means the work is not done.
 - `ui` runbook results are verified in the browser, or by their script in mode `test` when the script has one test per step. The agent calls only the upstream server's control routes, which verify nothing. `api` runbook results are verified only by their scripts (the files in `scripts:`), run with the project's test command.
 

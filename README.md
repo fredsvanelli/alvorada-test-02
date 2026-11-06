@@ -51,7 +51,15 @@ cp api/.env.example api/.env
 
 ℹ️ You don't need to change any value. **The defaults work as they are**.
 
-4- Install the dependencies
+4- Create the web environment variables
+
+```sh
+cp web/.env.example web/.env.local
+```
+
+ℹ️ You don't need to change any value. **The defaults work as they are**.
+
+5- Install the dependencies
 
 ```sh
 npm install

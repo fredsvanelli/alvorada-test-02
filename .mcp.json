@@ -6,8 +6,6 @@
         "@playwright/mcp@0.0.83",
         "--headless",
         "--isolated",
-        "--secrets",
-        ".env.local",
         "--output-dir",
         ".runbooks/evidence"
       ]
@@ -17,8 +15,6 @@
       "args": [
         "@playwright/mcp@0.0.83",
         "--isolated",
-        "--secrets",
-        ".env.local",
         "--output-dir",
         ".runbooks/evidence"
       ]
