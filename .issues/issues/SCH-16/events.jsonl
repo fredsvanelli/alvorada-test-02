@@ -3,3 +3,7 @@
 {"at":"2026-11-06T01:14:41Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
 {"at":"2026-11-06T01:14:41Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-16-cap-api-booking-times-to-the-0-100"}
 {"at":"2026-11-06T01:26:43Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T01-26-43Z-fred-vanelli.md"}
+{"at":"2026-11-06T02:14:13Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T02-14-13Z-fred-vanelli.md"}
+{"at":"2026-11-06T02:14:13Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-06T02:17:48Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-17"}
+{"at":"2026-11-06T02:17:48Z","by":"fred-vanelli","op":"link","field":"related","to":"SCH-18"}
