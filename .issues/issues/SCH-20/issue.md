@@ -1,6 +1,6 @@
 ---
 id: SCH-20
-title: Mostrar um (x) para cancelar ao passar o mouse sobre uma barra ativa da Timeline
+title: Show an (x) to cancel when hovering an active Timeline bar
 type: feature
 status: in_progress
 priority: medium
@@ -8,7 +8,7 @@ estimate: 3
 assignee: fred-vanelli
 branch: sch-20-show-cancel-x-on-timeline-bar-hover
 created: 2026-11-06T06:21:11.031Z
-updated: 2026-11-06T07:19:55Z
+updated: 2026-11-06T07:20:40Z
 ---
 
 ## Description
