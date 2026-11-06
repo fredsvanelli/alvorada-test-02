@@ -16,11 +16,11 @@ status: active
 last_run:
   date: 2026-11-06
   oldest: 2026-11-06
-  commit: "83ad559"
+  commit: "137e1bd"
   result: passed
-  report: _runs/2026-11-06-0107-bookings.view-home.md
+  report: _runs/2026-11-06-0122-bookings.view-home.md
   runs:
-    r1: { date: 2026-11-06, commit: "83ad559", report: _runs/2026-11-06-0107-bookings.view-home.md }
+    r1: { date: 2026-11-06, commit: "137e1bd", report: _runs/2026-11-06-0122-bookings.view-home.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -40,7 +40,7 @@ last_run:
 
 ## Goal
 
-A user opens the app and sees the five resources and every booking, active and canceled, on the Timeline and in the Bookings table, and can filter the table by status. A Timeline bar whose label does not fit ends it with an ellipsis, and hovering a bar shows its full label above the bars around it. When the API cannot be reached on load, the page says so, offers Retry and keeps the form disabled.
+A user opens the app and sees the five resources and every booking, active and canceled, on the Timeline and in the Bookings table, and can filter the table by status. A Timeline bar whose label does not fit ends it with an ellipsis, and hovering a bar lifts it slightly and shows its full label above the bars around it. When the API cannot be reached on load, the page says so, offers Retry and keeps the form disabled.
 
 ---
 
@@ -125,7 +125,7 @@ Expected:
 - R2 · Pixel Room row: an active bar with the text "B [80,100)", tooltip "Booking B · [80,100) · active".
 - R3 · 4K Projector, R4 · Orbit Room and R5 · Focus Room rows: no bar.
 - No dashed preview box shows on any row.
-- After action 3, while the pointer rests on C's visible end: bar C is drawn above bar A and its full label "C [20,50)" shows, struck through (`document.elementFromPoint` at the center of C's label now returns bar C or its label). Bar C keeps its start at 20 and its end at 50. Moving the pointer off bar C draws bar A over it again.
+- After action 3, while the pointer rests on C's visible end: bar C is drawn above bar A and its full label "C [20,50)" shows, struck through (`document.elementFromPoint` at the center of C's label now returns bar C or its label). Bar C keeps its start at 20 and its end at 50. Bar C sits 2px higher than at rest: once the 150ms transition settles, its bounding top is 2px less than before the hover. Moving the pointer off bar C draws bar A over it again and returns bar C to its rest position: its bounding top is the same as before the hover.
 
 ---
 
@@ -234,7 +234,8 @@ Actions:
 
 Expected:
 - Before the hover: bar B, the active bar on the R2 · Pixel Room row, is too narrow for its label, and its visible label ends with "…". The label element inside the bar (the `span` that holds "B [90,100)") has a `scrollWidth` greater than its `clientWidth`, and its computed `text-overflow` is `ellipsis`. The page text still holds the full label "B [90,100)". The tooltip reads "Booking B · [90,100) · active".
-- While the pointer rests on bar B: the bar widens to show its full label "B [90,100)", with no ellipsis (the label element's `scrollWidth` is no greater than its `clientWidth`), and is drawn above the bars next to it. Its right edge stays at the right end of the R2 track, and its left edge stays inside the track: the bar widens to the left.
+- While the pointer rests on bar B: the bar widens to show its full label "B [90,100)", with no ellipsis (the label element's `scrollWidth` is no greater than its `clientWidth`), and is drawn above the bars next to it. Its right edge stays at the right end of the R2 track, and its left edge stays inside the track: the bar widens to the left. Bar B sits 2px higher than at rest: once the 150ms transition settles, its bounding top is 2px less than before the hover.
+- After moving the pointer off bar B: it returns to its rest position: its bounding top is the same as before the hover.
 
 ---
 
@@ -250,6 +251,7 @@ Expected:
 - A canceled bar that lies entirely under an active bar: no part of it can be hovered, so its label never shows on the Timeline. It stays in the page text, in the bar's tooltip and in the Bookings table.
 - A bar too narrow to show even the ellipsis: it shows no text, and none of the fixtures holds a bar that narrow at 1280 by 720.
 - Keyboard focus on a bar: it does not expand the bar (SCH-18), and bars are not in the tab order, so no step can focus one.
+- The motion of the hover lift: the steps check only the settled 2px offset, not the 150ms easing (`transition-transform duration-150`, `web/src/components/bookings/timeline.tsx:77`) frame by frame, and not the reduced-motion case, where `motion-reduce:transition-none` applies the lift with no transition.
 
 ---
 
