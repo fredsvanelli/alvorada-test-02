@@ -3,3 +3,6 @@
 {"at":"2026-11-06T04:51:55Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
 {"at":"2026-11-06T04:52:42Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-19-show-every-api-call-in-the-operation-log"}
 {"at":"2026-11-06T05:03:24Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T05-03-24Z-fred-vanelli.md"}
+{"at":"2026-11-06T05:45:49Z","by":"fred-vanelli","op":"update","field":"title","from":"Show every API call in the Operation log, with multiline JSON and a taller scrolling panel","to":"Show user-triggered API calls in the Operation log, with multiline JSON and a taller scrolling panel"}
+{"at":"2026-11-06T05:45:49Z","by":"fred-vanelli","op":"update","field":"description"}
+{"at":"2026-11-06T05:45:49Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}

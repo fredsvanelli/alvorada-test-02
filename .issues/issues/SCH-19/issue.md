@@ -1,6 +1,6 @@
 ---
 id: SCH-19
-title: "Show every API call in the Operation log, with multiline JSON and a taller scrolling panel"
+title: "Show user-triggered API calls in the Operation log, with multiline JSON and a taller scrolling panel"
 type: feature
 status: in_progress
 priority: medium
@@ -8,18 +8,19 @@ estimate: 3
 assignee: fred-vanelli
 branch: sch-19-show-every-api-call-in-the-operation-log
 created: 2026-11-06T02:31:26.860Z
-updated: 2026-11-06T04:52:42Z
+updated: 2026-11-06T05:45:49Z
 ---
 
 ## Description
 
 ### Context
 
-The Operation log shows how the page talks to the API during a demo, but it records only the Book and Cancel POSTs. The page also sends `GET /resources`, `GET /bookings` and `GET /availability`, and the log leaves those out. JSON bodies print on one line, so long replies are hard to read. The panel has no height limit and keeps the last 14 entries. Once every call is logged, the preview checks of a single booking would fill those 14 entries.
+The Operation log shows how the page talks to the API during a demo, but it records only the Book and Cancel POSTs. The live preview also sends `GET /availability` for what the user types, and the log leaves those out. JSON bodies print on one line, so long replies are hard to read. The panel has no height limit and keeps the last 14 entries. Once the preview checks are logged, the checks of a single booking would fill those 14 entries.
 
 ### Scope (in)
 
-- Log every API call the bookings page sends: Book, Cancel, `GET /resources` and `GET /bookings` (page load, Retry, the re-fetch after a write), and `GET /availability` (live preview)
+- Log the API calls that come from a direct user action: Book, Cancel, and each `GET /availability` the live preview sends after the user edits a field
+- Leave out the calls the page sends on its own: `GET /resources` and `GET /bookings` (page load, Retry, the re-fetch after a write) and the availability re-check a write triggers
 - Print JSON request and response bodies on multiple indented lines
 - Let the panel grow with its entries up to a max height of 640px, then scroll inside the panel
 - Keep the last 30 entries, with the newest on top
@@ -34,7 +35,7 @@ The Operation log shows how the page talks to the API during a demo, but it reco
 
 ### Tasks
 
-- [ ] Record every API call of the bookings page in the Operation log
+- [ ] Record the API calls of direct user actions in the Operation log
 - [ ] Show JSON request and response bodies on multiple lines in the Operation log
 - [ ] Limit the Operation log panel height, with scrolling inside the panel
 - [ ] Keep the last 30 entries in the Operation log
@@ -42,10 +43,9 @@ The Operation log shows how the page talks to the API during a demo, but it reco
 
 ## Acceptance criteria
 
-- [ ] Opening the page adds an entry for `GET /resources` and an entry for `GET /bookings`, each with its response
-- [ ] Clicking Retry after a failed load adds new entries for the calls it sends
-- [ ] Each availability check the live preview sends adds a `GET /availability` entry with its response
-- [ ] After Book or Cancel, the log shows the POST entry and, above it, the `GET /bookings` re-fetch entry
+- [ ] Opening the page and clicking Retry add no entry: `GET /resources` and `GET /bookings` are not logged
+- [ ] Each availability check sent after the user edits Id, Resource, Start or End adds a `GET /availability` entry with its response
+- [ ] After Book or Cancel, the log shows the POST entry; the `GET /bookings` re-fetch and the availability re-check it triggers add no entry
 - [ ] A JSON request or response body shows on multiple indented lines
 - [ ] A reply that is not JSON, or a request that fails, shows its text as it came
 - [ ] A successful GET shows in green and a failed call shows in red, and Book and Cancel replies keep their current colors
