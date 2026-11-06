@@ -6,9 +6,9 @@ status: in_progress
 priority: medium
 estimate: 3
 assignee: fred-vanelli
-branch: sch-20-mostrar-um-x-para-cancelar-ao-passar-o
+branch: sch-20-show-cancel-x-on-timeline-bar-hover
 created: 2026-11-06T06:21:11.031Z
-updated: 2026-11-06T06:27:03Z
+updated: 2026-11-06T07:19:55Z
 ---
 
 ## Description

@@ -3,3 +3,4 @@
 {"at":"2026-11-06T06:26:46Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
 {"at":"2026-11-06T06:27:03Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-20-mostrar-um-x-para-cancelar-ao-passar-o"}
 {"at":"2026-11-06T06:34:56Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T06-34-56Z-fred-vanelli.md"}
+{"at":"2026-11-06T07:19:55Z","by":"fred-vanelli","op":"update","field":"branch","from":"sch-20-mostrar-um-x-para-cancelar-ao-passar-o","to":"sch-20-show-cancel-x-on-timeline-bar-hover"}
