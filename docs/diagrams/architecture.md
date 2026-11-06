@@ -90,7 +90,7 @@ flowchart TB
   subgraph bookingsMod["BookingsModule"]
     bc["BookingsController<br/>POST /bookings<br/>GET /bookings<br/>GET /availability<br/>POST /bookings/:id/cancel"]
     bs["BookingsService<br/>create · list · availability · cancel"]
-    rules["booking-rules.ts · pure functions<br/>parseInterval: integers 0..2147483647 and start < end<br/>overlaps a, b: a.start < b.end AND b.start < a.end"]
+    rules["booking-rules.ts · pure functions<br/>parseInterval: integers 0..100 (MAX_TIME, from config) and start < end<br/>overlaps a, b: a.start < b.end AND b.start < a.end"]
     repo["BookingsRepository<br/>find by id · active by resource ordered by id<br/>insert · set status"]
   end
 
@@ -133,7 +133,7 @@ sequenceDiagram
   W->>C: POST /bookings
   C->>S: create(dto)
 
-  alt Invalid data: missing field, not an integer in 0..2147483647, or start >= end
+  alt Invalid data: missing field, not an integer in 0..100, or start >= end
     S-->>C: invalid_data
     C-->>W: 422 invalid_data
   else Unknown resource
@@ -182,7 +182,7 @@ sequenceDiagram
   W->>C: GET /availability?resource=R1&start=19&end=21
   C->>S: availability(resource, start, end)
 
-  alt Invalid data: missing field, not an integer in 0..2147483647, or start >= end
+  alt Invalid data: missing field, not an integer in 0..100, or start >= end
     S-->>C: invalid_data
     C-->>W: 422 invalid_data
   else Unknown resource
