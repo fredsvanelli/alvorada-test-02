@@ -2,13 +2,13 @@
 id: SCH-18
 title: Show Timeline bar text when a bar is narrow or sits under another bar
 type: bug
-status: in_review
+status: done
 estimate: 2
 assignee: fred-vanelli
 related: [SCH-16]
 branch: sch-18-show-timeline-bar-text-when-a-bar-is
 created: 2026-11-06T02:17:39.571Z
-updated: 2026-11-06T04:36:29Z
+updated: 2026-11-06T06:12:31Z
 ---
 
 ## Description

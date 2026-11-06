@@ -2,13 +2,13 @@
 id: SCH-19
 title: "Show user-triggered API calls in the Operation log, with multiline JSON and a taller scrolling panel"
 type: feature
-status: in_review
+status: done
 priority: medium
 estimate: 3
 assignee: fred-vanelli
 branch: sch-19-show-every-api-call-in-the-operation-log
 created: 2026-11-06T02:31:26.860Z
-updated: 2026-11-06T06:07:34Z
+updated: 2026-11-06T06:12:32Z
 ---
 
 ## Description

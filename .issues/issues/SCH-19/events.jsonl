@@ -8,3 +8,4 @@
 {"at":"2026-11-06T05:45:49Z","by":"fred-vanelli","op":"update","field":"acceptance_criteria"}
 {"at":"2026-11-06T06:07:34Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T06-07-34Z-fred-vanelli.md"}
 {"at":"2026-11-06T06:07:34Z","by":"fred-vanelli","op":"move","field":"status","from":"in_progress","to":"in_review"}
+{"at":"2026-11-06T06:12:32Z","by":"fred-vanelli","op":"move","field":"status","from":"in_review","to":"done"}
