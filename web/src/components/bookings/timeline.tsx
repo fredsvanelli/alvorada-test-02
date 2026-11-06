@@ -1,6 +1,8 @@
+import { XIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { formatInterval, position, timelineRows, type Resource, type ShownBooking, type TimelinePreview } from "@/lib/bookings";
 import { cn } from "@/lib/utils";
+import { CancelBookingDialog } from "./cancel-booking-dialog";
 
 const legend = [
   { label: "Active", swatch: "bg-bar-active" },
@@ -15,10 +17,12 @@ export function Timeline({
   resources,
   bookings,
   preview,
+  onCancel,
 }: {
   resources: Resource[];
   bookings: ShownBooking[];
   preview: TimelinePreview | null;
+  onCancel: (id: string) => void;
 }) {
   const { max, ticks, rows } = timelineRows(resources, bookings, preview);
 
@@ -74,7 +78,7 @@ export function Timeline({
                     key={`${b.pending ?? "row"}:${b.id}`}
                     title={`Booking ${b.id} · ${formatInterval(b.start, b.end)} · ${b.status}`}
                     className={cn(
-                      "absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium transition-transform duration-150 hover:z-10 hover:min-w-max hover:-translate-y-0.5 motion-reduce:transition-none",
+                      "group absolute top-1.5 flex h-8 items-center overflow-hidden rounded-md px-2 font-mono text-xs font-medium transition-transform duration-150 hover:z-10 hover:min-w-max hover:-translate-y-0.5 motion-reduce:transition-none",
                       b.status === "active"
                         ? "border border-bar-active bg-bar-active text-white"
                         : "border border-dashed border-bar-canceled-border bg-bar-canceled text-muted-foreground line-through",
@@ -90,6 +94,22 @@ export function Timeline({
                     <span className="truncate">
                       {b.id} {formatInterval(b.start, b.end)}
                     </span>
+                    {/* Shown on hover only: display none at rest, so it takes no space and Tab never reaches it. */}
+                    {b.status === "active" && !b.pending && (
+                      <CancelBookingDialog
+                        booking={b}
+                        onCancel={onCancel}
+                        trigger={
+                          <button
+                            type="button"
+                            aria-label={`Cancel booking ${b.id} from the Timeline`}
+                            className="ml-1.5 hidden size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/20 group-hover:inline-flex hover:bg-white/35"
+                          >
+                            <XIcon aria-hidden="true" className="size-3" />
+                          </button>
+                        }
+                      />
+                    )}
                   </div>
                 ))}
                 {box && (

@@ -190,7 +190,7 @@ export function BookingsPage() {
             </Card>
           ) : (
             <>
-              <Timeline resources={resources} bookings={shown} preview={box} />
+              <Timeline resources={resources} bookings={shown} preview={box} onCancel={onCancel} />
               <BookingsTable bookings={shown} onCancel={onCancel} />
             </>
           )}
