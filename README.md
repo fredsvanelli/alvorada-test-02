@@ -1,5 +1,7 @@
 # Conflict-free bookings
 
+[Video demo](https://www.youtube.com/watch?v=K-oVzehxB6o)
+
 A booking system for a team's shared Resources that rejects overlapping Bookings, on the half-open rule `[start, end)`.
 
 - **Focus:** full stack, with the emphasis on the back end: the booking rules, the API contract and the tests. The web app is how the rules are shown.
@@ -227,6 +229,8 @@ curl -s -w '\n%{http_code}\n' 'http://localhost:3001/availability?resource=R1&st
   - Recorded in [ADR 0002](docs/adr/0002-availability-answers-id-taken-as-409.md) and in the contract (`api/openapi.yaml`).
 
 ## How AI was used
+
+[See it in slides (PDF)](docs/how-ai-was-used.pdf)
 
 The work was done with Claude Code, using SPEC-SS workflow for each task.
 
