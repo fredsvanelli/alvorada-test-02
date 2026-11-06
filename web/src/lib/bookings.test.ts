@@ -214,6 +214,11 @@ describe('timelineRows', () => {
     assert.deepEqual(t.rows[0].box, { left: 19, width: 2, tone: 'conflict' });
     assert.equal(t.rows[1].box, null);
   });
+  it('grows a bar left on hover only when it starts past the middle of the axis', () => {
+    const at = (start: number): Booking => ({ id: String(start), resource: r1, start, end: start + 10, status: 'active' });
+    const t = timelineRows([r1], [at(10), at(50), at(90)], null);
+    assert.deepEqual(t.rows[0].bars.map((b) => [b.booking.id, b.growsLeft, b.right]), [['10', false, 80], ['50', false, 40], ['90', true, 0]]);
+  });
 });
 
 describe('shownPreview', () => {
