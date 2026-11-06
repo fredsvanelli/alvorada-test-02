@@ -1,21 +1,23 @@
 // Runbook bookings.book-from-form (docs/runbooks/bookings/book-from-form.md). Change the runbook first, then /runbooks:to-test bookings.book-from-form.
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { LOG_GREEN as GREEN, LOG_RED as RED, expectEntry, logEntries } from './operation-log';
 
 const RUNBOOK = 'bookings.book-from-form';
 const UPSTREAM = process.env.RUNBOOKS_UPSTREAM_URL;
 
-// The Operation log colors replies with --color-log-ok and --color-log-error (web/src/app/globals.css).
-const GREEN = 'rgb(134, 239, 172)';
-const RED = 'rgb(252, 165, 165)';
-
 const INVALID_DATA =
   'Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 100 with start before end.';
+const AVAILABLE = { available: true, conflicts: [] };
+const REQ_A = { id: 'A', resource: 'R1', start: 10, end: 20 };
+const REQ_B = { id: 'B', resource: 'R1', start: 20, end: 30 };
+const BOOKING_A = { id: 'A', resource: { id: 'R1', name: 'Agora Room' }, start: 10, end: 20, status: 'active' };
+const BOOKING_B = { id: 'B', resource: { id: 'R1', name: 'Agora Room' }, start: 20, end: 30, status: 'active' };
 const PICK = 'Pick a start and an end from 0 to 100';
 
 // The page checks availability 250 ms after the last change; waiting longer proves no check follows.
 const AFTER_DEBOUNCE_MS = 500;
 
-type Step = 'S01' | 'S02' | 'S03' | 'S04' | 'S05' | 'S06' | 'S07';
+type Step = 'S01' | 'S02' | 'S03' | 'S04' | 'S05' | 'S06' | 'S07' | 'S08';
 
 // The runbook never reloads the page: each step starts on the screen its parents left. Each test opens `/` once with
 // no step selected (the runbook-level fixtures answer that first load), replays these steps under their own selects,
@@ -28,6 +30,7 @@ const SETUP: Record<Step, Step[]> = {
   S05: [],
   S06: [],
   S07: ['S01', 'S02'],
+  S08: ['S01', 'S02'],
 };
 
 async function select(request: APIRequestContext, step: Step | null) {
@@ -66,7 +69,6 @@ const list: Sent = { method: 'GET', path: '/bookings' };
 const ui = (page: Page) => {
   const operation = page.getByRole('region', { name: 'Operation', exact: true });
   const timeline = page.locator('[data-slot="card"]', { has: page.getByRole('heading', { name: 'Timeline' }) });
-  const log = page.getByRole('region', { name: 'Operation log' });
   const book = page.getByRole('button', { name: 'Book', exact: true });
   return {
     id: page.getByLabel('Id', { exact: true }),
@@ -80,19 +82,20 @@ const ui = (page: Page) => {
     rows: page.getByRole('table').locator('tbody tr'),
     chip: (label: string) => page.getByRole('button', { name: new RegExp(`^${label} \\(\\d+\\)$`) }),
     r1Bars: timeline.getByText('R1 · Agora Room', { exact: true }).locator('..').locator('[title^="Booking "]'),
-    entries: log.getByRole('listitem'),
+    entries: logEntries(page),
   };
 };
 
-// Waits for the preview to find the current fields available, then clicks Book and waits for the write to finish:
-// the log entry lands with the re-fetched list.
+// Waits for the preview to find the current fields available, then clicks Book and waits for the write to finish: the
+// result card changes once the (unlogged) re-fetch has answered, which comes after the POST's log entry.
 async function clickBook(page: Page, interval: string) {
-  const { book, preview, entries } = ui(page);
+  const { book, preview, card } = ui(page);
   await expect(preview).toHaveText(`R1 ${interval} is available`);
   await expect(book).toBeEnabled();
-  const before = await entries.count();
+  const shown = async () => ((await card.count()) ? card.innerText() : null);
+  const before = await shown();
   await book.click();
-  await expect(entries).toHaveCount(before + 1);
+  await expect.poll(shown).not.toBe(before);
 }
 
 const ACTIONS: Record<Step, (page: Page) => Promise<void>> = {
@@ -132,6 +135,8 @@ const ACTIONS: Record<Step, (page: Page) => Promise<void>> = {
   },
   S05: async (page) => {
     const f = ui(page);
+    // End first, so replacing Id never sends a check for values a previous step left.
+    await f.end.fill('');
     await f.id.fill('E');
     await expect(f.resource).toHaveValue('R1');
     await f.start.fill('50');
@@ -147,6 +152,8 @@ const ACTIONS: Record<Step, (page: Page) => Promise<void>> = {
     await f.end.fill('60');
     await clickBook(page, '[50,60)');
   },
+  // S08 only reads the log S02 left.
+  S08: async () => {},
 };
 
 async function expectCard(page: Page, code: string, title: string, detail: string) {
@@ -156,13 +163,16 @@ async function expectCard(page: Page, code: string, title: string, detail: strin
   await expect(card.locator('p')).toHaveText(detail);
 }
 
-async function expectEntry(page: Page, index: number, n: number | null, call: string, reply: string, color: string) {
-  const entry = ui(page).entries.nth(index);
-  if (n !== null) await expect(entry.locator('span').nth(0)).toHaveText(`#${n}`);
-  await expect(entry.locator('span').nth(1)).toHaveText(call);
-  const replyLine = entry.locator(':scope > div').nth(1);
-  await expect(replyLine).toHaveText(`→ ${reply}`);
-  await expect(replyLine).toHaveCSS('color', color);
+// The availability check entry at `index` (0 is the top) for this query, answered as given.
+async function expectCheck(page: Page, index: number, query: string, status: number, color: string, body?: unknown) {
+  const reply = await expectEntry(ui(page).entries.nth(index), { call: `GET /availability?${query}`, status, color });
+  if (body !== undefined) expect(reply).toEqual(body);
+}
+
+// The newest POST /bookings entry is still booking B's from S02.
+async function expectLatestPostIsB(page: Page) {
+  const post = ui(page).entries.filter({ hasText: 'POST /bookings' }).first();
+  expect(await expectEntry(post, { call: 'POST /bookings', request: REQ_B, status: 201, color: GREEN })).toEqual(BOOKING_B);
 }
 
 async function expectRow(page: Page, index: number, id: string, interval: string) {
@@ -191,7 +201,8 @@ async function expectFields(page: Page, id: string, start: string, end: string) 
   await expect(f.end).toHaveValue(end);
 }
 
-// What the page shows outside the form: a step that sends nothing must leave it as it was.
+// What the page shows outside the form: a step that sends nothing must leave it as it was, except for the log, which
+// may only gain availability checks on top.
 async function snapshot(page: Page) {
   const f = ui(page);
   const cardCount = await f.card.count();
@@ -208,7 +219,10 @@ async function expectUnchanged(page: Page, before: Awaited<ReturnType<typeof sna
   const f = ui(page);
   await expect(f.card).toHaveCount(before.cardCount);
   if (before.cardText !== null) expect(await f.card.innerText()).toBe(before.cardText);
-  expect(await f.entries.allInnerTexts()).toEqual(before.log);
+  const log = await f.entries.allInnerTexts();
+  const added = log.length - before.log.length;
+  expect(log.slice(added)).toEqual(before.log);
+  for (const entry of log.slice(0, added)) expect(entry).toMatch(/^#\d+\s+GET \/availability\?/);
   expect(await f.rows.allInnerTexts()).toEqual(before.rows);
   expect(await f.r1Bars.allInnerTexts()).toEqual(before.bars);
 }
@@ -259,15 +273,12 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.preview).toHaveText(PICK);
     await expect(f.book).toBeDisabled();
 
-    await expect(f.entries).toHaveCount(1);
-    await expectEntry(
-      page,
-      0,
-      1,
-      'POST /bookings {"id":"A","resource":"R1","start":10,"end":20}',
-      '201 {"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"active"}',
-      GREEN,
+    // The page load and the re-fetch are not logged: the POST on top, the check before the click under it.
+    await expect(f.entries).toHaveCount(2);
+    expect(await expectEntry(f.entries.nth(0), { call: 'POST /bookings', request: REQ_A, status: 201, color: GREEN })).toEqual(
+      BOOKING_A,
     );
+    await expectCheck(page, 1, 'resource=R1&start=10&end=20&id=A', 200, GREEN, AVAILABLE);
 
     const expected = [availability(10, 20, 'A'), post({ id: 'A', resource: 'R1', start: 10, end: 20 }), list];
     await expectSent(request, expected);
@@ -276,7 +287,7 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     expect(await sent(request)).toEqual(expected);
   });
 
-  test('S02 A second booking joins the list in API order, and its log entry goes on top', async ({ page, request }) => {
+  test('S02 A second booking joins the list in API order, and its log entries go on top', async ({ page, request }) => {
     await ACTIONS.S02(page);
     const f = ui(page);
 
@@ -295,23 +306,13 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.preview).toHaveText(PICK);
     await expect(f.book).toBeDisabled();
 
-    await expect(f.entries).toHaveCount(2);
-    await expectEntry(
-      page,
-      0,
-      2,
-      'POST /bookings {"id":"B","resource":"R1","start":20,"end":30}',
-      '201 {"id":"B","resource":{"id":"R1","name":"Agora Room"},"start":20,"end":30,"status":"active"}',
-      GREEN,
-    );
-    await expectEntry(
-      page,
-      1,
-      1,
-      'POST /bookings {"id":"A","resource":"R1","start":10,"end":20}',
-      '201 {"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"active"}',
-      GREEN,
-    );
+    await expect(f.entries.nth(0).locator('span').nth(1)).toHaveText('POST /bookings');
+    await expectLatestPostIsB(page);
+    await expectCheck(page, 1, 'resource=R1&start=20&end=30&id=B', 200, GREEN, AVAILABLE);
+    // Booking A's entries from S01 further down: its POST, then its check.
+    const postA = f.entries.filter({ hasText: 'POST /bookings' }).nth(1);
+    expect(await expectEntry(postA, { call: 'POST /bookings', request: REQ_A, status: 201, color: GREEN })).toEqual(BOOKING_A);
+    await expectCheck(page, 3, 'resource=R1&start=10&end=20&id=A', 200, GREEN, AVAILABLE);
 
     const expected = [availability(20, 30, 'B'), post({ id: 'B', resource: 'R1', start: 20, end: 30 }), list];
     await expectSent(request, expected);
@@ -328,14 +329,9 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.book).toBeDisabled();
 
     await expectCard(page, 'created', 'Booking B created', 'R1 taken for [20,30).');
-    await expectEntry(
-      page,
-      0,
-      2,
-      'POST /bookings {"id":"B","resource":"R1","start":20,"end":30}',
-      '201 {"id":"B","resource":{"id":"R1","name":"Agora Room"},"start":20,"end":30,"status":"active"}',
-      GREEN,
-    );
+    // Answered 200, so green, even though the interval conflicts.
+    await expectCheck(page, 0, 'resource=R1&start=19&end=21&id=C', 200, GREEN, { available: false, conflicts: ['A', 'B'] });
+    await expectLatestPostIsB(page);
     await expectOnlyAAndB(page);
     await expectUnchanged(page, before);
 
@@ -354,14 +350,12 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.book).toBeDisabled();
 
     await expectCard(page, 'created', 'Booking B created', 'R1 taken for [20,30).');
-    await expectEntry(
-      page,
-      0,
-      2,
-      'POST /bookings {"id":"B","resource":"R1","start":20,"end":30}',
-      '201 {"id":"B","resource":{"id":"R1","name":"Agora Room"},"start":20,"end":30,"status":"active"}',
-      GREEN,
-    );
+    await expectCheck(page, 0, 'resource=R1&start=40&end=50&id=A', 409, RED, {
+      error: 'id_taken',
+      message: 'This id was already used by another booking.',
+    });
+    await expectCheck(page, 1, 'resource=R1&start=40&end=50', 200, GREEN, AVAILABLE);
+    await expectLatestPostIsB(page);
     await expectOnlyAAndB(page);
     await expectUnchanged(page, before);
 
@@ -375,19 +369,20 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     expect(requests.filter((r) => r.path === '/bookings')).toEqual([]);
   });
 
-  test('S05 Start equal to End keeps Book disabled, because the availability check fails', async ({ page, request }) => {
+  test('S05 Start equal to End keeps Book disabled and sends no check', async ({ page, request }) => {
     const before = await snapshot(page);
     await ACTIONS.S05(page);
     const f = ui(page);
+    await page.waitForTimeout(AFTER_DEBOUNCE_MS);
 
-    await expect(f.preview).toHaveText("Couldn't check availability");
+    await expect(f.preview).toHaveText(PICK);
     await expect(f.book).toBeDisabled();
 
     await expectUnchanged(page, before);
+    expect((await f.entries.allInnerTexts()).length).toBe(before.log.length);
     await expectFields(page, 'E', '50', '50');
 
-    // Answered 422: the API checks the interval before the id.
-    await expect.poll(() => sent(request, true)).toEqual([availability(50, 50, 'E', 422)]);
+    expect(await sent(request)).toEqual([]);
   });
 
   test('S06 Book stays disabled while Start or End is empty, above 100 or not a whole number', async ({ page, request }) => {
@@ -409,6 +404,7 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.preview).toHaveText('R1 [50,60) is available');
     await expect(f.book).toBeEnabled();
 
+    await expectCheck(page, 0, 'resource=R1&start=50&end=60&id=F', 200, GREEN, AVAILABLE);
     await expectUnchanged(page, before);
 
     expect((await sent(request)).filter((r) => r.method === 'POST')).toEqual([]);
@@ -426,20 +422,45 @@ test.describe('Book a resource from the Operation form, or see why it was reject
     await expect(f.preview).toHaveText('R1 [50,60) is available');
     await expect(f.book).toBeEnabled();
 
-    await expectEntry(
-      page,
-      0,
-      null,
-      'POST /bookings {"id":"","resource":"R1","start":50,"end":60}',
-      `422 {"error":"invalid_data","message":"${INVALID_DATA}"}`,
-      RED,
-    );
-
     await expectSent(request, [
       availability(50, 60),
       post({ id: '', resource: 'R1', start: 50, end: 60 }),
       list,
       availability(50, 60),
     ]);
+
+    // The re-fetch and the re-check it triggers were sent (above) but are not logged: the rejected POST stays on top,
+    // with the check sent before the click under it. The wait lets the re-check's answer land first.
+    await page.waitForTimeout(AFTER_DEBOUNCE_MS);
+    const rejected = { call: 'POST /bookings', request: { id: '', resource: 'R1', start: 50, end: 60 }, status: 422, color: RED };
+    expect(await expectEntry(f.entries.nth(0), rejected)).toEqual({ error: 'invalid_data', message: INVALID_DATA });
+    await expectCheck(page, 1, 'resource=R1&start=50&end=60', 200, GREEN, AVAILABLE);
+  });
+
+  test('S08 Past 640px the Operation log scrolls its entries inside the panel, and the page length stays the same', async ({ page }) => {
+    const panel = page.getByRole('region', { name: 'Operation log' });
+    const heading = panel.getByRole('heading', { name: 'Operation log' });
+    const list = panel.locator('ol');
+    // The heading's offset inside the panel: focusing the list may scroll the page itself.
+    const measure = async () => {
+      const p = (await panel.boundingBox())!;
+      const h = (await heading.boundingBox())!;
+      return { height: p.height, headingOffset: h.y - p.y, page: await page.evaluate(() => document.documentElement.scrollHeight) };
+    };
+
+    const before = await measure();
+    expect(before.height).toBeLessThanOrEqual(640);
+    await expect(list).toHaveAttribute('tabindex', '0');
+    await expect(list).toHaveCSS('overflow-y', 'auto');
+    expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+
+    await list.focus();
+    await page.keyboard.press('End');
+
+    await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    await expectCheck(page, 3, 'resource=R1&start=10&end=20&id=A', 200, GREEN, AVAILABLE);
+    await expect(ui(page).entries.last()).toBeInViewport();
+    await expect(heading).toBeVisible();
+    expect(await measure()).toEqual(before);
   });
 });

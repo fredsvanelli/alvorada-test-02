@@ -10,17 +10,17 @@ upstream: mocked
 covers:
   entries: ["/", "GET /resources", "GET /bookings", "POST /bookings/{id}/cancel"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "text \"Cancel in the Bookings table opens a confirmation dialog: Keep booking or Escape closes it and sends nothing, Cancel booking closes it and sends the cancel followed by GET /bookings\""]
+sources: ["docs/superpowers/specs/2026-11-05-sch-10-web-ui-design.md", "SCH-10", "text \"Cancel in the Bookings table opens a confirmation dialog: Keep booking or Escape closes it and sends nothing, Cancel booking closes it and sends the cancel followed by GET /bookings\"", "SCH-19", "diff main...5269ad5", "text \"SCH-19 follow-up: the Operation log no longer logs GET /resources, GET /bookings (page load, Retry) nor the GET /bookings re-fetch after a write; it logs only the calls a user action sends: POST /bookings, POST /bookings/:id/cancel and each GET /availability the live preview sends\""]
 scripts: ["web/e2e/bookings/cancel-from-table.runbook.spec.ts"]
 status: active
 last_run:
-  date: 2026-11-05
-  oldest: 2026-11-05
-  commit: "b9ba3c1"
+  date: 2026-11-06
+  oldest: 2026-11-06
+  commit: "5269ad5"
   result: passed
-  report: _runs/2026-11-05-2306-bookings.cancel-from-table.md
+  report: _runs/2026-11-06-0234-bookings.cancel-from-table.md
   runs:
-    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2306-bookings.cancel-from-table.md }
+    r1: { date: 2026-11-06, commit: "5269ad5", report: _runs/2026-11-06-0234-bookings.cancel-from-table.md }
   cells:
     S01: passed r1
     S09: passed r1
@@ -41,7 +41,7 @@ last_run:
 
 ## Goal
 
-On the bookings home page, a user presses Cancel on an active booking in the Bookings table. A confirmation dialog asks first: "Keep booking" or Escape closes it and sends nothing, and "Cancel booking" confirms. On confirm the page sends the cancel, re-fetches the list, and shows the booking as Canceled in the table and on the timeline. The result card says it was canceled and that its id stays taken, and the row no longer offers Cancel.
+On the bookings home page, a user presses Cancel on an active booking in the Bookings table. A confirmation dialog asks first: "Keep booking" or Escape closes it and sends nothing, and "Cancel booking" confirms. On confirm the page sends the cancel, re-fetches the list, and shows the booking as Canceled in the table and on the timeline. The result card says it was canceled and that its id stays taken, and the row no longer offers Cancel. The Operation log shows only the calls a user action sends: the cancel, added when its reply arrives. The page load and the re-fetch are not logged.
 
 ---
 
@@ -73,7 +73,9 @@ Expected: the Bookings table header shows the chips "All (2)", "Active (2)" and 
 - ID "A", Resource "R1 · Agora Room", Interval "[10,20)", Status badge "Active", and a "Cancel" button labelled "Cancel booking A" (enabled) in the Action cell.
 - ID "B", Resource "R2 · Pixel Room", Interval "[30,40)", Status badge "Active", and a "Cancel" button labelled "Cancel booking B" (enabled).
 
-On the Timeline, the R1 row has an active bar (solid blue, white text) reading "A [10,20)" with the tooltip "Booking A · [10,20) · active". No result card (`role="status"`) is shown under Book, and the Operation log has no entries.
+On the Timeline, the R1 row has an active bar (solid blue, white text) reading "A [10,20)" with the tooltip "Booking A · [10,20) · active". No result card (`role="status"`) is shown under Book.
+
+The Operation log has no entries: the page load (`GET /resources` and `GET /bookings`) is not logged.
 
 ---
 
@@ -87,7 +89,7 @@ Actions:
 
 1. On the page S01 left open (no reload), click the "Cancel" button labelled "Cancel booking A".
 
-Expected: a confirmation dialog (`role="alertdialog"`) opens over the page. Its title is "Cancel booking A?" and its description is "R1 [10,20) becomes free. The id A stays taken.". It has two buttons, "Keep booking" (outlined) and "Cancel booking" (red text on a light red background). `GET /__runbooks/state` lists no request in `requests` since S09 was selected, and `unmatched` is empty. No result card is shown under Book, and the Operation log has no entries.
+Expected: a confirmation dialog (`role="alertdialog"`) opens over the page. Its title is "Cancel booking A?" and its description is "R1 [10,20) becomes free. The id A stays taken.". It has two buttons, "Keep booking" (outlined) and "Cancel booking" (red text on a light red background). `GET /__runbooks/state` lists no request in `requests` since S09 was selected, and `unmatched` is empty. No result card is shown under Book, and the Operation log still has no entries.
 
 ---
 
@@ -101,7 +103,7 @@ Actions:
 
 1. With the dialog S09 opened, click "Keep booking".
 
-Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S10 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log has no entries.
+Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S10 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log still has no entries.
 
 ---
 
@@ -116,7 +118,7 @@ Actions:
 1. Without reloading, click the "Cancel" button labelled "Cancel booking A". The dialog "Cancel booking A?" opens.
 2. Press Escape.
 
-Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S11 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log has no entries.
+Expected: the dialog closes: no `role="alertdialog"` element is on the page. `GET /__runbooks/state` lists no request in `requests` since S11 was selected, and `unmatched` is empty. Row A still shows the Status badge "Active" and the enabled "Cancel" button labelled "Cancel booking A". No result card is shown under Book, and the Operation log still has no entries.
 
 ---
 
@@ -183,7 +185,7 @@ Expected: the R1 row shows a canceled bar reading "A [10,20)": light grey backgr
 
 ---
 
-### S06. The Operation log records the cancel and the API's answer
+### S06. The Operation log records only the cancel, with the API's answer
 
 Parents: S02
 Requirement: none
@@ -193,10 +195,23 @@ Actions:
 
 1. Look at the Operation log, without reloading.
 
-Expected: the log has exactly one entry. Its first line is "#1" followed by `POST /bookings/A/cancel`. Its second line, indented and in the green "ok" color, is:
+Expected: the log has exactly one entry: the re-fetch `GET /bookings` S02 sent is not logged. Its first line is "#1" followed by `POST /bookings/A/cancel`. It has no request block (the cancel has no body). Under it, indented and in the green "ok" color, `→ 200` on its own line, then the reply JSON on indented lines (2-space indents):
 
 ```text
-→ 200 {"result":"canceled","booking":{"id":"A","resource":{"id":"R1","name":"Agora Room"},"start":10,"end":20,"status":"canceled"}}
+→ 200
+{
+  "result": "canceled",
+  "booking": {
+    "id": "A",
+    "resource": {
+      "id": "R1",
+      "name": "Agora Room"
+    },
+    "start": 10,
+    "end": 20,
+    "status": "canceled"
+  }
+}
 ```
 
 ---
@@ -236,6 +251,7 @@ Expected: "Active (1)" is pressed and the table shows a single row: ID "B", Reso
 - The in-flight state: while the cancel request is pending, row A and its bar are at 50% opacity and its Cancel button is disabled (`bookings-table.tsx`, `timeline.tsx`, `applyOptimistic` in `web/src/lib/bookings.ts`). The mocked server answers at once, and a fixture has no delay, so the state lasts too short for the browser to observe it reliably. The `applyOptimistic` unit test covers the state change.
 - A failed cancel (network error, a 5xx or a body outside the contract), which shows the "Request failed" card, and a failed re-fetch, which keeps the last good list (`bookings-page.tsx`, `write`): the fixtures are recorded from the live API, which cannot fail on demand. A hand-written 500 fixture in a step folder would be overwritten by the next `--record` pass. It can be added with `/runbooks:update` once the fixtures are recorded.
 - That the cancel was saved (A stays canceled after a reload, and its id stays taken): this runbook is `mocked`, so it proves the request in S02 and what the screen shows, never what the API saves. The api runbook `bookings.cancel-booking` S01 proves the row is kept with `status: canceled`.
+- The Operation log's limits: it keeps the latest 30 entries while the numbers keep counting up, and past 640px its entries scroll inside the panel. This flow adds one entry, so it reaches neither. The cap is covered by the `addLog` unit test in `web/src/lib/bookings.test.ts`. A failed cancel would show in red (its entry takes the tone of the result card, `cancelResult` in the same file), but the fixtures cannot fail, as the item above says.
 - The availability preview re-running after the re-fetch (an interval freed by the cancel turning "available"): it belongs to the live preview flow, `bookings.preview-availability`.
 
 ---
