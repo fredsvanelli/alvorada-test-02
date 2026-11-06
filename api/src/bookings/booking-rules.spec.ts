@@ -8,8 +8,9 @@ describe('parseInterval', () => {
     // Compared as strings, "9" < "10" is false: catches a missing Number().
     { start: '9', end: '10', want: { start: 9, end: 10 } },
     { start: 0, end: 1, want: { start: 0, end: 1 } },
-    { start: 0, end: 2147483647, want: { start: 0, end: 2147483647 } },
-    { start: '0', end: '2147483647', want: { start: 0, end: 2147483647 } },
+    { start: 0, end: 100, want: { start: 0, end: 100 } },
+    { start: '0', end: '100', want: { start: 0, end: 100 } },
+    { start: 99, end: 100, want: { start: 99, end: 100 } },
   ])('accepts ($start, $end)', ({ start, end, want }) => {
     expect(parseInterval(start, end)).toStrictEqual(want);
   });
@@ -25,7 +26,7 @@ describe('parseInterval', () => {
     Number.POSITIVE_INFINITY,
     10.5,
     -1,
-    2147483648,
+    101,
     '',
     ' ',
     '-5',
@@ -35,7 +36,7 @@ describe('parseInterval', () => {
     '10.0',
     '+10',
     'abc',
-    '2147483648',
+    '101',
   ];
 
   it.each(badTimes)('rejects %j as start', (value) => {
@@ -51,6 +52,8 @@ describe('parseInterval', () => {
     { start: '20', end: '20' },
     { start: 30, end: 20 },
     { start: '10', end: '9' },
+    // 100 is a valid end but never a valid start, because no end can follow it.
+    { start: 100, end: 100 },
   ])('rejects start >= end ($start, $end)', ({ start, end }) => {
     expect(parseInterval(start, end)).toBeNull();
   });

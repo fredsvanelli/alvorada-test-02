@@ -60,6 +60,15 @@ describe('BookingsController', () => {
     });
   });
 
+  it('asks for id, resource, start and end on invalid_data', async () => {
+    create.mockResolvedValue({ ok: false, error: 'invalid_data' });
+    const error = await thrown();
+    expect(error.getResponse()).toMatchObject({
+      message:
+        'Send id (1 to 64 letters, digits, - or _), resource, and integer start and end from 0 to 100 with start before end.',
+    });
+  });
+
   it('returns conflicts on a conflict', async () => {
     create.mockResolvedValue({
       ok: false,
@@ -168,7 +177,7 @@ describe('BookingsController', () => {
       const error = await thrownByAvailability();
       expect(error.getResponse()).toMatchObject({
         message:
-          'Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _).',
+          'Send resource, integer start and end from 0 to 100 with start before end, and optionally an id (1 to 64 letters, digits, - or _).',
       });
     });
   });

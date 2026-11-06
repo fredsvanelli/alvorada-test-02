@@ -126,11 +126,11 @@ describe('Create a booking, or reject it without writing anything', () => {
     const bodies: Record<string, unknown> = {
       'missing end': { id: 'A', resource: 'R1', start: 10 },
       'negative start': { id: 'A', resource: 'R1', start: -1, end: 20 },
-      'end above the integer range': {
+      'end above the bookable window': {
         id: 'A',
         resource: 'R1',
         start: 10,
-        end: 2147483648,
+        end: 101,
       },
       'empty interval': { id: 'A', resource: 'R1', start: 20, end: 20 },
       'id with a space': { id: 'a b', resource: 'R1', start: 10, end: 20 },
@@ -147,6 +147,10 @@ describe('Create a booking, or reject it without writing anything', () => {
     for (const [name, body] of Object.entries(bodies)) {
       await expectError(await post(body), 422, 'invalid_data', name);
     }
+
+    const list = await fetch(`${baseUrl}/bookings`);
+    expect(list.status).toBe(200);
+    expect(await list.json()).toStrictEqual([]);
 
     const readBack = await post({
       id: 'A',
@@ -312,12 +316,12 @@ describe('Create a booking, or reject it without writing anything', () => {
     });
   });
 
-  it('S15 Times at both ends of the integer range are accepted', async () => {
+  it('S15 Times at both ends of the bookable window are accepted', async () => {
     const response = await post({
       id: 'A',
       resource: 'R1',
       start: 0,
-      end: 2147483647,
+      end: 100,
     });
 
     expect(response.status).toBe(201);
@@ -325,7 +329,7 @@ describe('Create a booking, or reject it without writing anything', () => {
       id: 'A',
       resource: { id: 'R1', name: 'Agora Room' },
       start: 0,
-      end: 2147483647,
+      end: 100,
       status: 'active',
     });
   });

@@ -1,3 +1,4 @@
+import { MAX_TIME } from "config";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Preview, Resource, ResultCard } from "@/lib/bookings";
@@ -51,7 +52,7 @@ export function OperationPanel({
         id={`f-${field}`}
         type="number"
         min={0}
-        max={100}
+        max={MAX_TIME}
         step={1}
         inputMode="numeric"
         value={form[field]}

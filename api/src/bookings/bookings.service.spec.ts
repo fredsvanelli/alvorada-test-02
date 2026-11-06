@@ -115,7 +115,7 @@ describe('BookingsService', () => {
     ['a resource with a NUL character', { ...valid, resource: 'R\u0000' }],
     ['a missing start', { ...valid, start: undefined }],
     ['a negative start', { ...valid, start: -1 }],
-    ['an end above the integer range', { ...valid, end: 2147483648 }],
+    ['an end above the bookable window', { ...valid, end: 101 }],
     ['an empty interval', { ...valid, start: 20, end: 20 }],
     ['a decimal start', { ...valid, start: 10.5 }],
   ])('rejects invalid data: %s', async (_, body) => {
@@ -163,6 +163,20 @@ describe('BookingsService', () => {
       expect(insert).not.toHaveBeenCalled();
     },
   );
+
+  // The API can no longer create a booking that ends past the window, but one
+  // stored before the window existed still occupies its interval.
+  it('rejects an overlap with a stored booking that ends past the window', async () => {
+    findActiveByResource.mockResolvedValue([booking('B', 90, 130)]);
+    await expect(
+      service.create({ ...valid, id: 'C', start: 95, end: 100 }),
+    ).resolves.toStrictEqual({
+      ok: false,
+      error: 'conflict',
+      conflicts: ['B'],
+    });
+    expect(insert).not.toHaveBeenCalled();
+  });
 
   it('rejects an overlap with the conflicting ids in repository order', async () => {
     findActiveByResource.mockResolvedValue([
@@ -280,7 +294,7 @@ describe('BookingsService', () => {
       ['a non-numeric start', 'R1', 'abc', 20],
       ['a decimal start', 'R1', '1.5', 20],
       ['a negative start', 'R1', '-1', 20],
-      ['an end above the integer range', 'R1', 0, 2147483648],
+      ['an end above the bookable window', 'R1', 0, 101],
       ['start equal to end', 'R1', 10, 10],
       ['start after end', 'R1', 20, 10],
     ])('rejects %s as invalid_data', async (_, resource, start, end) => {

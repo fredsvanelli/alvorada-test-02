@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["GET /availability"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"GET /availability now accepts an optional `id` query param. When sent and a booking (active or canceled) already has that id, it answers 409 { error: id_taken, message } with no conflicts or available keys, checked after unknown_resource and before the conflict lookup (unknown_resource wins over id_taken). A free id answers 200 exactly as before. An empty, repeated or malformed id (not 1 to 64 letters, digits, - or _) is invalid_data 422. Without id, behavior is unchanged.\"", "SCH-12"]
+sources: ["docs/superpowers/specs/2026-11-04-sch-7-check-availability-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"GET /availability now accepts an optional `id` query param. When sent and a booking (active or canceled) already has that id, it answers 409 { error: id_taken, message } with no conflicts or available keys, checked after unknown_resource and before the conflict lookup (unknown_resource wins over id_taken). A free id answers 200 exactly as before. An empty, repeated or malformed id (not 1 to 64 letters, digits, - or _) is invalid_data 422. Without id, behavior is unchanged.\"", "SCH-12", "SCH-16"]
 scripts: ["api/test/runbooks/bookings-check-availability.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "37e3b09"
+  commit: "b9ba3c1"
   result: passed
-  report: _runs/2026-11-05-2047-bookings.check-availability.md
+  report: _runs/2026-11-05-2306-bookings.check-availability.md
   runs:
-    r1: { date: 2026-11-05, commit: "37e3b09", report: _runs/2026-11-05-2047-bookings.check-availability.md }
+    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2306-bookings.check-availability.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -35,6 +35,7 @@ last_run:
     S12: passed r1
     S13: passed r1
     S14: passed r1
+    S15: passed r1
 ---
 
 # Check whether an interval is free on a resource, without booking it
@@ -169,6 +170,7 @@ GET /availability?<query from the table>
 |---|---|
 | start not a number | `resource=R1&start=abc&end=20` |
 | start after end | `resource=R1&start=20&end=10` |
+| end above the bookable window | `resource=R1&start=0&end=101` |
 | missing resource | `start=10&end=20` |
 | repeated resource | `resource=R1&resource=R2&start=10&end=20` |
 
@@ -178,7 +180,7 @@ Expected: 422, for each query.
 { "error": "invalid_data", "message": "<string>" }
 ```
 
-The body has no `conflicts` key and no `available` key. A repeated param arrives as an array, which is not a resource id. Today's message is "Send resource, integer start and end from 0 to 2147483647 with start before end, and optionally an id (1 to 64 letters, digits, - or _)."; its text is not checked.
+The body has no `conflicts` key and no `available` key. A repeated param arrives as an array, which is not a resource id. Today's message is "Send resource, integer start and end from 0 to 100 with start before end, and optionally an id (1 to 64 letters, digits, - or _)."; its text is not checked.
 
 ---
 
@@ -394,13 +396,37 @@ Read-back: `POST /bookings` with X R1 `[10,20)`, sent after the check, returns 2
 
 ---
 
+### S15. Times at both ends of the bookable window are accepted
+
+Parents: none
+Requirement: none
+Endpoint: `GET /availability`
+As: anonymous
+Given: no bookings.
+Request:
+
+```http
+GET /availability?resource=R1&start=0&end=100
+```
+
+Expected: 200.
+
+```json
+{ "available": true, "conflicts": [] }
+```
+
+The body has exactly these two keys. The bookable window is `[0, 100)`, so 0 is the lowest start and 100 is the highest end (`MAX_TIME` in `api/src/bookings/booking-rules.ts`). S05 proves that an end of 101 is rejected.
+
+---
+
 ## Not covered
 
-- The other `invalid_data` inputs (empty or NUL resource, missing, empty, repeated, decimal or negative start, end above 2147483647, start equal to end) and `invalid_data` winning over `unknown_resource`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" in `api/src/bookings/bookings.service.spec.ts` covers each input and that the resource lookup is not reached. Create shares the same `parseInterval`, and `bookings.create-booking` S03, S16 and S18 prove those rules over HTTP.
+- The other `invalid_data` inputs (empty or NUL resource, missing, empty, repeated, decimal or negative start, start equal to end) and `invalid_data` winning over `unknown_resource`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" in `api/src/bookings/bookings.service.spec.ts` covers each input and that the resource lookup is not reached. Create shares the same `parseInterval`, and `bookings.create-booking` S03, S16 and S18 prove those rules over HTTP.
 - An exact, case-sensitive resource match (`r1` is unknown): left out of the agreed steps. Availability uses the same `ResourcesService.exists` as create, which `bookings.create-booking` S05 proves with `r1`.
 - Unknown query params (for example `foo`) are ignored: left out of the agreed steps. The controller reads only `resource`, `start`, `end` and `id` (`api/src/bookings/bookings.controller.ts`, `@Get('availability')`).
 - `invalid_data` for a bad id winning over `unknown_resource`, and an invalid interval with a taken id answering `invalid_data`, not `id_taken`: left out of the agreed steps. The `it.each` "rejects %s as invalid_data" for ids in `api/src/bookings/bookings.service.spec.ts` asserts the resource lookup is not reached, and the service validates every param before any lookup (`availability` in `api/src/bookings/bookings.service.ts`).
 - An id at the 64-character limit, or made of `-` and `_`, accepted: left out of the agreed steps. Availability uses the same `ID` pattern as create (`api/src/bookings/bookings.service.ts`), and "accepts a 64-character id" in `api/src/bookings/bookings.service.spec.ts` proves the limit for create.
+- A booking stored before the bookable window existed, which may end past 100, counting as a conflict: this runbook creates bookings only through `POST /bookings`, which can no longer create one. Availability uses the same `findConflicts` as create (`api/src/bookings/bookings.service.ts`), and "rejects an overlap with a stored booking that ends past the window" in `api/src/bookings/bookings.service.spec.ts` proves the rule for create.
 - Concurrent checks and creates: concurrency is out of scope (PRD).
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.

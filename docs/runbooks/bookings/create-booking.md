@@ -9,17 +9,17 @@ roles: []
 covers:
   entries: ["POST /bookings"]
   requirements: []
-sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel and GET /bookings now exist; point the canceled-booking Not covered entry to bookings.cancel-booking and drop the claims that GET /bookings does not exist\"", "text \"fix the line reference in the concurrency Not covered entry\""]
+sources: ["docs/superpowers/specs/2026-11-04-sch-6-create-booking-design.md", "docs/superpowers/specs/2026-11-05-sch-8-cancel-and-list-design.md", "text \"POST /bookings/:id/cancel and GET /bookings now exist; point the canceled-booking Not covered entry to bookings.cancel-booking and drop the claims that GET /bookings does not exist\"", "text \"fix the line reference in the concurrency Not covered entry\"", "SCH-16"]
 scripts: ["api/test/runbooks/bookings-create-booking.spec.ts"]
 status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "37e3b09"
+  commit: "b9ba3c1"
   result: passed
-  report: _runs/2026-11-05-2047-bookings.create-booking.md
+  report: _runs/2026-11-05-2306-bookings.create-booking.md
   runs:
-    r1: { date: 2026-11-05, commit: "37e3b09", report: _runs/2026-11-05-2047-bookings.create-booking.md }
+    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2306-bookings.create-booking.md }
   cells:
     S01: passed r1
     S02: passed r1
@@ -60,7 +60,7 @@ Prove that `POST /bookings` creates an `active` booking for a free `[start, end)
 - Auth: none. Authentication is out of scope (PRD), and `api/openapi.yaml` declares `security: []`.
 - Data: every step starts from an empty `booking` table (`beforeEach` empties it through the app's TypeORM `DataSource`). The bookings a step lists under "Given" are created in that step's test through `POST /bookings`, with the ids the step names, before the request under test; each of those creates must return 201. Resources come only from the seed, with these names: R1 `Agora Room`, R2 `Pixel Room`, R3 `4K Projector`.
 - Requests: every request with a body sends `Content-Type: application/json`. A request written as `{ id, resource, [start,end) }` in a step title means the JSON body `{ "id": ..., "resource": ..., "start": start, "end": end }`, with numbers unless the step says otherwise. Requests send the resource as its id string (`"resource": "R1"`); a 201 body returns it as an object (`"resource": { "id": "R1", "name": "Agora Room" }`).
-- Read-back: a step proves what was or was not saved with a follow-up `POST /bookings` whose result depends on it (a conflict naming the saved booking, or a 201 that a saved row would have refused). A read-back through `GET /bookings` was left out of the agreed steps; `bookings.list-bookings` proves what that list returns.
+- Read-back: a step proves what was or was not saved with a follow-up `POST /bookings` whose result depends on it (a conflict naming the saved booking, or a 201 that a saved row would have refused). Only S03 also reads `GET /bookings`, to show the list stays empty after the rejected bodies; `bookings.list-bookings` proves what that list returns.
 
 ---
 
@@ -137,7 +137,7 @@ Content-Type: application/json
 |---|---|
 | missing end | `{ "id": "A", "resource": "R1", "start": 10 }` |
 | negative start | `{ "id": "A", "resource": "R1", "start": -1, "end": 20 }` |
-| end above the integer range | `{ "id": "A", "resource": "R1", "start": 10, "end": 2147483648 }` |
+| end above the bookable window | `{ "id": "A", "resource": "R1", "start": 10, "end": 101 }` |
 | empty interval | `{ "id": "A", "resource": "R1", "start": 20, "end": 20 }` |
 | id with a space | `{ "id": "a b", "resource": "R1", "start": 10, "end": 20 }` |
 | 65-character id | `{ "id": "<65 times A>", "resource": "R1", "start": 10, "end": 20 }` |
@@ -150,7 +150,7 @@ Expected: 422, for each body.
 { "error": "invalid_data", "message": "<string>" }
 ```
 
-The body has no `conflicts` key. Read-back: afterwards, `POST /bookings` with `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }` returns 201, so no rejected body wrote a row: id A is free and R1 `[10,20)` has no booking.
+The body has no `conflicts` key. Read-back: afterwards, `GET /bookings` returns 200 with `[]`, and `POST /bookings` with `{ "id": "A", "resource": "R1", "start": 10, "end": 20 }` returns 201, so no rejected body wrote a row: id A is free and R1 `[10,20)` has no booking.
 
 ---
 
@@ -462,7 +462,7 @@ Expected: 422.
 
 ---
 
-### S15. Times at both ends of the integer range are accepted
+### S15. Times at both ends of the bookable window are accepted
 
 Parents: none
 Requirement: none
@@ -474,16 +474,16 @@ Request:
 POST /bookings
 Content-Type: application/json
 
-{ "id": "A", "resource": "R1", "start": 0, "end": 2147483647 }
+{ "id": "A", "resource": "R1", "start": 0, "end": 100 }
 ```
 
 Expected: 201.
 
 ```json
-{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 0, "end": 2147483647, "status": "active" }
+{ "id": "A", "resource": { "id": "R1", "name": "Agora Room" }, "start": 0, "end": 100, "status": "active" }
 ```
 
-`0` and `2147483647`, the upper bound of the Postgres `integer` columns, are valid times.
+`0` and `100` are the two ends of the bookable window, and both are valid times.
 
 ---
 
@@ -619,7 +619,7 @@ Intervals are half-open: `[0,10)` ends before A starts at 10. S07 proves the oth
 - A canceled booking never conflicts, and a canceled booking's id still returns `id_taken`: both are proven against Postgres by `bookings.cancel-booking` (`docs/runbooks/bookings/cancel-booking.md`), S05 (a canceled booking no longer conflicts) and S06 (its id stays taken), which cancel through `POST /bookings/:id/cancel`.
 - Concurrent creates with the same id or overlapping intervals: concurrency is out of scope (PRD). The check-then-insert is not atomic (`api/src/bookings/bookings.service.ts:66-73`); two simultaneous creates with the same id hit the primary key and return 500.
 - A role that must not get in (403) and no authentication (401): authentication is out of scope (PRD; `api/openapi.yaml` `security: []`).
-- Read-back through `GET /bookings`: left out of the agreed steps, which prove what was saved through a follow-up `POST /bookings` instead. `bookings.list-bookings` (`docs/runbooks/bookings/list-bookings.md`) proves what `GET /bookings` returns.
+- Read-back through `GET /bookings` beyond S03: the other steps prove what was saved through a follow-up `POST /bookings` instead. `bookings.list-bookings` (`docs/runbooks/bookings/list-bookings.md`) proves what `GET /bookings` returns.
 - The text of `message` in error bodies: it is for people, and clients branch on `error` (`api/openapi.yaml`, `BookingError`). Steps check only that it is a string.
 - A database failure during the create: the code has no handler of its own for it (Nest's default 500). Database reachability is proven by `health.check-database`.
 

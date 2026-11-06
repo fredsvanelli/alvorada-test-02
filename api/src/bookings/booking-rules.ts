@@ -1,10 +1,10 @@
 // The [start, end) booking rule, in one place. Pure: no Nest or TypeORM.
+import { MAX_TIME } from 'config';
 
 export type Interval = { start: number; end: number };
 
-// Upper bound of the Postgres `integer` columns, so a bigger value is
-// invalid_data instead of a database error.
-const MAX_TIME = 2_147_483_647;
+// Bookings stored before the bookable window never pass through here, so they
+// can still end past MAX_TIME.
 
 // A time is a non-negative integer, given as a number or a digit-only string.
 function toTime(value: unknown): number | null {
