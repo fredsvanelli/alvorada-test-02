@@ -15,11 +15,11 @@ status: active
 last_run:
   date: 2026-11-05
   oldest: 2026-11-05
-  commit: "500ef6c"
+  commit: "b9ba3c1"
   result: passed
-  report: _runs/2026-11-05-1330-resources.list-resources.md
+  report: _runs/2026-11-05-2306-resources.list-resources.md
   runs:
-    r1: { date: 2026-11-05, commit: "500ef6c", report: _runs/2026-11-05-1330-resources.list-resources.md }
+    r1: { date: 2026-11-05, commit: "b9ba3c1", report: _runs/2026-11-05-2306-resources.list-resources.md }
   cells:
     S01: passed r1
 ---
