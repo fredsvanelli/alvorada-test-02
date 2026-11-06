@@ -1,0 +1,5 @@
+{"at":"2026-11-06T01:11:31Z","by":"fred-vanelli","op":"create","to":{"id":"SCH-16","title":"Cap API booking times to the [0, 100) window","type":"feature","status":"backlog","priority":"medium","estimate":3,"labels":[],"blocked_by":[],"related":[],"duplicate_of":[],"created":"2026-11-06T01:11:31.832Z","updated":"2026-11-06T01:11:31Z"}}
+{"at":"2026-11-06T01:14:41Z","by":"fred-vanelli","op":"assign","field":"assignee","from":null,"to":"fred-vanelli"}
+{"at":"2026-11-06T01:14:41Z","by":"fred-vanelli","op":"move","field":"status","from":"backlog","to":"in_progress"}
+{"at":"2026-11-06T01:14:41Z","by":"fred-vanelli","op":"update","field":"branch","from":null,"to":"sch-16-cap-api-booking-times-to-the-0-100"}
+{"at":"2026-11-06T01:26:43Z","by":"fred-vanelli","op":"comment","to":"2026-11-06T01-26-43Z-fred-vanelli.md"}

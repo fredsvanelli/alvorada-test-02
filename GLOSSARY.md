@@ -16,6 +16,10 @@ _Avoid_: reservation
 A half-open span `[start, end)` of non-negative integer times with start before end; the Resource is free again at `end`.
 _Avoid_: period, slot, range
 
+**Bookable window**:
+The times `[0, 100)` that a new Booking or an Availability check may ask about. A Booking stored before the window existed may lie outside it. It still lists, can be Canceled and counts for Conflicts.
+_Avoid_: range, cap, limit
+
 **Active** / **Canceled**:
 The two statuses of a Booking. A Canceled Booking keeps its id but no longer occupies its Interval.
 _Avoid_: deleted, freed
